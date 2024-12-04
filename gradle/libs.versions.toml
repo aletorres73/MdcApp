@@ -19,6 +19,7 @@ firebase-bom = "33.6.0"
 koin = "3.6.0-Beta4"
 koin-compose = "1.2.0-Beta4"
 kotlinx-serialization = "1.7.1"
+compose-preview = "1.4.1"
 
 
 [libraries]
@@ -47,6 +48,9 @@ koin-android = { group = "io.insert-koin", name = "koin-android" }
 koin-core = { group = "io.insert-koin", name = "koin-core" }
 koin-compose = { group = "io.insert-koin", name = "koin-compose" }
 koin-compose-viewmodel = { group = "io.insert-koin", name = "koin-compose-viewmodel", version.ref = "koin-compose" }
+
+compose-preview-desktop = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose-preview" }
+
 
 
 [plugins]

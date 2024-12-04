@@ -2,6 +2,7 @@ package com.mdcapp.ui.screens.orders
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -23,11 +24,12 @@ fun DesktopOrdersScreen(
     Screen { padding ->
         val state = vm.state
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(200.dp),
-            contentPadding = PaddingValues(4.dp),
+            columns = GridCells.Adaptive(250.dp),
+            contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(padding)
-
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(padding)
         ) {
             items(state.orderList, key = null) {
                 OrderItems(

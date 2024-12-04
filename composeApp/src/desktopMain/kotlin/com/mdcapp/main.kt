@@ -41,7 +41,7 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         title = "MDCapp Desktop",
-        state = WindowState(size = DpSize(900.dp,550.dp))
+        state = WindowState(size = DpSize(1500.dp, 800.dp))
     ) {
         DesktopOrdersScreen()
     }
