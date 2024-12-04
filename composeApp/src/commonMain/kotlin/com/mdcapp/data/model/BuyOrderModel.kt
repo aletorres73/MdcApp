@@ -1,6 +1,6 @@
 package com.mdcapp.data.model
 
-data class Order(
+data class BuyOrderModel(
     var id: String,
     var order: String = "",
     var client: String = "",
@@ -13,9 +13,3 @@ data class Order(
     var loadedDate: String = "",
 )
 
-val orderList = (1..10).map {
-    Order(
-        id = it.toString(),
-        order= "Order$it"
-    )
-}

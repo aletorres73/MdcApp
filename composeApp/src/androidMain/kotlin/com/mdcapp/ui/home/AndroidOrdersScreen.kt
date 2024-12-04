@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.mdcapp.ui.Screen
-import com.mdcapp.ui.composables.OrderItems
+import com.mdcapp.ui.composables.orders.OrderItems
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -28,7 +28,7 @@ fun AndroidOrdersScreen(
                 verticalArrangement = Arrangement.SpaceAround,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(state.orderList, key = { it.id }) {
+                items(state.orderList, key = { it.orderNumber }) {
                     OrderItems(
                         order = it
                     )

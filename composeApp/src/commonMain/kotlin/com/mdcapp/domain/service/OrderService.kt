@@ -8,9 +8,14 @@ import dev.gitlive.firebase.firestore.FirebaseFirestore
 class OrderService(
     private val db: FirebaseFirestore
 ) {
+    companion object {
+        const val ORDERS = "Orders"
+        const val BUY_ORDERS = "buyOrders"
+    }
+
     suspend fun fetchAllOrders(): List<RemoteResultOrder> {
         return try {
-            val documents = db.collection("buyOrders")
+            val documents = db.collection(ORDERS)
                 .get()
                 .documents
                 .map { it.data<RemoteResultOrder>() }
