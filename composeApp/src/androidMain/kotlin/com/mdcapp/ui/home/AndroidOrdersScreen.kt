@@ -1,29 +1,22 @@
-package com.mdcapp.ui.viewmodels.orders
+package com.mdcapp.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.currentComposer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.Order
 import com.mdcapp.ui.Screen
+import com.mdcapp.ui.composables.OrderItems
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
 @OptIn(KoinExperimentalAPI::class)
 @Composable
-fun OrdersScreen(
+fun AndroidOrdersScreen(
     vm: OrdersViewModel = koinViewModel()
 ) {
     Screen {
@@ -35,7 +28,7 @@ fun OrdersScreen(
                 verticalArrangement = Arrangement.SpaceAround,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(state.orderList, key = null) {
+                items(state.orderList, key = { it.id }) {
                     OrderItems(
                         order = it
                     )
@@ -45,16 +38,3 @@ fun OrdersScreen(
     }
 }
 
-@Composable
-fun OrderItems(order: Order) {
-    Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = 12.dp, horizontal = 8.dp)
-    ) {
-        Column {
-            Text(text = "Orden ${order.id}", style = MaterialTheme.typography.titleMedium)
-            Text(text = order.client, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}

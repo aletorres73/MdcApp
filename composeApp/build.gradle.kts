@@ -48,6 +48,8 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
 
             implementation(libs.kotlinx.coroutines.core)
+
+            implementation(libs.kotlinx.serilization.json)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

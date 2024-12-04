@@ -6,7 +6,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.Order
-import com.mdcapp.data.model.orderList
 import com.mdcapp.domain.usescases.GetAllOrdersUseCase
 import kotlinx.coroutines.launch
 
@@ -37,12 +36,11 @@ class OrdersViewModel(private val getOrdersUseCase: GetAllOrdersUseCase) : ViewM
         state = if (data.dataList.isNotEmpty()) {
             UiState(
                 loading = false,
-                orderList = data.dataList
+                orderList = data.dataList.sortedByDescending { it.order }
             )
         } else {
             UiState(loading = true)
         }
-        println("OrdersViewModel fetch from repository: ${data.dataList}")
     }
 
 }
