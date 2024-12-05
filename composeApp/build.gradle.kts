@@ -43,17 +43,19 @@ kotlin {
             implementation(libs.gitlive.firebase.firestore)
             implementation(libs.koin.core)
             implementation(project.dependencies.platform(libs.koin.bom))
-            implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
 
             implementation(libs.kotlinx.coroutines.core)
 
             implementation(libs.kotlinx.serilization.json)
+
+            implementation(libs.androidx.navigation.compose)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+
         }
     }
     task("testClasses")
@@ -91,6 +93,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.navigation.compose)
     debugImplementation(compose.uiTooling)
 }
 

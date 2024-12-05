@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mdcapp.data.model.OrderModel
 import com.mdcapp.ui.Screen
 import com.mdcapp.ui.composables.orders.OrderItems
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
@@ -19,7 +20,8 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @OptIn(KoinExperimentalAPI::class)
 @Composable
 fun DesktopOrdersScreen(
-    vm: OrdersViewModel = koinViewModel()
+    vm: OrdersViewModel = koinViewModel(),
+    onOpenOrderDetail: (OrderModel) -> Unit
 ) {
     Screen { padding ->
         val state = vm.state
@@ -31,9 +33,10 @@ fun DesktopOrdersScreen(
                 .fillMaxHeight()
                 .padding(padding)
         ) {
-            items(state.orderList, key = null) {
+            items(state.orderList, key = null) { order ->
                 OrderItems(
-                    order = it
+                    order = order,
+                    onCardClick = { onOpenOrderDetail(order) }
                 )
             }
         }

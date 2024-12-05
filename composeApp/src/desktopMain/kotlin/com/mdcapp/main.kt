@@ -8,7 +8,7 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import com.google.firebase.FirebasePlatform
 import com.mdcapp.di.initKoin
-import com.mdcapp.ui.screens.orders.DesktopOrdersScreen
+import com.mdcapp.ui.navigation.Navigation
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.FirebaseOptions
 import dev.gitlive.firebase.initialize
@@ -43,6 +43,6 @@ fun main() = application {
         title = "MDCapp Desktop",
         state = WindowState(size = DpSize(1500.dp, 800.dp))
     ) {
-        DesktopOrdersScreen()
+        Navigation()
     }
 }
