@@ -8,7 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun Screen(content: @Composable (PaddingValues) -> Unit) {
+fun Screen(
+    content: @Composable (PaddingValues) -> Unit
+) {
     MaterialTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
             content(paddingValues)

@@ -41,8 +41,8 @@ fun OrderItems(order: OrderModel, onCardClick: () -> Unit) {
             )
             val infoOrder = linkedMapOf(
                 "Pedido: " to order.orders,
-                "Estado de orden: " to order.payState,
                 "Estado de entrega: " to order.trackingState,
+                "Estado de orden: " to order.payState
             )
             infoOrder.forEach { (key, value) ->
                 Row(

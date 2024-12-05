@@ -22,11 +22,13 @@ fun Navigation() {
             DesktopOrdersScreen(onOpenOrderDetail = {
                 openDetailOrderWindow = true
                 order = it
-            })
+            }
+            )
             if (openDetailOrderWindow)
                 OpenDetailWindow(
                     order = order,
-                    onCloseRequest = { openDetailOrderWindow = false })
+                    onCloseRequest = { openDetailOrderWindow = false }
+                )
         }
     }
 
