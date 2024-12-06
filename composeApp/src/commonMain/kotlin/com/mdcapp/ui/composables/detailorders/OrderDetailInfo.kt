@@ -9,18 +9,22 @@ import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.OrderModel
 
 @Composable
-fun OrderDetailInfo(order: OrderModel) {
+fun OrderDetailInfo(
+    order: OrderModel,
+    onClick: (String, String) -> Unit
+) {
     Column(modifier = Modifier.padding(16.dp)) {
         OrderSection(title = "Información de la Orden",
-            onClick = { handleOrderInfoClick(order.orderNumber) },
+            onClick = { onClick("orderDetail", order.orderNumber) },
             content = {
                 OrderInfoRow(label = "Número de Orden", value = order.orderNumber)
                 OrderInfoRow(label = "Razón Social", value = order.nameClient)
             }
         )
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        OrderSection(title = "Información del Pedido",
-            onClick = { handleOrderDetailClick(order.orderNumber) },
+        OrderSection(
+            title = "Información del Pedido",
+            onClick = { onClick("buyOrderDetails", order.orderNumber) },
             content = {
                 OrderInfoRow(label = "Marca", value = order.branch)/*
             OrderInfoRow(
@@ -35,7 +39,7 @@ fun OrderDetailInfo(order: OrderModel) {
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         OrderSection(
             title = "Información de Facturación y Pagos",
-            onClick = { handleBillingInfoClick(order.orderNumber) },
+            onClick = { onClick("billingsDetail", order.orderNumber) },
             content = {
 //            OrderInfoRow(label = "Número de Factura", value = order.numberDocument)
 //            OrderInfoRow(label = "Fecha de Facturación", value = order.documentDate)
@@ -61,14 +65,4 @@ fun OrderDetailInfo(order: OrderModel) {
     }
 }
 
-fun handleOrderInfoClick(orderNumber: String) {
-    println("Información de la Orden: $orderNumber")
-}
 
-fun handleOrderDetailClick(orderNumber: String) {
-    println("Información del Pedido: $orderNumber")
-}
-
-fun handleBillingInfoClick(orderNumber: String) {
-    println("Información de Facturación y Pagos: $orderNumber")
-}

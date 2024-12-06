@@ -1,4 +1,4 @@
-package com.mdcapp.ui.navigation
+package com.mdcapp.ui.screens.common
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -7,25 +7,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberWindowState
-import com.mdcapp.data.model.OrderModel
-import com.mdcapp.ui.screens.orderdetail.DesktopOrderDetailScreen
 
 @Composable
-fun OpenDetailWindow(
-    order: OrderModel,
-    onCloseRequest: () -> Unit = {}
+fun OpenWindow(
+    onCloseRequest: () -> Unit = {},
+    title: String,
+    content: @Composable () -> Unit = {},
+    size: DpSize = DpSize(600.dp, 780.dp),
+    position: WindowPosition = WindowPosition(alignment = Alignment.CenterEnd)
 ) {
     val windowState = rememberWindowState(
-        size = DpSize(600.dp, 780.dp),
-        position = WindowPosition(alignment = Alignment.CenterEnd)
+        size = size,
+        position = position
     )
     Window(
         onCloseRequest = { onCloseRequest() },
-        title = "Detalle de orden",
-//        alwaysOnTop = true,
+        title = title,
         state = windowState,
         resizable = false
     ) {
-        DesktopOrderDetailScreen(order = order)
+        content()
     }
 }

@@ -1,4 +1,4 @@
-package com.mdcapp.ui.screens.orderdetail
+package com.mdcapp.ui.screens.orders.orderdetail
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,7 +14,8 @@ import com.mdcapp.ui.composables.detailorders.OrderDetailInfo
 
 @Composable
 fun DesktopOrderDetailScreen(
-    order: OrderModel
+    order: OrderModel,
+    onClick: (String, String) -> Unit
 ) {
     Screen { padding ->
         Column(
@@ -24,7 +25,10 @@ fun DesktopOrderDetailScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start
         ) {
-            OrderDetailInfo(order = order)
+            OrderDetailInfo(
+                order = order,
+                onClick = onClick
+            )
         }
     }
 }
