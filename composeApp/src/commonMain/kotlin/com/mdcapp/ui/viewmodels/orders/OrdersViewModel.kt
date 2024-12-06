@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.OrderModel
-import com.mdcapp.domain.usescases.OrdersUseCase
+import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
 import kotlinx.coroutines.launch
 
 class OrdersViewModel(private val getAllOrders: OrdersUseCase.GetAllOrders) : ViewModel() {

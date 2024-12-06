@@ -5,13 +5,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mdcapp.data.model.OrderModel
-import com.mdcapp.domain.usescases.HandlersUsesCases
+import com.mdcapp.domain.usescases.handlerusescases.HandlersUsesCases
 import com.mdcapp.ui.screens.common.OpenWindow
 import com.mdcapp.ui.screens.orders.DesktopOrdersScreen
 import com.mdcapp.ui.screens.orders.orderdetail.DesktopOrderDetailScreen
@@ -38,18 +36,12 @@ fun Navigation() {
                     content = {
                         DesktopOrderDetailScreen(
                             order = order,
-                            onClick = { key, value ->
-                                openWindowHandler = handler.loadValues(key, value)
-                            }
+                            /*
+                                                        onClick = { key, value ->
+                                                            openWindowHandler = handler.loadValues(key, value)
+                                                        }*/
                         )
                     }
-                )
-            if (openWindowHandler)
-                OpenWindow(
-                    onCloseRequest = { openWindowHandler = false },
-                    title = "Handler",
-                    size = DpSize(600.dp, 390.dp),
-                    content = {}
                 )
         }
     }

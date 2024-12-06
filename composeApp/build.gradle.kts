@@ -102,6 +102,9 @@ compose.desktop {
         mainClass = "com.mdcapp.MainKt"
 
         nativeDistributions {
+            windows {
+                includeAllModules = true
+            }
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.mdcapp"
             packageVersion = "1.0.0"

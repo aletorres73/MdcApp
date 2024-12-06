@@ -15,7 +15,6 @@ import com.mdcapp.ui.composables.detailorders.OrderDetailInfo
 @Composable
 fun DesktopOrderDetailScreen(
     order: OrderModel,
-    onClick: (String, String) -> Unit
 ) {
     Screen { padding ->
         Column(
@@ -25,10 +24,7 @@ fun DesktopOrderDetailScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start
         ) {
-            OrderDetailInfo(
-                order = order,
-                onClick = onClick
-            )
+            OrderDetailInfo(order = order)
         }
     }
 }

@@ -2,6 +2,7 @@
 
 package com.mdcapp.domain.service
 
+import com.mdcapp.data.remote.RemoteResultBuyOrder
 import com.mdcapp.data.remote.RemoteResultOrder
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 
@@ -26,6 +27,20 @@ class OrderService(
         } catch (e: Exception) {
             println("Firestore : on firestore getCollections: $e")
             emptyList()
+        }
+    }
+
+    suspend fun fetchBuyOrder(orderId: String): RemoteResultBuyOrder {
+        return try {
+            val document = db.collection(BUY_ORDERS)
+                .document(orderId)
+                .get()
+                .data<RemoteResultBuyOrder>()
+            println("on fetchBuyOrder in firestore: $document")
+            document
+        } catch (e: Exception) {
+            println("Firestore : on firestore getCollections: $e")
+            RemoteResultBuyOrder()
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.mdcapp.data.model
 
 data class BuyOrderModel(
-    var id: String,
+    var id: String = "",
     var order: String = "",
     var client: String = "",
     var branch: String = "",

@@ -5,42 +5,58 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.model.OrderModel
-import com.mdcapp.domain.usescases.OrdersUseCase
+import com.mdcapp.data.model.BuyOrderModel
+import com.mdcapp.domain.usescases.handlerusescases.HandlersUsesCases
+import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.launch
 
-class BuyOrdersViewModel(private val getAllOrders: OrdersUseCase.GetAllOrders) : ViewModel() {
+class BuyOrdersViewModel(
+    private val getBuyOrder: BuyOrderUseCase.GetBuyOrderById,
+    private val handlers: HandlersUsesCases
+) : ViewModel() {
     var state by mutableStateOf(UiState())
         private set
 
-    private var data by mutableStateOf(Data())
+    private var buyOrderId by mutableStateOf(String())
 
     data class UiState(
         val loading: Boolean = false,
-        val orderList: List<OrderModel> = emptyList()
-    )
-
-    data class Data(
-        val dataList: List<OrderModel> = emptyList()
+        val buyOrder: BuyOrderModel = BuyOrderModel(),
+        val error: String? = null
     )
 
     init {
+        loadBuyOrder()
+    }
+
+    private fun loadBuyOrder() {
         viewModelScope.launch {
-            state = UiState(loading = false)
-            fetchFromRepository()
+            state = state.copy(loading = true)
+            try {
+                if (buyOrderId.isNotEmpty()) {
+                    state = state.copy(
+                        loading = false,
+                        buyOrder = getBuyOrder(buyOrderId)
+                    )
+                }
+            } catch (e: Exception) {
+                state = state.copy(
+                    loading = false,
+                    error = e.message
+                )
+            }
+
         }
     }
 
-    private suspend fun BuyOrdersViewModel.fetchFromRepository() {
-        data = Data(dataList = getAllOrders())
-        state = if (data.dataList.isNotEmpty()) {
-            UiState(
-                loading = false,
-                orderList = data.dataList.sortedByDescending { it.orderNumber }
-            )
-        } else {
-            UiState(loading = true)
-        }
+    fun loadHandler(key: String, value: String): Boolean {
+        buyOrderId = value
+        loadBuyOrder()
+        return if (handlers.loadValues(key, value)) {
+            loadBuyOrder()
+            true
+        } else
+            false
     }
 
 }

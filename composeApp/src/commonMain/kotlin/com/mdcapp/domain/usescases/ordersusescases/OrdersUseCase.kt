@@ -1,4 +1,4 @@
-package com.mdcapp.domain.usescases
+package com.mdcapp.domain.usescases.ordersusescases
 
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.domain.remote.OrderRepository

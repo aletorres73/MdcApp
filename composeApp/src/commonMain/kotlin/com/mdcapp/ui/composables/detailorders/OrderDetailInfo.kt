@@ -1,21 +1,34 @@
 package com.mdcapp.ui.composables.detailorders
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.OrderModel
+import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun OrderDetailInfo(
     order: OrderModel,
-    onClick: (String, String) -> Unit
+//    onClick: (String, String) -> Unit,
+    vm: BuyOrdersViewModel = koinViewModel()
 ) {
+    var isBuyOrderClicked by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.padding(16.dp)) {
         OrderSection(title = "Información de la Orden",
-            onClick = { onClick("orderDetail", order.orderNumber) },
+            onClick = { /*vm.loadHandler("orderDetail", order.orderNumber)*/ },
             content = {
                 OrderInfoRow(label = "Número de Orden", value = order.orderNumber)
                 OrderInfoRow(label = "Razón Social", value = order.nameClient)
@@ -24,32 +37,28 @@ fun OrderDetailInfo(
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         OrderSection(
             title = "Información del Pedido",
-            onClick = { onClick("buyOrderDetails", order.orderNumber) },
+            onClick = {
+                isBuyOrderClicked = if (!isBuyOrderClicked)
+                    vm.loadHandler("buyOrderDetails", order.orders)
+                else
+                    false
+            },
             content = {
-                OrderInfoRow(label = "Marca", value = order.branch)/*
-            OrderInfoRow(
-                label = "Estado de Pedido",
-                value = order.trackingState
-            )*/
+                OrderInfoRow(label = "Marca", value = order.branch)
                 OrderInfoRow(label = "Comentarios", value = order.documentComments)
                 OrderInfoRow(label = "Fecha de Carga", value = order.inputDate)
                 OrderInfoRow(label = "Número de Pedido", value = order.orders)
             }
         )
+        AnimatedVisibility(isBuyOrderClicked) {
+            ShowBuyOrder()
+        }
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         OrderSection(
             title = "Información de Facturación y Pagos",
-            onClick = { onClick("billingsDetail", order.orderNumber) },
+            onClick = { /*onClick("billingsDetail", order.orderNumber)*/ },
             content = {
-//            OrderInfoRow(label = "Número de Factura", value = order.numberDocument)
-//            OrderInfoRow(label = "Fecha de Facturación", value = order.documentDate)
-//            OrderInfoRow(label = "Tipo de Facturación", value = order.type)
                 OrderInfoRow(label = "Importe total de Facturación", value = order.valueDocument)
-//                OrderInfoRow(label = "Estado de Cobranza", value = order.payState)
-//                OrderInfoRow(label = "Fecha de Recepción", value = order.receptionDate)
-//                OrderInfoRow(label = "Fecha de Pago", value = order.payDate)
-//            OrderInfoRow(label = "Valor de Descuento", value = order.discount)
-//            OrderInfoRow(label = "Descuento total", value = "%${order.sellOut.toInt()*100}")
                 OrderInfoRow(label = "Monto total a Cobrar", value = order.payAmount)
                 OrderInfoRow(label = "Monto total Pagado", value = order.payedAmount)
                 OrderInfoRow(label = "Diferencia en Pago", value = order.payDifference)
@@ -57,12 +66,14 @@ fun OrderDetailInfo(
                     label = "Archivo de Remitos/Facturación",
                     value = order.documents.orEmpty()
                 )
-//                OrderInfoRow(label = "Archivo de Comprobantes", value = order.checked.orEmpty())
-//            OrderInfoRow(label = "Verificación", value = order.calendar.orEmpty())
-//            OrderInfoRow(label = "Fecha", value = order.date.orEmpty())
             }
         )
     }
+}
+
+@Composable
+fun ShowBuyOrder() {
+    Text("Acá va el pedido")
 }
 
 

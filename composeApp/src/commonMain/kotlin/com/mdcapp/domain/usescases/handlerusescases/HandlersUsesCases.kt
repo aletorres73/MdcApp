@@ -1,4 +1,4 @@
-package com.mdcapp.domain.usescases
+package com.mdcapp.domain.usescases.handlerusescases
 
 import com.mdcapp.domain.remote.OrderRepository
 
@@ -35,8 +35,9 @@ class HandlersUsesCases(repository: OrderRepository) {
         println("Información de la Orden: $orderNumber")
     }
 
-    private fun handleBuyOrderDetailClick(orderNumber: String) {
-        println("Información del Pedido: $orderNumber")
+    private fun handleBuyOrderDetailClick(buyOrderId: String) {
+        println("Información del Pedido: $buyOrderId")
+
     }
 
     private fun handleBillingInfoClick(orderNumber: String) {
