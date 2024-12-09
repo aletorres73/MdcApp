@@ -49,14 +49,12 @@ class BuyOrdersViewModel(
         }
     }
 
-    fun loadHandler(key: String, value: String): Boolean {
+    fun loadHandler(key: String, value: String) {
         buyOrderId = value
         loadBuyOrder()
-        return if (handlers.loadValues(key, value)) {
-            loadBuyOrder()
-            true
-        } else
-            false
+//        if (handlers.loadValues(key, value)) {
+//            loadBuyOrder()
+//        }
     }
 
 }

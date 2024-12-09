@@ -4,8 +4,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.OrderModel
+import com.mdcapp.ui.composables.buyorders.BuyOrderItem
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -21,10 +22,12 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun OrderDetailInfo(
     order: OrderModel,
-//    onClick: (String, String) -> Unit,
     vm: BuyOrdersViewModel = koinViewModel()
 ) {
     var isBuyOrderClicked by remember { mutableStateOf(false) }
+    LaunchedEffect(order.orders) {
+        vm.loadHandler("buyOrderDetails", order.orders)
+    }
 
     Column(modifier = Modifier.padding(16.dp)) {
         OrderSection(title = "Información de la Orden",
@@ -37,12 +40,7 @@ fun OrderDetailInfo(
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         OrderSection(
             title = "Información del Pedido",
-            onClick = {
-                isBuyOrderClicked = if (!isBuyOrderClicked)
-                    vm.loadHandler("buyOrderDetails", order.orders)
-                else
-                    false
-            },
+            onClick = { isBuyOrderClicked = !isBuyOrderClicked },
             content = {
                 OrderInfoRow(label = "Marca", value = order.branch)
                 OrderInfoRow(label = "Comentarios", value = order.documentComments)
@@ -51,7 +49,7 @@ fun OrderDetailInfo(
             }
         )
         AnimatedVisibility(isBuyOrderClicked) {
-            ShowBuyOrder()
+            BuyOrderItem(vm.state.buyOrder)
         }
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         OrderSection(
@@ -70,10 +68,4 @@ fun OrderDetailInfo(
         )
     }
 }
-
-@Composable
-fun ShowBuyOrder() {
-    Text("Acá va el pedido")
-}
-
 

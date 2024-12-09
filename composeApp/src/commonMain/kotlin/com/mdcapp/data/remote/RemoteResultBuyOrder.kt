@@ -14,7 +14,7 @@ data class RemoteResultBuyOrder(
     @SerialName("Tipo") var type: String = "",
     @SerialName("Facturación") var billing: String = "",
     @SerialName("Comentarios") var coments: String = "",
-    @SerialName("Articulos") var articles: HashMap<String, String> = hashMapOf("" to ""),
+    @SerialName("Articulos") var articles: List<HashMap<String, String>> = emptyList(),
     @SerialName("Fecha de carga") var loadedDate: String = "",
 )
 

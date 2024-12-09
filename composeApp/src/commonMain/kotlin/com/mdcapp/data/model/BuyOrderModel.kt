@@ -9,7 +9,7 @@ data class BuyOrderModel(
     var type: String = "",
     var billing: String = "",
     var comments: String = "",
-    var articles: HashMap<String, String> = hashMapOf("" to ""),
+    var articles: List<HashMap<String, String>> = emptyList(),
     var loadedDate: String = "",
 )
 
