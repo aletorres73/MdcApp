@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.ui.Screen
 import com.mdcapp.ui.composables.detailorders.OrderDetailInfo
@@ -15,6 +16,7 @@ import com.mdcapp.ui.composables.detailorders.OrderDetailInfo
 @Composable
 fun DesktopOrderDetailScreen(
     order: OrderModel,
+    onBillingClicked: (BillingModel) -> Unit
 ) {
     Screen { padding ->
         Column(
@@ -24,7 +26,8 @@ fun DesktopOrderDetailScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start
         ) {
-            OrderDetailInfo(order = order)
+            OrderDetailInfo(order = order,
+                onBillingClicked = { billing -> onBillingClicked(billing) })
         }
     }
 }

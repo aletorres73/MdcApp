@@ -12,7 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.OrderModel
+import com.mdcapp.ui.composables.billings.BillingList
 import com.mdcapp.ui.composables.buyorders.BuyOrderItem
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -22,16 +24,20 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun OrderDetailInfo(
     order: OrderModel,
-    vm: BuyOrdersViewModel = koinViewModel()
+    vm: BuyOrdersViewModel = koinViewModel(),
+    onBillingClicked: (BillingModel) -> Unit
 ) {
     var isBuyOrderClicked by remember { mutableStateOf(false) }
+    var isBillingClicked by remember { mutableStateOf(false) }
+
     LaunchedEffect(order.orders) {
-        vm.loadHandler("buyOrderDetails", order.orders)
+        vm.fetchBuyOrder(order.orders)
+        vm.fetchBillings(order.orderNumber)
     }
 
     Column(modifier = Modifier.padding(16.dp)) {
         OrderSection(title = "Información de la Orden",
-            onClick = { /*vm.loadHandler("orderDetail", order.orderNumber)*/ },
+            onClick = {},
             content = {
                 OrderInfoRow(label = "Número de Orden", value = order.orderNumber)
                 OrderInfoRow(label = "Razón Social", value = order.nameClient)
@@ -49,12 +55,12 @@ fun OrderDetailInfo(
             }
         )
         AnimatedVisibility(isBuyOrderClicked) {
-            BuyOrderItem(vm.state.buyOrder)
+            BuyOrderItem(vm.stateBuyOrder.buyOrder)
         }
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         OrderSection(
             title = "Información de Facturación y Pagos",
-            onClick = { /*onClick("billingsDetail", order.orderNumber)*/ },
+            onClick = { isBillingClicked = !isBillingClicked },
             content = {
                 OrderInfoRow(label = "Importe total de Facturación", value = order.valueDocument)
                 OrderInfoRow(label = "Monto total a Cobrar", value = order.payAmount)
@@ -66,6 +72,12 @@ fun OrderDetailInfo(
                 )
             }
         )
+        AnimatedVisibility(isBillingClicked) {
+            BillingList(
+                billings = vm.stateBillings.billings,
+                onBillingClicked = { billing -> onBillingClicked(billing) }
+            )
+        }
     }
 }
 

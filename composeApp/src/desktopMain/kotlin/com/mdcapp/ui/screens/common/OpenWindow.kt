@@ -14,7 +14,8 @@ fun OpenWindow(
     title: String,
     content: @Composable () -> Unit = {},
     size: DpSize = DpSize(600.dp, 780.dp),
-    position: WindowPosition = WindowPosition(alignment = Alignment.CenterEnd)
+    position: WindowPosition = WindowPosition(alignment = Alignment.CenterEnd),
+    onTop: Boolean = false
 ) {
     val windowState = rememberWindowState(
         size = size,
@@ -24,7 +25,8 @@ fun OpenWindow(
         onCloseRequest = { onCloseRequest() },
         title = title,
         state = windowState,
-        resizable = false
+        resizable = false,
+        alwaysOnTop = onTop
     ) {
         content()
     }

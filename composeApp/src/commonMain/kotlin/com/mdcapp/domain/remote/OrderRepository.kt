@@ -1,5 +1,6 @@
 package com.mdcapp.domain.remote
 
+import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.data.remote.toDomain
@@ -12,5 +13,9 @@ class OrderRepository(private val service: OrderService) {
 
     suspend fun getBuyOrderById(orderId: String): BuyOrderModel {
         return service.fetchBuyOrder(orderId).toDomain()
+    }
+
+    suspend fun getBillingsByOrder(orderId: String): List<BillingModel> {
+        return service.fetchBillings(orderId).map { it.toDomain() }
     }
 }

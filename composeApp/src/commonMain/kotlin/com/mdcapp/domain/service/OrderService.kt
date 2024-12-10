@@ -2,8 +2,10 @@
 
 package com.mdcapp.domain.service
 
+import com.mdcapp.data.remote.RemoteResultBillingModel
 import com.mdcapp.data.remote.RemoteResultBuyOrder
 import com.mdcapp.data.remote.RemoteResultOrder
+import dev.gitlive.firebase.firestore.FieldPath
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 
 class OrderService(
@@ -12,6 +14,7 @@ class OrderService(
     companion object {
         const val ORDERS = "Orders"
         const val BUY_ORDERS = "buyOrders"
+        const val BILLINGS = "billings"
     }
 
     suspend fun fetchAllOrders(): List<RemoteResultOrder> {
@@ -41,6 +44,21 @@ class OrderService(
         } catch (e: Exception) {
             println("Firestore : on firestore getCollections: $e")
             RemoteResultBuyOrder()
+        }
+    }
+
+    suspend fun fetchBillings(orderId: String): List<RemoteResultBillingModel> {
+        return try {
+            val document = db.collection(BILLINGS)
+                .where { FieldPath("Orden").equalTo(orderId) }
+                .get()
+                .documents
+                .map { it.data<RemoteResultBillingModel>() }
+            println("on fetchBillings in firestore : $document")
+            document
+        } catch (e: Exception) {
+            println("Firestore: on fetchBillings $e")
+            emptyList()
         }
     }
 }
