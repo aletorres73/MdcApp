@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.google.firebase.FirebaseApp
-import com.mdcapp.ui.home.AndroidOrdersScreen
+import com.mdcapp.ui.PlatformNavigation
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -12,7 +12,7 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
 
         setContent {
-            AndroidOrdersScreen()
+            PlatformNavigation()
         }
     }
 }

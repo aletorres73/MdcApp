@@ -14,12 +14,12 @@ import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.ui.composables.billings.BillingItem
 import com.mdcapp.ui.screens.common.OpenWindow
-import com.mdcapp.ui.screens.orders.DesktopOrdersScreen
 import com.mdcapp.ui.screens.orders.orderdetail.DesktopOrderDetailScreen
+import com.mdcapp.ui.screens.orders.orders.DesktopOrdersScreen
 
 
 @Composable
-fun Navigation() {
+fun DesktopNavigation() {
     val navController = rememberNavController()
     var openDetailOrderWindow by remember { mutableStateOf(false) }
     var openDetailBillingWindow by remember { mutableStateOf(false) }

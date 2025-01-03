@@ -10,7 +10,7 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import com.google.firebase.FirebasePlatform
 import com.mdcapp.di.initKoin
-import com.mdcapp.ui.navigation.Navigation
+import com.mdcapp.ui.PlatformNavigation
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.FirebaseOptions
 import dev.gitlive.firebase.initialize
@@ -48,6 +48,6 @@ fun main() = application {
             position = WindowPosition(Alignment.CenterStart)
         )
     ) {
-        Navigation()
+        PlatformNavigation()
     }
 }
