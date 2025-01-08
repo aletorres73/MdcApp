@@ -29,8 +29,7 @@ fun FilterTextButtons(
 ) {
     Row(
         modifier = Modifier
-//            .fillMaxWidth()
-            .padding(4.dp),
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround
     ) {
@@ -58,6 +57,8 @@ fun FilterTextButtons(
         TextButton(
             onClick = {
                 isPendingPressed = !isPendingPressed
+                isInProgressPressed = false
+                isClosedPressed = false
                 onFilterPressed("Pending", isPendingPressed)
             },
             modifier = modifierTextButton(isPendingPressed)
@@ -68,6 +69,8 @@ fun FilterTextButtons(
         TextButton(
             onClick = {
                 isInProgressPressed = !isInProgressPressed
+                isClosedPressed = false
+                isPendingPressed = false
                 onFilterPressed("Progress", isInProgressPressed)
             },
             modifier = modifierTextButton(isInProgressPressed)
@@ -78,6 +81,8 @@ fun FilterTextButtons(
         TextButton(
             onClick = {
                 isClosedPressed = !isClosedPressed
+                isPendingPressed = false
+                isInProgressPressed = false
                 onFilterPressed("Closed", isClosedPressed)
             },
             modifier = modifierTextButton(isClosedPressed)
