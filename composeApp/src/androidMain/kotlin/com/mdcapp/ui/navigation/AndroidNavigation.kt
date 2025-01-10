@@ -4,19 +4,28 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.mdcapp.ui.home.AndroidOrdersScreen
+import com.mdcapp.ui.clients.ClientsScreen
+import com.mdcapp.ui.home.HomeScreen
+import com.mdcapp.ui.home.orders.AndroidOrdersScreen
 
 @Composable
-fun AndroidNavigation() {
+fun AndroidNavigation(
+    route: String,
+) {
     val navController = rememberNavController()
-    /*    var openDetailOrderWindow by remember { mutableStateOf(false) }
-        var openDetailBillingWindow by remember { mutableStateOf(false) }
-        var order by remember { mutableStateOf(OrderModel()) }
-        var billing by remember { mutableStateOf(BillingModel()) }*/
 
-    NavHost(navController = navController, startDestination = "Orders") {
+    NavHost(
+        navController = navController,
+        startDestination = route
+    ) {
         composable(route = "Orders") {
             AndroidOrdersScreen()
+        }
+        composable(route = "Home") {
+            HomeScreen()
+        }
+        composable(route = "Clients") {
+            ClientsScreen()
         }
     }
 

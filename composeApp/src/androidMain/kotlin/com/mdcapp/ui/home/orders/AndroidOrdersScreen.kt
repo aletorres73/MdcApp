@@ -1,6 +1,5 @@
-package com.mdcapp.ui.home
+package com.mdcapp.ui.home.orders
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -67,7 +66,7 @@ fun AndroidOrdersScreen(
                 state = refreshState,
                 indicator = { LoadingIndicator(enabled = state.loading) }
             ) {
-                AnimatedVisibility(visible = !state.loading) {
+//                AnimatedVisibility(visible = !state.loading) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = padding,
@@ -81,7 +80,7 @@ fun AndroidOrdersScreen(
                         }
                     }
                     LoadingIndicator(enabled = state.loading)
-                }
+//                }
             }
         }
     }
