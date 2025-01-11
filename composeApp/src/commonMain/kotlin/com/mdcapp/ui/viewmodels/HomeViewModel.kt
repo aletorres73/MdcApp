@@ -28,7 +28,7 @@ class HomeViewModel(private val getFactories: HomeUseCase.GetAllFactories) : Vie
         state = state.copy(
             loading = false,
             error = factoryList.isNotEmpty(),
-            factoryList = factoryList
+            factoryList = factoryList.sortedByDescending { it.branchList.size }
         )
     }
 

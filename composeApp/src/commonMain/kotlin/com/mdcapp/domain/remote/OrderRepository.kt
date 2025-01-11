@@ -18,4 +18,8 @@ class OrderRepository(private val service: OrderService) {
     suspend fun getBillingsByOrder(orderId: String): List<BillingModel> {
         return service.fetchBillings(orderId).map { it.toDomain() }
     }
+
+    suspend fun getOrdersByFactory(name: String): List<OrderModel> {
+        return service.fetchOrdersByFactory(name).map { it.toDomain() }
+    }
 }

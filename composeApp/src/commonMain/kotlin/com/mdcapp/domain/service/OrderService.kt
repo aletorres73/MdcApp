@@ -33,6 +33,21 @@ class OrderService(
         }
     }
 
+    suspend fun fetchOrdersByFactory(name: String): List<RemoteResultOrder> {
+        return try {
+            val document = db.collection(ORDERS)
+                .where { FieldPath("Marca").equalTo(name) }
+                .get()
+                .documents
+                .map { it.data<RemoteResultOrder>() }
+            document
+
+        } catch (e: Exception) {
+            println("Firestor: on firesotroe get orders by factories $e")
+            emptyList()
+        }
+    }
+
     suspend fun fetchBuyOrder(orderId: String): RemoteResultBuyOrder {
         return try {
             val document = db.collection(BUY_ORDERS)

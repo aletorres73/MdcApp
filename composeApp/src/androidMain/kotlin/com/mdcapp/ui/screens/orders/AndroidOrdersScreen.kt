@@ -1,4 +1,4 @@
-package com.mdcapp.ui.home.orders
+package com.mdcapp.ui.screens.orders
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +14,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,11 +31,18 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @OptIn(KoinExperimentalAPI::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AndroidOrdersScreen(
-    vm: OrdersViewModel = koinViewModel()
+    vm: OrdersViewModel = koinViewModel(),
+    factoryName: String
+//    onBack: () -> Unit
 ) {
+    LaunchedEffect(factoryName) {
+        vm.init(factoryName)
+    }
     Screen {
         val state = vm.state
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+//        BackHandler { onBack()}
 
         Scaffold(
             topBar = {
@@ -67,19 +75,19 @@ fun AndroidOrdersScreen(
                 indicator = { LoadingIndicator(enabled = state.loading) }
             ) {
 //                AnimatedVisibility(visible = !state.loading) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = padding,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        items(state.orderList, key = { it.orderNumber }) {
-                            OrderItems(
-                                order = it,
-                                onCardClick = {}
-                            )
-                        }
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = padding,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    items(state.orderList, key = { it.orderNumber }) {
+                        OrderItems(
+                            order = it,
+                            onCardClick = {}
+                        )
                     }
-                    LoadingIndicator(enabled = state.loading)
+                }
+                LoadingIndicator(enabled = state.loading)
 //                }
             }
         }

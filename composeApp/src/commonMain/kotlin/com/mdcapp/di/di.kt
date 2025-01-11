@@ -22,20 +22,24 @@ import org.koin.dsl.module
 val appModule = module {
     single<FirebaseFirestore> { Firebase.firestore }
 
-
     single<HomeUseCase.GetAllFactories> { get<HomeUseCase>().GetAllFactories() }
+
     single<OrdersUseCase.GetAllOrders> { get<OrdersUseCase>().GetAllOrders() }
+    single<OrdersUseCase.GetOrdersByFactory> { get<OrdersUseCase>().GetOrdersByFactory() }
+
     single<BuyOrderUseCase.GetBuyOrderById> { get<BuyOrderUseCase>().GetBuyOrderById() }
     single<BuyOrderUseCase.GetBillings> { get<BuyOrderUseCase>().GetBillings() }
+
 }
 
 val dataModule = module {
+//services
     factoryOf(::OrderService)
     factoryOf(::HomeService)
-
+//repositories
     factoryOf(::OrderRepository)
     factoryOf(::HomeRepository)
-
+// use cases
     factoryOf(::OrdersUseCase)
     factoryOf(::BuyOrderUseCase)
     factoryOf(::HomeUseCase)

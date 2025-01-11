@@ -9,4 +9,10 @@ class OrdersUseCase(private val repository: OrderRepository) {
             return repository.getAllOrders()
         }
     }
+
+    inner class GetOrdersByFactory {
+        suspend operator fun invoke(name: String): List<OrderModel> {
+            return repository.getOrdersByFactory(name)
+        }
+    }
 }

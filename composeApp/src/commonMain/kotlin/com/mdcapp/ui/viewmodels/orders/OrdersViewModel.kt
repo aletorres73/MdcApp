@@ -10,12 +10,16 @@ import com.mdcapp.data.model.OrderModel
 import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
 import kotlinx.coroutines.launch
 
-class OrdersViewModel(private val getAllOrders: OrdersUseCase.GetAllOrders) : ViewModel() {
+class OrdersViewModel(
+    private val getAllOrders: OrdersUseCase.GetAllOrders,
+    private val getOrdersByFactory: OrdersUseCase.GetOrdersByFactory
+) : ViewModel() {
     var state by mutableStateOf(UiState())
         private set
 
     data class UiState(
-        val loading: Boolean = true,
+        val loading: Boolean = false,
+        val factoryName: String = "",
         val orderList: List<OrderModel> = emptyList(),
         val filteredOrderList: List<OrderModel> = emptyList(),
         var filters: MutableMap<String, Boolean> = mutableMapOf(
@@ -25,13 +29,16 @@ class OrdersViewModel(private val getAllOrders: OrdersUseCase.GetAllOrders) : Vi
         ),
     )
 
-    init {
-        viewModelScope.launch { fetchFromRepository() }
+    fun init(factoryName: String) {
+        viewModelScope.launch {
+            state = state.copy(factoryName = factoryName)
+            fetchFromRepository()
+        }
     }
 
     suspend fun fetchFromRepository() {
         state = state.copy(loading = true)
-        val orderList = getAllOrders()
+        val orderList = getOrdersByFactory(state.factoryName)
         state = state.copy(
             loading = false,
             orderList = orderList.sortedByDescending { it.orderNumber }

@@ -1,4 +1,4 @@
-package com.mdcapp.ui.clients
+package com.mdcapp.ui.screens.clients
 
 import androidx.compose.runtime.Composable
 import com.mdcapp.ui.Screen

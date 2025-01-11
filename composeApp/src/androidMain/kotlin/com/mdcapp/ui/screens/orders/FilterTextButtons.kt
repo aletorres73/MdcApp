@@ -1,4 +1,4 @@
-package com.mdcapp.ui.home.orders
+package com.mdcapp.ui.screens.orders
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
