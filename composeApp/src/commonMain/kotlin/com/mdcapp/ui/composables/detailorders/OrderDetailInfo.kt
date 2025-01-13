@@ -1,9 +1,12 @@
 package com.mdcapp.ui.composables.detailorders
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,7 +16,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.OrderModel
 import com.mdcapp.ui.composables.billings.BillingList
 import com.mdcapp.ui.composables.buyorders.BuyOrderItem
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
@@ -23,58 +25,53 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @OptIn(KoinExperimentalAPI::class)
 @Composable
 fun OrderDetailInfo(
-    order: OrderModel,
+    orderId: String,
     vm: BuyOrdersViewModel = koinViewModel(),
     onBillingClicked: (BillingModel) -> Unit
 ) {
+    val state = vm.state
     var isBuyOrderClicked by remember { mutableStateOf(false) }
     var isBillingClicked by remember { mutableStateOf(false) }
 
-    LaunchedEffect(order.orders) {
-        vm.fetchBuyOrder(order.orders)
-        vm.fetchBillings(order.orderNumber)
+    LaunchedEffect(orderId) {
+        vm.init(orderId)
     }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        OrderSection(title = "Información de la Orden",
-            onClick = {},
-            content = {
-                OrderInfoRow(label = "Número de Orden", value = order.orderNumber)
-                OrderInfoRow(label = "Razón Social", value = order.nameClient)
-            }
-        )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+    Column(
+        modifier = Modifier.padding(
+            horizontal = 8.dp,
+            vertical = 12.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text("Pedido:", style = MaterialTheme.typography.titleMedium)
         OrderSection(
-            title = "Información del Pedido",
             onClick = { isBuyOrderClicked = !isBuyOrderClicked },
             content = {
-                OrderInfoRow(label = "Marca", value = order.branch)
-                OrderInfoRow(label = "Comentarios", value = order.documentComments)
-                OrderInfoRow(label = "Fecha de Carga", value = order.inputDate)
-                OrderInfoRow(label = "Número de Pedido", value = order.orders)
+                OrderInfoRow(label = "Razón Social", value = state.buyOrder.client)
+                OrderInfoRow(label = "Marca", value = state.buyOrder.branch)
+                OrderInfoRow(label = "Comentarios", value = state.buyOrder.comments)
+                OrderInfoRow(label = "Fecha de Carga", value = state.buyOrder.loadedDate)
+                OrderInfoRow(label = "Número de Pedido", value = state.buyOrder.id)
             }
         )
         AnimatedVisibility(isBuyOrderClicked) {
-            BuyOrderItem(vm.stateBuyOrder.buyOrder)
+            BuyOrderItem(vm.state.buyOrder)
         }
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+        Text("Facturación:", style = MaterialTheme.typography.titleMedium)
         OrderSection(
-            title = "Información de Facturación y Pagos",
             onClick = { isBillingClicked = !isBillingClicked },
             content = {
-                OrderInfoRow(label = "Importe total de Facturación", value = order.valueDocument)
-                OrderInfoRow(label = "Monto total a Cobrar", value = order.payAmount)
-                OrderInfoRow(label = "Monto total Pagado", value = order.payedAmount)
-                OrderInfoRow(label = "Diferencia en Pago", value = order.payDifference)
                 OrderInfoRow(
-                    label = "Archivo de Remitos/Facturación",
-                    value = order.documents.orEmpty()
+                    label = "Importe total ",
+                    value = "$" + String.format("%.2f", state.totalAmount)
                 )
             }
         )
         AnimatedVisibility(isBillingClicked) {
             BillingList(
-                billings = vm.stateBillings.billings,
+                billings = vm.state.billings,
                 onBillingClicked = { billing -> onBillingClicked(billing) }
             )
         }

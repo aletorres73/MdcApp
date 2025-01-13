@@ -20,7 +20,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.mdcapp.ui.Screen
 import com.mdcapp.ui.composables.common.LoadingIndicator
@@ -38,14 +37,16 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun AndroidOrdersScreen(
     vm: OrdersViewModel = koinViewModel(),
-    factoryName: String
+    factoryName: String,
+    onDetailClick: (String) -> Unit,
+    onBackPressed: () -> Unit
 ) {
     LaunchedEffect(factoryName) {
         vm.init(if (factoryName == "IBA") "Gummi" else factoryName)
     }
     Screen {
         val state = vm.state
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
         Scaffold(
             topBar = {
@@ -61,17 +62,14 @@ fun AndroidOrdersScreen(
                                 modifier = Modifier.padding(vertical = 6.dp),
                                 style = MaterialTheme.typography.titleMediumEmphasized
                             )
-                            HorizontalDivider()
-                            FilterTextButtons { filter, isPressed ->
-                                vm.filterListByOrderState(filter, isPressed)
-                            }
                         }
                     },
-                    scrollBehavior = scrollBehavior
+                    scrollBehavior = scrollBehavior,
+                    onBack = onBackPressed,
+                    isNavigationOn = true
                 )
             },
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+
         ) { padding ->
             val refreshState = rememberPullToRefreshState()
             val scope = rememberCoroutineScope()
@@ -81,16 +79,27 @@ fun AndroidOrdersScreen(
                 state = refreshState,
                 indicator = { LoadingIndicator(enabled = state.loading) }
             ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = padding,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Column(
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize()
                 ) {
-                    items(state.orderList, key = { it.orderNumber }) {
-                        OrderItems(
-                            order = it,
-                            onCardClick = {}
-                        )
+                    HorizontalDivider()
+                    FilterTextButtons { filter, isPressed ->
+                        vm.filterListByOrderState(filter, isPressed)
+                    }
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        items(state.orderList, key = { it.orderNumber }) { order ->
+                            OrderItems(
+                                order = order,
+                                onCardClick = {
+                                    onDetailClick(order.orderNumber)
+                                }
+                            )
+                        }
                     }
                 }
                 LoadingIndicator(enabled = state.loading)

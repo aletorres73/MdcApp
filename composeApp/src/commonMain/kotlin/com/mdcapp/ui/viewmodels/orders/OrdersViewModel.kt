@@ -11,8 +11,7 @@ import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
 import kotlinx.coroutines.launch
 
 class OrdersViewModel(
-    private val getAllOrders: OrdersUseCase.GetAllOrders,
-    private val getOrdersByFactory: OrdersUseCase.GetOrdersByFactory
+    private val getOrdersByFactory: OrdersUseCase.GetOrdersByFactory,
 ) : ViewModel() {
     var state by mutableStateOf(UiState())
         private set

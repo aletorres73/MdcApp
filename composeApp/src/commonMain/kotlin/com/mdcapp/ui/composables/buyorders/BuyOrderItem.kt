@@ -23,8 +23,8 @@ fun BuyOrderItem(buyOrder: BuyOrderModel) {
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val styleTitle = MaterialTheme.typography.titleMedium
-        val styleArticle = MaterialTheme.typography.bodyMedium
+        val styleTitle = MaterialTheme.typography.titleSmall
+        val styleArticle = MaterialTheme.typography.bodySmall
 
         Column {
             Text(text = "Articulo", style = styleTitle)
@@ -50,7 +50,7 @@ fun BuyOrderItem(buyOrder: BuyOrderModel) {
             }
         }
         Column {
-            Text(text = "Pares pedidos", style = styleTitle)
+            Text(text = "P. Pedidos", style = styleTitle)
             buyOrder.articles.forEach { article ->
                 article["Pares"]?.let {
                     Text(
@@ -61,7 +61,7 @@ fun BuyOrderItem(buyOrder: BuyOrderModel) {
             }
         }
         Column {
-            Text(text = "Pares facturados", style = styleTitle)
+            Text(text = "P. Facturados", style = styleTitle)
             buyOrder.articles.forEach { article ->
                 article["Entregados"]?.let {
                     Text(

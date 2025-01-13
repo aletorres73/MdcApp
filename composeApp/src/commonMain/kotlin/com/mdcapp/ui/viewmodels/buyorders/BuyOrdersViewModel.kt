@@ -12,81 +12,83 @@ import kotlinx.coroutines.launch
 
 class BuyOrdersViewModel(
     private val getBuyOrder: BuyOrderUseCase.GetBuyOrderById,
-    private val getBillings: BuyOrderUseCase.GetBillings
+    private val getBillings: BuyOrderUseCase.GetBillings,
 ) : ViewModel() {
-    var stateBuyOrder by mutableStateOf(UiStateBuyOrder())
-        private set
-    var stateBillings by mutableStateOf(UiStateBillings())
+
+    var state by mutableStateOf(UiState())
         private set
 
-    private var buyOrderId by mutableStateOf(String())
-    private var orderId by mutableStateOf(String())
-
-    data class UiStateBuyOrder(
-        val loading: Boolean = false,
+    data class UiState(
+        val loadingOrder: Boolean = false,
+        val loadingBillings: Boolean = false,
+        val orderId: String = "",
         val buyOrder: BuyOrderModel = BuyOrderModel(),
-        val error: String? = null
-    )
-
-    data class UiStateBillings(
-        val loading: Boolean = false,
         val billings: List<BillingModel> = emptyList(),
+        val totalAmount: Double = 0.0,
         val error: String? = null
     )
 
-    /*    init {
-            loadBuyOrder()
-            loadBillings()
-        }*/
+    fun init(orderId: String) {
+        println("Init called with orderId: $orderId")
+        state = state.copy(orderId = orderId)
+        loadBuyOrder()
+        loadBillings()
+    }
 
     private fun loadBuyOrder() {
         viewModelScope.launch {
-            stateBuyOrder = stateBuyOrder.copy(loading = true)
+            state = state.copy(loadingOrder = true)
             try {
-                if (buyOrderId.isNotEmpty()) {
-                    stateBuyOrder = stateBuyOrder.copy(
-                        loading = false,
-                        buyOrder = getBuyOrder(buyOrderId)
+                if (state.orderId.isNotEmpty()) {
+                    val buyOrder = getBuyOrder(state.orderId)
+                    println("BuyOrder loaded: $buyOrder")
+                    state = state.copy(
+                        loadingOrder = false,
+                        buyOrder = buyOrder,
                     )
                 }
             } catch (e: Exception) {
-                stateBuyOrder = stateBuyOrder.copy(
-                    loading = false,
+                state = state.copy(
+                    loadingOrder = false,
                     error = e.message
                 )
             }
-
         }
     }
 
     private fun loadBillings() {
         viewModelScope.launch {
-            stateBillings = stateBillings.copy(loading = true)
+            state = state.copy(loadingBillings = true)
             try {
-                if (buyOrderId.isNotEmpty()) {
-                    stateBillings = stateBillings.copy(
-                        loading = false,
-                        billings = getBillings(orderId)
+                if (state.orderId.isNotEmpty()) {
+                    val billings = getBillings(state.orderId)
+                    val totalAmount = calculateTotalBillingAmount(billings)
+                    println("Billings loaded: $billings")
+                    println("Total amount calculated: $totalAmount")
+                    state = state.copy(
+                        loadingBillings = false,
+                        billings = billings,
+                        totalAmount = totalAmount
                     )
                 }
             } catch (e: Exception) {
-                stateBillings = stateBillings.copy(
-                    loading = false,
+                state = state.copy(
+                    loadingBillings = false,
                     error = e.message
                 )
             }
-
         }
     }
 
-    fun fetchBuyOrder(id: String) {
-        buyOrderId = id
-        loadBuyOrder()
+    private fun calculateTotalBillingAmount(billings: List<BillingModel>): Double {
+        var total = 0.0
+        billings.forEach {
+            val amount = it.total
+                .replace("$", "")
+                .replace(",", "")
+                .toDouble()
+            total += amount
+        }
+        return total
     }
-
-    fun fetchBillings(id: String) {
-        orderId = id
-        loadBillings()
-    }
-
 }

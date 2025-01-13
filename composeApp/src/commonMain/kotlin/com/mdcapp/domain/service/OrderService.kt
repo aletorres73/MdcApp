@@ -51,13 +51,15 @@ class OrderService(
     suspend fun fetchBuyOrder(orderId: String): RemoteResultBuyOrder {
         return try {
             val document = db.collection(BUY_ORDERS)
-                .document(orderId)
+                .where { FieldPath("Orden Id").equalTo(orderId) }
                 .get()
-                .data<RemoteResultBuyOrder>()
+                .documents
+                .map { it.data<RemoteResultBuyOrder>() }
+                .first()
             println("on fetchBuyOrder in firestore: $document")
             document
         } catch (e: Exception) {
-            println("Firestore : on firestore getCollections: $e")
+            println("Firestore : on firestore fetchBuyOrder: $e")
             RemoteResultBuyOrder()
         }
     }

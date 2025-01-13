@@ -29,7 +29,7 @@ fun FilterTextButtons(
 ) {
     Row(
         modifier = Modifier
-            .padding(vertical = 4.dp),
+            .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround
     ) {

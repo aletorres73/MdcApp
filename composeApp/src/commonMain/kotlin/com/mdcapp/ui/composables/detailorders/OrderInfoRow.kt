@@ -21,7 +21,7 @@ fun OrderInfoRow(label: String, value: String) {
         Text(
             text = "$label:",
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.weight(1.5f)
+            modifier = Modifier.weight(1.2f)
         )
         Text(
             text = value,
