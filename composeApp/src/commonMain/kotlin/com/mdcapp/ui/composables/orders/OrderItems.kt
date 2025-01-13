@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +24,8 @@ fun OrderItems(order: OrderModel, onCardClick: () -> Unit) {
         modifier = Modifier
             .clickable(onClick = onCardClick)
             .fillMaxSize()
-            .padding(vertical = 8.dp, horizontal = 6.dp)
+            .padding(vertical = 8.dp, horizontal = 6.dp),
+        elevation = CardDefaults.cardElevation(5.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -31,14 +33,19 @@ fun OrderItems(order: OrderModel, onCardClick: () -> Unit) {
             verticalArrangement = Arrangement.SpaceAround,
         ) {
             val body = MaterialTheme.typography.bodyMedium
-            Text(
-                text = "Orden ${order.orderNumber}",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = order.nameClient,
-                style = body
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = order.orderNumber,
+                    style = body
+                )
+                Text(
+                    text = order.nameClient,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
             val infoOrder = linkedMapOf(
                 "Pedido: " to order.orders,
                 "Estado de orden: " to order.payState

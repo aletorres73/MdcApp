@@ -53,9 +53,7 @@ fun HomeScreen(
                     items(state.factoryList, key = null) {
                         Spacer(modifier = Modifier.size(4.dp))
                         FactoryItem(it) {
-                            onFactory(
-                                if (it.name == "IBA") "Gummi" else it.name
-                            )
+                            onFactory(it.name)
                         }
                     }
                 }
