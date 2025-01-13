@@ -22,13 +22,14 @@ import com.mdcapp.data.model.OrderModel
 fun OrderItems(order: OrderModel, onCardClick: () -> Unit) {
     Card(
         modifier = Modifier
-            .clickable(onClick = onCardClick)
             .fillMaxSize()
             .padding(vertical = 8.dp, horizontal = 6.dp),
         elevation = CardDefaults.cardElevation(5.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .clickable(onClick = onCardClick)
+                .fillMaxSize()
                 .padding(6.dp),
             verticalArrangement = Arrangement.SpaceAround,
         ) {
