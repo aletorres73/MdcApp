@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.ui.composables.billings.BillingList
+import com.mdcapp.ui.composables.billings.formatValue
 import com.mdcapp.ui.composables.buyorders.BuyOrderItem
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -65,7 +66,7 @@ fun OrderDetailInfo(
             content = {
                 OrderInfoRow(
                     label = "Importe total ",
-                    value = "$" + String.format("%.2f", state.totalAmount)
+                    value = formatValue(state.totalAmount)
                 )
             }
         )

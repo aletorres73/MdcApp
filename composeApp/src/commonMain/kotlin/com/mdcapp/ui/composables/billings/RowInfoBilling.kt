@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun RowInfoBilling(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     key: String = "",
     value: String
 ) {
@@ -24,12 +24,12 @@ fun RowInfoBilling(
     ) {
         Text(
             text = key,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
         )
         Spacer(Modifier.size(8.dp))
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
         )
     }
 }
