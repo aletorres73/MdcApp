@@ -13,7 +13,8 @@ data class RemoteResultBillingModel(
     @SerialName("Fecha") var loadDate: String = "",
     @SerialName("Fecha recepción") var deliveryDate: String = "",
     @SerialName("Fecha Pago") var payDate: String = "",
-    @SerialName("Articulos") var articles: List<HashMap<String, String>> = emptyList()
+    @SerialName("Articulos") var articles: List<HashMap<String, String>> = emptyList(),
+    @SerialName("Condicion de pago") var paymentCondition: String = ""
 )
 
 fun RemoteResultBillingModel.toDomain() = BillingModel(
@@ -24,5 +25,6 @@ fun RemoteResultBillingModel.toDomain() = BillingModel(
     loadDate = loadDate,
     deliveryDate = deliveryDate,
     payDate = payDate,
-    articles = articles
+    articles = articles,
+    paymentCondition = paymentCondition
 )

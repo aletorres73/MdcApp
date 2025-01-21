@@ -28,8 +28,11 @@ fun DesktopOrderDetailScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.Start
             ) {
-                OrderDetailInfo(order = order,
-                    onBillingClicked = { billing -> onBillingClicked(billing) })
+                OrderDetailInfo(
+                    orderId = order.orderNumber,
+                    onBillingClicked = { billing -> onBillingClicked(billing) },
+                    factoryName = ""
+                )
             }
         }
     }

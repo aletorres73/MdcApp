@@ -5,6 +5,7 @@ import com.mdcapp.domain.remote.OrderRepository
 import com.mdcapp.domain.service.HomeService
 import com.mdcapp.domain.service.OrderService
 import com.mdcapp.domain.usescases.homeusescases.HomeUseCase
+import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
 import com.mdcapp.ui.viewmodels.HomeViewModel
@@ -30,6 +31,7 @@ val appModule = module {
     single<BuyOrderUseCase.GetBuyOrderById> { get<BuyOrderUseCase>().GetBuyOrderById() }
     single<BuyOrderUseCase.GetBillings> { get<BuyOrderUseCase>().GetBillings() }
 
+    single<PaymentConditionsUseCase.GetPaymentsConditions> { get<PaymentConditionsUseCase>().GetPaymentsConditions() }
 }
 
 val dataModule = module {
@@ -43,6 +45,7 @@ val dataModule = module {
     factoryOf(::OrdersUseCase)
     factoryOf(::BuyOrderUseCase)
     factoryOf(::HomeUseCase)
+    factoryOf(::PaymentConditionsUseCase)
 }
 
 val viewModelModule = module {

@@ -12,4 +12,3 @@ data class BuyOrderModel(
     var articles: List<HashMap<String, String>> = emptyList(),
     var loadedDate: String = "",
 )
-

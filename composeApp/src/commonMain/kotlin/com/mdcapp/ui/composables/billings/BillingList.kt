@@ -23,11 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
+import com.mdcapp.data.model.PaymentCondition
 
 @Composable
 fun BillingList(
     billings: List<BillingModel>,
-    onBillingClicked: (BillingModel) -> Unit
+    onBillingClicked: (BillingModel) -> Unit,
+    paymentCondition: List<PaymentCondition>
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp),

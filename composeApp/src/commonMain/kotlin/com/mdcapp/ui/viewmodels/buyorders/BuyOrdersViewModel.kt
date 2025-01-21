@@ -7,12 +7,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
+import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.launch
 
 class BuyOrdersViewModel(
     private val getBuyOrder: BuyOrderUseCase.GetBuyOrderById,
     private val getBillings: BuyOrderUseCase.GetBillings,
+    private val getPaymentsConditions: PaymentConditionsUseCase.GetPaymentsConditions,
 ) : ViewModel() {
 
     var state by mutableStateOf(UiState())
@@ -21,23 +24,48 @@ class BuyOrdersViewModel(
     data class UiState(
         val loadingOrder: Boolean = false,
         val loadingBillings: Boolean = false,
+        val loadingPayments: Boolean = false,
         val orderId: String = "",
+        val factoryName: String = "",
         val buyOrder: BuyOrderModel = BuyOrderModel(),
         val billings: List<BillingModel> = emptyList(),
         val totalAmount: Double = 0.0,
-        val error: String? = null
+        val error: String? = null,
+        val paymentsConditions: List<PaymentCondition> = emptyList()
     )
 
-    fun init(orderId: String) {
+    fun init(orderId: String, factoryName: String) {
         println("Init called with orderId: $orderId")
-        state = state.copy(orderId = orderId)
+        state = state.copy(
+            orderId = orderId,
+            factoryName = factoryName
+        )
         loadBuyOrder()
         loadBillings()
+        loadPaymentConditions()
+    }
+
+    private fun loadPaymentConditions() {
+        state = state.copy(loadingPayments = true)
+        viewModelScope.launch {
+            state = try {
+                state.copy(
+                    paymentsConditions = getPaymentsConditions(factoryName = state.factoryName),
+                    loadingPayments = false
+                )
+            } catch (e: Exception) {
+                state.copy(
+                    loadingPayments = false,
+                    error = e.message
+                )
+            }
+            println("${state.paymentsConditions}")
+        }
     }
 
     private fun loadBuyOrder() {
+        state = state.copy(loadingOrder = true)
         viewModelScope.launch {
-            state = state.copy(loadingOrder = true)
             try {
                 if (state.orderId.isNotEmpty()) {
                     val buyOrder = getBuyOrder(state.orderId)

@@ -4,6 +4,7 @@ package com.mdcapp.domain.service
 
 import com.mdcapp.data.remote.RemoteResultBillingModel
 import com.mdcapp.data.remote.RemoteResultBuyOrder
+import com.mdcapp.data.remote.RemoteResultFactoryModel
 import com.mdcapp.data.remote.RemoteResultOrder
 import dev.gitlive.firebase.firestore.FieldPath
 import dev.gitlive.firebase.firestore.FirebaseFirestore
@@ -15,6 +16,7 @@ class OrderService(
         const val ORDERS = "Orders"
         const val BUY_ORDERS = "buyOrders"
         const val BILLINGS = "billings"
+        const val FACTORIES = "factories"
     }
 
     suspend fun fetchAllOrders(): List<RemoteResultOrder> {
@@ -43,7 +45,7 @@ class OrderService(
             document
 
         } catch (e: Exception) {
-            println("Firestor: on firesotroe get orders by factories $e")
+            println("Firestore: on firesotore get orders by factories $e")
             emptyList()
         }
     }
@@ -77,5 +79,23 @@ class OrderService(
             println("Firestore: on fetchBillings $e")
             emptyList()
         }
+    }
+
+    suspend fun fetchPaymentsTypesFactory(factoryName: String): Map<String, Map<String, Any>> {
+        return try {
+            val document = db.collection(FACTORIES)
+                .where { FieldPath("Fabrica").equalTo(factoryName) }
+                .get()
+                .documents
+                .map { it.data<RemoteResultFactoryModel>() }
+                .first()
+            val paymentsTypes = document.paymentsTypes
+            println("on fetchPaymentsTypesFactory in firestore : $paymentsTypes")
+            paymentsTypes
+        } catch (e: Exception) {
+            println("Firestore: on fetchPaymentsTypesFactory $e")
+            emptyMap()
+        }
+
     }
 }

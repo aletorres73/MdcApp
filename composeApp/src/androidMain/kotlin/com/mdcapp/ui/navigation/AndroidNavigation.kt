@@ -22,12 +22,15 @@ fun AndroidNavigation(
         startDestination = route
     ) {
         composable(
-            route = "OrderDetail/{orderId}",
-            arguments = listOf(navArgument("orderId") { type = NavType.StringType }
+            route = "OrderDetail/{orderId}/{factoryName}",
+            arguments = listOf(
+                navArgument("orderId") { type = NavType.StringType },
+                navArgument("factoryName") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val orderId = checkNotNull(backStackEntry.arguments?.getString("orderId"))
-            OrderDetailScreen(orderId) {
+            val factoryName = checkNotNull(backStackEntry.arguments?.getString("factoryName"))
+            OrderDetailScreen(orderId, factoryName) {
                 navController.popBackStack()
             }
         }
@@ -40,7 +43,7 @@ fun AndroidNavigation(
             AndroidOrdersScreen(
                 factoryName = factoryName,
                 onDetailClick = { orderId ->
-                    navController.navigate("OrderDetail/$orderId")
+                    navController.navigate("OrderDetail/$orderId/$factoryName")
                 },
                 onBackPressed = { navController.navigate("Home") }
             )

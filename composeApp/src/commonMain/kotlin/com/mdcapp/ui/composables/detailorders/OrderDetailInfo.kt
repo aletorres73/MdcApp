@@ -27,6 +27,7 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun OrderDetailInfo(
     orderId: String,
+    factoryName: String,
     vm: BuyOrdersViewModel = koinViewModel(),
     onBillingClicked: (BillingModel) -> Unit
 ) {
@@ -35,7 +36,8 @@ fun OrderDetailInfo(
     var isBillingClicked by remember { mutableStateOf(false) }
 
     LaunchedEffect(orderId) {
-        vm.init(orderId)
+//        if (factoryName != "")
+        vm.init(orderId, factoryName)
     }
 
     Column(
@@ -72,8 +74,9 @@ fun OrderDetailInfo(
         )
         AnimatedVisibility(isBillingClicked) {
             BillingList(
-                billings = vm.state.billings,
-                onBillingClicked = { billing -> onBillingClicked(billing) }
+                billings = state.billings,
+                onBillingClicked = { billing -> onBillingClicked(billing) },
+                paymentCondition = state.paymentsConditions
             )
         }
     }

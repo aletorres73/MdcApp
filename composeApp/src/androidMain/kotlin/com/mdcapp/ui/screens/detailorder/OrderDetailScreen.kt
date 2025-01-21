@@ -23,7 +23,8 @@ import com.mdcapp.ui.composables.detailorders.OrderDetailInfo
 @Composable
 fun OrderDetailScreen(
     orderId: String,
-    onBackPressed: () -> Unit
+    factoryName: String,
+    onBackPressed: () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Screen {
@@ -55,7 +56,8 @@ fun OrderDetailScreen(
                 HorizontalDivider()
                 OrderDetailInfo(
                     orderId = orderId,
-                    onBillingClicked = {}
+                    onBillingClicked = {},
+                    factoryName = factoryName
                 )
             }
         }
