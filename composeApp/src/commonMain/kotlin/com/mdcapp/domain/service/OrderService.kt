@@ -2,6 +2,7 @@
 
 package com.mdcapp.domain.service
 
+import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.data.remote.RemoteResultBillingModel
 import com.mdcapp.data.remote.RemoteResultBuyOrder
 import com.mdcapp.data.remote.RemoteResultFactoryModel
@@ -96,6 +97,19 @@ class OrderService(
             println("Firestore: on fetchPaymentsTypesFactory $e")
             emptyMap()
         }
+    }
 
+    suspend fun setPaymentsConditionsFactory(
+        factoryName: String,
+        data: List<PaymentCondition>
+    ): Boolean {
+        return try {
+            db.collection(FACTORIES).document(factoryName)
+                .update(mapOf("Condiciones" to data))
+            true
+        } catch (e: Exception) {
+            println("Firestore: on setPaymentsConditionsFactory $e")
+            false
+        }
     }
 }

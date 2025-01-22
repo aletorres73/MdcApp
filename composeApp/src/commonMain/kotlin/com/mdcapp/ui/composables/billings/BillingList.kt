@@ -9,27 +9,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.PaymentCondition
 
 @Composable
 fun BillingList(
     billings: List<BillingModel>,
     onBillingClicked: (BillingModel) -> Unit,
-    paymentCondition: List<PaymentCondition>
+    onAddPaymentCondition: (billingNumber: String) -> Unit
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -73,7 +67,7 @@ fun BillingList(
                             )
                             RowInfoBilling(
                                 key = "C.P:",
-                                value = ""
+                                value = billing.paymentCondition
                             )
                         }
                         Column(
@@ -106,19 +100,19 @@ fun BillingList(
                         ) {
                             RowInfoBilling(
                                 key = "Dtos:",
-                                value = "$0.00"
+                                value = "$${billing.discount}"
                             )
                             RowInfoBilling(
                                 key = "A cobrar:",
-                                value = "$0.00"
+                                value = "$${billing.toPay}"
                             )
                             RowInfoBilling(
                                 key = "Pagado:",
-                                value = "$0.00"
+                                value = "$${billing.payed}"
                             )
                             RowInfoBilling(
                                 key = "Saldo:",
-                                value = "$0.00"
+                                value = "${billing.rest}"
                             )
                         }
                         Column(
@@ -126,53 +120,21 @@ fun BillingList(
                         ) {
                             val rowAlignment = Alignment.CenterVertically
                             val rowArrangement = Arrangement.spacedBy(4.dp)
-                            InputChip(
-                                onClick = {},
-                                label = {
-                                    Row(
-                                        verticalAlignment = rowAlignment,
-                                        horizontalArrangement = rowArrangement
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.AddCircle,
-                                            contentDescription = null
-                                        )
-                                        Text("Agregar recepción")
-                                    }
-                                },
-                                selected = true
+                            BillingInputChip(
+                                rowAlignment = rowAlignment,
+                                rowArrangement = rowArrangement,
+                                text = "Agregar recepción"
                             )
-                            InputChip(
-                                onClick = {},
-                                label = {
-                                    Row(
-                                        verticalAlignment = rowAlignment,
-                                        horizontalArrangement = rowArrangement
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.AddCircle,
-                                            contentDescription = null
-                                        )
-                                        Text("Condición de pago")
-                                    }
-                                },
-                                selected = true
+                            BillingInputChip(
+                                onClick = { onAddPaymentCondition(billing.billingNumber) },
+                                rowAlignment = rowAlignment,
+                                rowArrangement = rowArrangement,
+                                text = "Condición de pago"
                             )
-                            InputChip(
-                                onClick = {},
-                                label = {
-                                    Row(
-                                        verticalAlignment = rowAlignment,
-                                        horizontalArrangement = rowArrangement
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.AddCircle,
-                                            contentDescription = null
-                                        )
-                                        Text("Registrar pago")
-                                    }
-                                },
-                                selected = true
+                            BillingInputChip(
+                                rowAlignment = rowAlignment,
+                                rowArrangement = rowArrangement,
+                                text = "Registrar pago"
                             )
                         }
                     }
@@ -181,5 +143,6 @@ fun BillingList(
         }
     }
 }
+
 
 

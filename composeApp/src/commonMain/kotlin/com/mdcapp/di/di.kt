@@ -32,6 +32,7 @@ val appModule = module {
     single<BuyOrderUseCase.GetBillings> { get<BuyOrderUseCase>().GetBillings() }
 
     single<PaymentConditionsUseCase.GetPaymentsConditions> { get<PaymentConditionsUseCase>().GetPaymentsConditions() }
+    single<PaymentConditionsUseCase.SetPaymentsConditionsFactory> { get<PaymentConditionsUseCase>().SetPaymentsConditionsFactory() }
 }
 
 val dataModule = module {

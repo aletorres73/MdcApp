@@ -9,7 +9,11 @@ data class BillingModel(
     var deliveryDate: String = "",
     var payDate: String = "",
     var articles: List<HashMap<String, String>> = emptyList(),
-    var paymentCondition: String
+    var paymentCondition: String,
+    var discount: Double,
+    var toPay: Double,
+    var payed: Double,
+    var rest: Double
 )
 
 data class PaymentCondition(

@@ -2,6 +2,7 @@ package com.mdcapp.ui.composables.detailorders
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
@@ -17,8 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.ui.composables.billings.BillingList
+import com.mdcapp.ui.composables.billings.BottomSheetPaymentCondition
 import com.mdcapp.ui.composables.billings.formatValue
 import com.mdcapp.ui.composables.buyorders.BuyOrderItem
+import com.mdcapp.ui.composables.common.LoadingIndicator
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -36,49 +39,71 @@ fun OrderDetailInfo(
     var isBillingClicked by remember { mutableStateOf(false) }
 
     LaunchedEffect(orderId) {
-//        if (factoryName != "")
         vm.init(orderId, factoryName)
     }
 
-    Column(
-        modifier = Modifier.padding(
-            horizontal = 8.dp,
-            vertical = 12.dp
-        ),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text("Pedido:", style = MaterialTheme.typography.titleMedium)
-        OrderSection(
-            onClick = { isBuyOrderClicked = !isBuyOrderClicked },
-            content = {
-                OrderInfoRow(label = "Razón Social", value = state.buyOrder.client)
-                OrderInfoRow(label = "Marca", value = state.buyOrder.branch)
-                OrderInfoRow(label = "Comentarios", value = state.buyOrder.comments)
-                OrderInfoRow(label = "Fecha de Carga", value = state.buyOrder.loadedDate)
-                OrderInfoRow(label = "Número de Pedido", value = state.buyOrder.id)
-            }
+    Box {
+        LoadingIndicator(
+            enabled = state.loadingOrder && state.loadingBillings && state.loadingPayments
         )
-        AnimatedVisibility(isBuyOrderClicked) {
-            BuyOrderItem(vm.state.buyOrder)
-        }
-        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-        Text("Facturación:", style = MaterialTheme.typography.titleMedium)
-        OrderSection(
-            onClick = { isBillingClicked = !isBillingClicked },
-            content = {
-                OrderInfoRow(
-                    label = "Importe total ",
-                    value = formatValue(state.totalAmount)
+        Column(
+            modifier = Modifier.padding(
+                horizontal = 8.dp,
+                vertical = 12.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text("Pedido:", style = MaterialTheme.typography.titleMedium)
+            OrderSection(
+                onClick = { isBuyOrderClicked = !isBuyOrderClicked },
+                content = {
+                    OrderInfoRow(label = "Razón Social", value = state.buyOrder.client)
+                    OrderInfoRow(label = "Marca", value = state.buyOrder.branch)
+                    OrderInfoRow(label = "Comentarios", value = state.buyOrder.comments)
+                    OrderInfoRow(label = "Fecha de Carga", value = state.buyOrder.loadedDate)
+                    OrderInfoRow(label = "Número de Pedido", value = state.buyOrder.id)
+                }
+            )
+            AnimatedVisibility(isBuyOrderClicked) {
+                BuyOrderItem(vm.state.buyOrder)
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            Text("Facturación:", style = MaterialTheme.typography.titleMedium)
+            OrderSection(
+                onClick = { isBillingClicked = !isBillingClicked },
+                content = {
+                    OrderInfoRow(
+                        label = "Importe total ",
+                        value = formatValue(state.totalAmount)
+                    )
+                }
+            )
+            AnimatedVisibility(isBillingClicked) {
+                var isAddPaymentCondition by remember { mutableStateOf(false) }
+                var billingNumber by remember { mutableStateOf("") }
+                BillingList(
+                    billings = state.billings,
+                    onBillingClicked = { billing -> onBillingClicked(billing) },
+                    onAddPaymentCondition = {
+                        billingNumber = it
+                        isAddPaymentCondition = !isAddPaymentCondition
+                    }
+                )
+                BottomSheetPaymentCondition(
+                    enable = isAddPaymentCondition,
+                    paymentCondition = state.paymentsConditions,
+                    factoryName = factoryName,
+                    onDismissRequest = { isAddPaymentCondition = false },
+                    onConditionSelected = { paymentCondition ->
+                        vm.onSelectedPaymentCondition(paymentCondition, billingNumber)
+                        isAddPaymentCondition = false
+                    }
                 )
             }
-        )
-        AnimatedVisibility(isBillingClicked) {
-            BillingList(
-                billings = state.billings,
-                onBillingClicked = { billing -> onBillingClicked(billing) },
-                paymentCondition = state.paymentsConditions
-            )
         }
     }
 }
+
+
+
 

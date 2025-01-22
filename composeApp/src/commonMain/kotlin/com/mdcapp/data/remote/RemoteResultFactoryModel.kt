@@ -29,3 +29,15 @@ fun Map<String, Map<String, Any>>.toPaymentConditions(): List<PaymentCondition> 
         )
     }
 }
+
+fun List<PaymentCondition>.toRemote(): Map<String, Map<String, Any>> {
+    return this.mapIndexed { index, paymentCondition ->
+        "payment${index + 1}" to mapOf(
+            "condicion" to paymentCondition.paymentName,
+            "dto" to paymentCondition.discount,
+            "meses" to paymentCondition.month,
+            "vencimiento" to paymentCondition.expiration,
+            "plazo" to paymentCondition.date
+        )
+    }.toMap()
+}

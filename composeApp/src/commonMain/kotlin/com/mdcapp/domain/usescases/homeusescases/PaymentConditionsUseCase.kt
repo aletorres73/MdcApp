@@ -9,4 +9,10 @@ class PaymentConditionsUseCase(private val repository: OrderRepository) {
             return repository.getPaymentsConditionFactory(factoryName)
         }
     }
+
+    inner class SetPaymentsConditionsFactory {
+        suspend operator fun invoke(factoryName: String, data: List<PaymentCondition>): Boolean {
+            return repository.addPaymentConditionsToFactory(factoryName, data)
+        }
+    }
 }
