@@ -23,7 +23,8 @@ import com.mdcapp.data.model.BillingModel
 fun BillingList(
     billings: List<BillingModel>,
     onBillingClicked: (BillingModel) -> Unit,
-    onAddPaymentCondition: (billingNumber: String) -> Unit
+    onAddPaymentCondition: (billingNumber: String) -> Unit,
+    onAddDeliveryDate: (billingNumber: String) -> Unit
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -76,15 +77,15 @@ fun BillingList(
                         ) {
                             RowInfoBilling(
                                 key = "Facturación:",
-                                value = billing.loadDate
+                                value = billing.loadDate.ifEmpty { "-/-/-" }
                             )
                             RowInfoBilling(
                                 key = "Recepción:",
-                                value = billing.deliveryDate
+                                value = billing.deliveryDate.ifEmpty { "-/-/-" }
                             )
                             RowInfoBilling(
                                 key = "Pago:",
-                                value = billing.payDate
+                                value = billing.payDate.ifEmpty { "-/-/-" }
                             )
                         }
                     }
@@ -121,6 +122,7 @@ fun BillingList(
                             val rowAlignment = Alignment.CenterVertically
                             val rowArrangement = Arrangement.spacedBy(4.dp)
                             BillingInputChip(
+                                onClick = { onAddDeliveryDate(billing.billingNumber) },
                                 rowAlignment = rowAlignment,
                                 rowArrangement = rowArrangement,
                                 text = "Agregar recepción"

@@ -21,6 +21,7 @@ import com.mdcapp.ui.composables.billings.BillingList
 import com.mdcapp.ui.composables.billings.BottomSheetPaymentCondition
 import com.mdcapp.ui.composables.billings.formatValue
 import com.mdcapp.ui.composables.buyorders.BuyOrderItem
+import com.mdcapp.ui.composables.common.DatePicker
 import com.mdcapp.ui.composables.common.LoadingIndicator
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 
@@ -34,6 +35,10 @@ fun OrderDetailInfo(
     val state = vm.state
     var isBuyOrderClicked by remember { mutableStateOf(false) }
     var isBillingClicked by remember { mutableStateOf(false) }
+    var isDateSelect by remember { mutableStateOf(false) }
+    var isAddPaymentCondition by remember { mutableStateOf(false) }
+    var billingNumber by remember { mutableStateOf("") }
+
 
     LaunchedEffect(orderId) {
         vm.init(orderId, factoryName)
@@ -70,20 +75,42 @@ fun OrderDetailInfo(
                 onClick = { isBillingClicked = !isBillingClicked },
                 content = {
                     OrderInfoRow(
-                        label = "Importe total ",
+                        label = "Importe total",
                         value = formatValue(state.totalAmount)
+                    )
+                    OrderInfoRow(
+                        enable = state.totalDiscount != 0.0,
+                        label = "Dto total",
+                        value = formatValue(state.totalDiscount)
+                    )
+                    OrderInfoRow(
+                        enable = state.totalToyPay != 0.0,
+                        label = "Total a cobrar",
+                        value = formatValue(state.totalToyPay)
+                    )
+                    OrderInfoRow(
+                        enable = state.totalPayed != 0.0,
+                        label = "Total cobrado",
+                        value = formatValue(state.totalPayed)
+                    )
+                    OrderInfoRow(
+                        enable = state.totalRest != 0.0,
+                        label = "Saldo",
+                        value = formatValue(state.totalRest)
                     )
                 }
             )
             AnimatedVisibility(isBillingClicked) {
-                var isAddPaymentCondition by remember { mutableStateOf(false) }
-                var billingNumber by remember { mutableStateOf("") }
                 BillingList(
                     billings = if (vm.dataChanged()) vm.tempState.billings else state.billings,
                     onBillingClicked = { billing -> onBillingClicked(billing) },
-                    onAddPaymentCondition = {
-                        billingNumber = it
-                        isAddPaymentCondition = !isAddPaymentCondition
+                    onAddPaymentCondition = { number ->
+                        billingNumber = number
+                        isAddPaymentCondition = true
+                    },
+                    onAddDeliveryDate = { number ->
+                        billingNumber = number
+                        isDateSelect = true
                     }
                 )
                 BottomSheetPaymentCondition(
@@ -94,6 +121,16 @@ fun OrderDetailInfo(
                     onConditionSelected = { paymentCondition ->
                         vm.onSelectedPaymentCondition(paymentCondition, billingNumber)
                         isAddPaymentCondition = false
+                    }
+                )
+                DatePicker(
+                    enable = isDateSelect,
+                    onDismissButton = { isDateSelect = false },
+                    onDismissRequest = { isDateSelect = false },
+                    onConfirmButton = { newDate ->
+                        println(newDate)
+                        vm.saveDateSelected(newDate, billingNumber)
+                        isDateSelect = false
                     }
                 )
             }

@@ -13,7 +13,8 @@ data class BillingModel(
     var discount: Double,
     var toPay: Double,
     var payed: Double,
-    var rest: Double
+    var rest: Double,
+    var stateBilling: String
 )
 
 data class PaymentCondition(
