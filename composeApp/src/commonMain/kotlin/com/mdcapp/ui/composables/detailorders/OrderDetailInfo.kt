@@ -23,15 +23,12 @@ import com.mdcapp.ui.composables.billings.formatValue
 import com.mdcapp.ui.composables.buyorders.BuyOrderItem
 import com.mdcapp.ui.composables.common.LoadingIndicator
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
-import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.annotation.KoinExperimentalAPI
 
-@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun OrderDetailInfo(
     orderId: String,
     factoryName: String,
-    vm: BuyOrdersViewModel = koinViewModel(),
+    vm: BuyOrdersViewModel,
     onBillingClicked: (BillingModel) -> Unit
 ) {
     val state = vm.state
@@ -82,7 +79,7 @@ fun OrderDetailInfo(
                 var isAddPaymentCondition by remember { mutableStateOf(false) }
                 var billingNumber by remember { mutableStateOf("") }
                 BillingList(
-                    billings = state.billings,
+                    billings = if (vm.dataChanged()) vm.tempState.billings else state.billings,
                     onBillingClicked = { billing -> onBillingClicked(billing) },
                     onAddPaymentCondition = {
                         billingNumber = it

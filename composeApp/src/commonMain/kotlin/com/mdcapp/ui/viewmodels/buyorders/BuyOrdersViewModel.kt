@@ -18,8 +18,9 @@ class BuyOrdersViewModel(
     private val getPaymentsConditions: PaymentConditionsUseCase.GetPaymentsConditions,
     private val addPaymentConditionsUseCase: PaymentConditionsUseCase.SetPaymentsConditionsFactory
 ) : ViewModel() {
-
     var state by mutableStateOf(UiState())
+        private set
+    var tempState by mutableStateOf(state)
         private set
 
     data class UiState(
@@ -35,9 +36,30 @@ class BuyOrdersViewModel(
         val paymentsConditions: List<PaymentCondition> = emptyList(),
     )
 
+    fun init(orderId: String, factoryName: String) {
+        viewModelScope.launch {
+            println("Init called with orderId: $orderId")
+            state = state.copy(
+                orderId = orderId,
+                factoryName = factoryName
+            )
+            loadBuyOrder()
+            loadBillings()
+            loadPaymentConditions()
+            tempState = state
+        }
+    }
+
+    fun dataChanged() = state != tempState
+
+    fun saveData() {
+        state = tempState
+        //agregar función para actualizar billing en la nube retornando boolean
+    }
+
     fun onSelectedPaymentCondition(paymentCondition: PaymentCondition, billingNumber: String) {
-        state = state.copy(
-            billings = state.billings.map { billing ->
+        tempState = tempState.copy(
+            billings = tempState.billings.map { billing ->
                 if (billing.billingNumber == billingNumber) {
                     val total =
                         billing.total
@@ -57,19 +79,6 @@ class BuyOrdersViewModel(
                 }
             }
         )
-    }
-
-    fun init(orderId: String, factoryName: String) {
-        viewModelScope.launch {
-            println("Init called with orderId: $orderId")
-            state = state.copy(
-                orderId = orderId,
-                factoryName = factoryName
-            )
-            loadBuyOrder()
-            loadBillings()
-            loadPaymentConditions()
-        }
     }
 
     private suspend fun loadPaymentConditions() {

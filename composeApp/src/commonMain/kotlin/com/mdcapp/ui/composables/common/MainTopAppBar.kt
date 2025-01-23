@@ -17,7 +17,7 @@ fun MainTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior,
     onBack: () -> Unit = {},
     isNavigationOn: Boolean = false,
-    onSearchIconClick: () -> Unit = {},
+//    onSearchIconClick: () -> Unit = {},
     onActions: @Composable () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -25,7 +25,7 @@ fun MainTopAppBar(
         modifier = modifier,
         title = { titleContent() },
         scrollBehavior = scrollBehavior,
-//        actions = { onActions() },
+        actions = { onActions() },
         navigationIcon = {
             if (isNavigationOn) {
                 IconButton(onClick = onBack) {

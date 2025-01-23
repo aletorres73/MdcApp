@@ -40,17 +40,17 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
+
             implementation(libs.gitlive.firebase.firestore)
             implementation(libs.koin.core)
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
-
             implementation(libs.kotlinx.coroutines.core)
-
             implementation(libs.kotlinx.serilization.json)
-
             implementation(libs.androidx.navigation.compose)
+            implementation(libs.material.icons.extended)
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
