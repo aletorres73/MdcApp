@@ -246,4 +246,30 @@ class BuyOrdersViewModel(
         }
         return total
     }
+
+    fun addPayment(billingNumber: String, payed: Double) {
+        tempState = tempState.copy(
+            billings = tempState.billings.map { billing ->
+                if (billing.billingNumber == billingNumber) {
+                    billing.copy(
+                        payed = billing.payed + payed,
+                    )
+                } else billing
+            }
+        )
+        setRest(billingNumber)
+    }
+
+    private fun setRest(billingNumber: String) {
+        tempState = tempState.copy(
+            billings = tempState.billings.map { billing ->
+                if (billing.billingNumber == billingNumber) {
+                    billing.copy(
+                        rest = "%.2f".format(billing.toPay - billing.payed).toDouble()
+                    )
+                } else billing
+            }
+        )
+
+    }
 }

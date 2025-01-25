@@ -4,17 +4,29 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.ui.composables.billings.BillingList
@@ -24,6 +36,7 @@ import com.mdcapp.ui.composables.buyorders.BuyOrderItem
 import com.mdcapp.ui.composables.common.DatePicker
 import com.mdcapp.ui.composables.common.LoadingIndicator
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun OrderDetailInfo(
@@ -37,6 +50,7 @@ fun OrderDetailInfo(
     var isBillingClicked by remember { mutableStateOf(false) }
     var isDateSelect by remember { mutableStateOf(false) }
     var isAddPaymentCondition by remember { mutableStateOf(false) }
+    var isAddPaymentRegister by remember { mutableStateOf(false) }
     var billingNumber by remember { mutableStateOf("") }
 
 
@@ -111,6 +125,10 @@ fun OrderDetailInfo(
                     onAddDeliveryDate = { number ->
                         billingNumber = number
                         isDateSelect = true
+                    },
+                    onPaymentRegister = { number ->
+                        billingNumber = number
+                        isAddPaymentRegister = true
                     }
                 )
                 BottomSheetPaymentCondition(
@@ -133,6 +151,74 @@ fun OrderDetailInfo(
                         isDateSelect = false
                     }
                 )
+                PaymentsRegister(
+                    enable = isAddPaymentRegister,
+                    onDismissRequest = { isAddPaymentRegister = false },
+                    onConfirm = { payed ->
+                        println(payed)
+                        isAddPaymentCondition = false
+                        vm.addPayment(billingNumber, payed)
+                    },
+                    billingNumber = billingNumber
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PaymentsRegister(
+    enable: Boolean,
+    onDismissRequest: () -> Unit,
+    onConfirm: (Double) -> Unit,
+    billingNumber: String
+) {
+    if (enable) {
+        var inputPay by remember { mutableStateOf(TextFieldValue("")) }
+        val sheetState = rememberModalBottomSheetState()
+        val scope = rememberCoroutineScope()
+        ModalBottomSheet(
+            modifier = Modifier
+                .wrapContentHeight(),
+            sheetState = sheetState,
+            onDismissRequest = {
+                scope.launch {
+                    sheetState.hide()
+                    onDismissRequest()
+                }
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Registrar pago en $billingNumber",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                HorizontalDivider()
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    value = inputPay,
+                    onValueChange = { newValue -> inputPay = newValue },
+                    label = { Text("Ingresar monto") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    prefix = { Text("$") }
+                )
+                Button(onClick = {
+                    println(inputPay)
+                    scope.launch {
+                        sheetState.hide()
+                        onConfirm(inputPay.text.toDouble())
+                    }
+                }) {
+                    Text("Agregar pago")
+                }
             }
         }
     }

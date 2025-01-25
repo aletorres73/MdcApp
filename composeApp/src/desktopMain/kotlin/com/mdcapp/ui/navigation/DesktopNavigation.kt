@@ -10,8 +10,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.OrderModel
+import com.mdcapp.data.remote.RemoteResultBillingModel
+import com.mdcapp.data.remote.toDomain
 import com.mdcapp.ui.composables.billings.BillingItem
 import com.mdcapp.ui.screens.common.OpenWindow
 import com.mdcapp.ui.screens.orders.orderdetail.DesktopOrderDetailScreen
@@ -24,7 +25,7 @@ fun DesktopNavigation() {
     var openDetailOrderWindow by remember { mutableStateOf(false) }
     var openDetailBillingWindow by remember { mutableStateOf(false) }
     var order by remember { mutableStateOf(OrderModel()) }
-    var billing by remember { mutableStateOf(BillingModel()) }
+    var billing by remember { mutableStateOf(RemoteResultBillingModel().toDomain()) }
 
     NavHost(navController = navController, startDestination = "Orders") {
         composable(route = "Orders") {

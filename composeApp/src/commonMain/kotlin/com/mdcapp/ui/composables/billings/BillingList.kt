@@ -24,7 +24,8 @@ fun BillingList(
     billings: List<BillingModel>,
     onBillingClicked: (BillingModel) -> Unit,
     onAddPaymentCondition: (billingNumber: String) -> Unit,
-    onAddDeliveryDate: (billingNumber: String) -> Unit
+    onAddDeliveryDate: (billingNumber: String) -> Unit,
+    onPaymentRegister: (billingNumber: String) -> Unit,
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -113,7 +114,7 @@ fun BillingList(
                             )
                             RowInfoBilling(
                                 key = "Saldo:",
-                                value = "${billing.rest}"
+                                value = "$${billing.rest}"
                             )
                         }
                         Column(
@@ -134,6 +135,7 @@ fun BillingList(
                                 text = "Condición de pago"
                             )
                             BillingInputChip(
+                                onClick = { onPaymentRegister(billing.billingNumber) },
                                 rowAlignment = rowAlignment,
                                 rowArrangement = rowArrangement,
                                 text = "Registrar pago"
