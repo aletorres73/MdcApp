@@ -61,10 +61,16 @@ fun OrderDetailScreen(
             println("data saved")
             vm.saveData()
             scope.launch {
-                snackBarHostState.showSnackbar(
-                    message = "Datos guardados",
-                    duration = SnackbarDuration.Short
-                )
+                if (vm.state.result)
+                    snackBarHostState.showSnackbar(
+                        message = "Datos guardados",
+                        duration = SnackbarDuration.Short
+                    )
+                else
+                    snackBarHostState.showSnackbar(
+                        message = "Error",
+                        duration = SnackbarDuration.Short
+                    )
             }
             onBackPressed()
         }

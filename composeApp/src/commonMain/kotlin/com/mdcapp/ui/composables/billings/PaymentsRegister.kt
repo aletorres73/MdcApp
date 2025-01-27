@@ -11,8 +11,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -39,12 +40,15 @@ fun PaymentsRegister(
         var inputPay by remember { mutableStateOf(TextFieldValue("")) }
         val sheetState = rememberModalBottomSheetState()
         val scope = rememberCoroutineScope()
+        val keyboardController = LocalSoftwareKeyboardController.current
+
         ModalBottomSheet(
             modifier = Modifier
                 .wrapContentHeight(),
             sheetState = sheetState,
             onDismissRequest = {
                 scope.launch {
+                    keyboardController?.hide()
                     sheetState.hide()
                     onDismissRequest()
                 }
@@ -61,7 +65,7 @@ fun PaymentsRegister(
                     style = MaterialTheme.typography.titleMedium,
                 )
                 HorizontalDivider()
-                OutlinedTextField(
+                TextField(
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentHeight(),
@@ -75,6 +79,7 @@ fun PaymentsRegister(
                 Button(onClick = {
                     println(inputPay)
                     scope.launch {
+//                        keyboardController?.hide()
                         sheetState.hide()
                         onConfirm(inputPay.text.toDouble())
                     }

@@ -15,6 +15,7 @@ import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class BuyOrdersViewModel(
     private val getBuyOrder: BuyOrderUseCase.GetBuyOrderById,
@@ -45,6 +46,7 @@ class BuyOrdersViewModel(
         var totalRest: Double = 0.0,
         val error: String? = null,
         val paymentsConditions: List<PaymentCondition> = emptyList(),
+        var result: Boolean = true
     )
 
     fun init(orderId: String, factoryName: String) {
@@ -89,15 +91,25 @@ class BuyOrdersViewModel(
 
     fun saveData() {
         viewModelScope.launch {
-            var result: Boolean
+            var result = true // Inicializar result en true
             tempState.billings.forEach {
-                result = updateBilling(it.billingNumber, it)
-                if (result) println("Billing ${it.billingNumber} updated")
-                else println("Error on update billing ${it.billingNumber}")
+                result =
+                    result && updateBilling(it.billingNumber, it) // Acumular el resultado booleano
+                if (result) {
+                    println("Billing ${it.billingNumber} updated")
+                } else {
+                    println("Error on update billing ${it.billingNumber}")
+                }
             }
-            state = tempState
+            if (result) {
+                state = tempState
+                println("All billings updated successfully")
+            } else {
+                println("Error updating some billings")
+            }
         }
     }
+
 
     fun onSelectedPaymentCondition(paymentCondition: PaymentCondition, billingNumber: String) {
         tempState = tempState.copy(
@@ -116,9 +128,9 @@ class BuyOrdersViewModel(
                     )
                     billing.copy(
                         paymentCondition = paymentCondition.paymentName,
-                        total = "$%.2f".format(total),
-                        discount = "%.2f".format(discount).toDouble(),
-                        toPay = "%.2f".format(toPay).toDouble(),
+                        total = "$%.2f".format(Locale.US, total),
+                        discount = "%.2f".format(Locale.US, discount).toDouble(),
+                        toPay = "%.2f".format(Locale.US, toPay).toDouble(),
                         payDate = payDate
                     )
                 } else {
@@ -275,7 +287,8 @@ class BuyOrdersViewModel(
                 clientName = tempState.buyOrder.client,
                 documentNumber = billingNumber,
                 type = tempState.billings.find { it.billingNumber == billingNumber }?.type ?: "",
-                total = payed
+                total = payed,
+                clientId = tempState.buyOrder.clientId
             )
             if (addPaymentToRegister(paymentToRegister)) {
                 tempState = tempState.copy(
@@ -298,7 +311,7 @@ class BuyOrdersViewModel(
             billings = tempState.billings.map { billing ->
                 if (billing.billingNumber == billingNumber) {
                     billing.copy(
-                        rest = "%.2f".format(billing.toPay - billing.payed).toDouble()
+                        rest = "%.2f".format(Locale.US, billing.toPay - billing.payed).toDouble()
                     )
                 } else billing
             }
