@@ -29,4 +29,10 @@ class BuyOrderUseCase(private val repository: OrderRepository) {
             return repository.getLastId()
         }
     }
+
+    inner class UpdateBilling {
+        suspend operator fun invoke(numberBilling: String, billingModel: BillingModel): Boolean {
+            return repository.updateBillingOnService(numberBilling, billingModel)
+        }
+    }
 }

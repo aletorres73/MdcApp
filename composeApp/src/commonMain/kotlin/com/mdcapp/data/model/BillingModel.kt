@@ -1,5 +1,7 @@
 package com.mdcapp.data.model
 
+import com.mdcapp.data.remote.RemoteResultBillingModel
+
 data class BillingModel(
     var billingNumber: String = "",
     var orderId: String = "",
@@ -15,6 +17,23 @@ data class BillingModel(
     var payed: Double,
     var rest: Double,
     var stateBilling: String
+)
+
+fun BillingModel.toDomain() = RemoteResultBillingModel(
+    billingNumber,
+    orderId,
+    type,
+    total,
+    loadDate,
+    deliveryDate,
+    payDate,
+    articles,
+    paymentCondition,
+    discount,
+    toPay,
+    payed,
+    rest,
+    stateBilling
 )
 
 data class PaymentCondition(

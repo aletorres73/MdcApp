@@ -142,4 +142,18 @@ class OrderService(
             -1
         }
     }
+
+    suspend fun updateBilling(document: String, data: RemoteResultBillingModel): Boolean {
+        return try {
+            db.collection(BILLINGS)
+                .document(document)
+                .update(data)
+            Log.i("firestore", "on updateBilling success $data")
+            true
+        } catch (e: Exception) {
+            Log.e("firestore", "on updateBilling $e")
+            false
+        }
+
+    }
 }

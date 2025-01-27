@@ -21,7 +21,8 @@ class BuyOrdersViewModel(
     private val getBillings: BuyOrderUseCase.GetBillings,
     private val getPaymentsConditions: PaymentConditionsUseCase.GetPaymentsConditions,
     private val addPaymentToRegister: BuyOrderUseCase.AddPaymentToRegister,
-    private val getLastId: BuyOrderUseCase.GetLastIdPaymentFromRegister
+    private val getLastId: BuyOrderUseCase.GetLastIdPaymentFromRegister,
+    private val updateBilling: BuyOrderUseCase.UpdateBilling
 //    private val addPaymentConditionsUseCase: PaymentConditionsUseCase.SetPaymentsConditionsFactory
 ) : ViewModel() {
     var state by mutableStateOf(UiState())
@@ -56,8 +57,11 @@ class BuyOrdersViewModel(
             loadBuyOrder()
             loadBillings()
             loadPaymentConditions()
-            tempState = state
-            loadTotalsPayments()
+            if (state.loadingOrder && state.loadingBillings && state.loadingPayments) {
+                tempState = state
+                loadTotalsPayments()
+            } else tempState = state
+
         }
     }
 
@@ -84,8 +88,15 @@ class BuyOrdersViewModel(
     fun dataChanged() = state != tempState
 
     fun saveData() {
-        state = tempState
-        //agregar función para actualizar billing en la nube retornando boolean
+        viewModelScope.launch {
+            var result: Boolean
+            tempState.billings.forEach {
+                result = updateBilling(it.billingNumber, it)
+                if (result) println("Billing ${it.billingNumber} updated")
+                else println("Error on update billing ${it.billingNumber}")
+            }
+            state = tempState
+        }
     }
 
     fun onSelectedPaymentCondition(paymentCondition: PaymentCondition, billingNumber: String) {
@@ -103,8 +114,6 @@ class BuyOrdersViewModel(
                         billingNumber,
                         paymentCondition.expiration
                     )
-
-
                     billing.copy(
                         paymentCondition = paymentCondition.paymentName,
                         total = "$%.2f".format(total),
@@ -152,8 +161,9 @@ class BuyOrdersViewModel(
         val billing = tempState.billings.find { it.billingNumber == billingNumber }
         val newPayDate = billing?.let {
             try {
-                val deliveryDateStr =
+                val deliveryDateStr = formatDateString(
                     newDeliveryDate.ifEmpty { it.deliveryDate.ifEmpty { newDeliveryDate } }
+                )
                 val deliveryDate = LocalDate.parse(deliveryDateStr, dateFormatter)
                 val newDate = deliveryDate.plusDays(expiration.toLong())
                 newDate.format(dateFormatter)
@@ -181,7 +191,7 @@ class BuyOrdersViewModel(
         return "$day/$month/$year"
     }
 
-    fun getCurrentDate(): String {
+    private fun getCurrentDate(): String {
         val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val currentDate = LocalDate.now()
         return currentDate.format(dateFormatter)

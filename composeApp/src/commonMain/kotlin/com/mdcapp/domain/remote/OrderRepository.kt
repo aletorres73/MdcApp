@@ -45,4 +45,8 @@ class OrderRepository(private val service: OrderService) {
     suspend fun getLastId(): Int {
         return service.fetchLastIdFromPayments()
     }
+
+    suspend fun updateBillingOnService(documentId: String, data: BillingModel): Boolean {
+        return service.updateBilling(documentId, data.toDomain())
+    }
 }
