@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
 import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.data.model.PaymentRegisterModel
 import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.launch
@@ -19,7 +20,9 @@ class BuyOrdersViewModel(
     private val getBuyOrder: BuyOrderUseCase.GetBuyOrderById,
     private val getBillings: BuyOrderUseCase.GetBillings,
     private val getPaymentsConditions: PaymentConditionsUseCase.GetPaymentsConditions,
-    private val addPaymentConditionsUseCase: PaymentConditionsUseCase.SetPaymentsConditionsFactory
+    private val addPaymentToRegister: BuyOrderUseCase.AddPaymentToRegister,
+    private val getLastId: BuyOrderUseCase.GetLastIdPaymentFromRegister
+//    private val addPaymentConditionsUseCase: PaymentConditionsUseCase.SetPaymentsConditionsFactory
 ) : ViewModel() {
     var state by mutableStateOf(UiState())
         private set
@@ -178,6 +181,12 @@ class BuyOrdersViewModel(
         return "$day/$month/$year"
     }
 
+    fun getCurrentDate(): String {
+        val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val currentDate = LocalDate.now()
+        return currentDate.format(dateFormatter)
+    }
+
     private suspend fun loadPaymentConditions() {
         state = state.copy(loadingPayments = true)
         state = try {
@@ -247,17 +256,31 @@ class BuyOrdersViewModel(
         return total
     }
 
-    fun addPayment(billingNumber: String, payed: Double) {
-        tempState = tempState.copy(
-            billings = tempState.billings.map { billing ->
-                if (billing.billingNumber == billingNumber) {
-                    billing.copy(
-                        payed = billing.payed + payed,
-                    )
-                } else billing
-            }
-        )
-        setRest(billingNumber)
+    suspend fun addPayment(billingNumber: String, payed: Double) {
+        viewModelScope.launch {
+            val paymentToRegister = PaymentRegisterModel(
+                id = getLastId() + 1,
+                branch = tempState.factoryName,
+                date = getCurrentDate(),
+                clientName = tempState.buyOrder.client,
+                documentNumber = billingNumber,
+                type = tempState.billings.find { it.billingNumber == billingNumber }?.type ?: "",
+                total = payed
+            )
+            if (addPaymentToRegister(paymentToRegister)) {
+                tempState = tempState.copy(
+                    billings = tempState.billings.map { billing ->
+                        if (billing.billingNumber == billingNumber) {
+                            billing.copy(
+                                payed = billing.payed + payed,
+                            )
+                        } else billing
+                    }
+                )
+                setRest(billingNumber)
+            } else
+                tempState = tempState.copy(error = " fail addPaymentToRegister")
+        }
     }
 
     private fun setRest(billingNumber: String) {
@@ -270,6 +293,5 @@ class BuyOrdersViewModel(
                 } else billing
             }
         )
-
     }
 }

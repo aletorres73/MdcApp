@@ -2,7 +2,9 @@
 
 package com.mdcapp.domain.service
 
+import android.util.Log
 import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.data.model.RemotePaymentRegisterResult
 import com.mdcapp.data.remote.RemoteResultBillingModel
 import com.mdcapp.data.remote.RemoteResultBuyOrder
 import com.mdcapp.data.remote.RemoteResultFactoryModel
@@ -18,6 +20,7 @@ class OrderService(
         const val BUY_ORDERS = "buyOrders"
         const val BILLINGS = "billings"
         const val FACTORIES = "factories"
+        const val PAYMENTS_REGISTER = "paymentsRegister"
     }
 
     suspend fun fetchAllOrders(): List<RemoteResultOrder> {
@@ -110,6 +113,33 @@ class OrderService(
         } catch (e: Exception) {
             println("Firestore: on setPaymentsConditionsFactory $e")
             false
+        }
+    }
+
+    suspend fun addPaymentToRegister(data: RemotePaymentRegisterResult): Boolean {
+        return try {
+            db.collection(PAYMENTS_REGISTER)
+                .document(data.id.toString())
+                .set(data)
+            Log.i("firestore", "On addPaymentToRegister $data successful")
+            true
+        } catch (e: Exception) {
+            Log.e("firestore", "onAddPaymentToRegister $e")
+            false
+        }
+    }
+
+    suspend fun fetchLastIdFromPayments(): Int {
+        return try {
+            val documents = db.collection(PAYMENTS_REGISTER)
+                .get()
+                .documents
+                .map { it.data<RemotePaymentRegisterResult>() }
+            val list = documents.maxByOrNull { it.id }!!
+            if (documents.isEmpty()) 0 else list.id
+        } catch (e: Exception) {
+            Log.e("firestore", "on fetchLastIdFromPayments $e")
+            -1
         }
     }
 }

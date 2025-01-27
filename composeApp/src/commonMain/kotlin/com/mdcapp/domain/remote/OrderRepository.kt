@@ -4,6 +4,8 @@ import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.data.model.PaymentRegisterModel
+import com.mdcapp.data.model.toDomain
 import com.mdcapp.data.remote.toDomain
 import com.mdcapp.data.remote.toPaymentConditions
 import com.mdcapp.domain.service.OrderService
@@ -34,5 +36,13 @@ class OrderRepository(private val service: OrderService) {
         data: List<PaymentCondition>
     ): Boolean {
         return service.setPaymentsConditionsFactory(factoryName, data)
+    }
+
+    suspend fun addPaymentToRegister(data: PaymentRegisterModel): Boolean {
+        return service.addPaymentToRegister(data.toDomain())
+    }
+
+    suspend fun getLastId(): Int {
+        return service.fetchLastIdFromPayments()
     }
 }
