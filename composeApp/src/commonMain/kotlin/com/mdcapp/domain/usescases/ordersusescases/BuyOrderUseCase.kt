@@ -35,4 +35,12 @@ class BuyOrderUseCase(private val repository: OrderRepository) {
             return repository.updateBillingOnService(numberBilling, billingModel)
         }
     }
+
+    inner class GetPaymentsRegister {
+        suspend operator fun invoke(documentList: List<String>): List<PaymentRegisterModel> {
+            return repository.getPaymentsRegisterByNumberDocument(documentList)
+        }
+
+        suspend operator fun invoke(clientId: String) {}
+    }
 }

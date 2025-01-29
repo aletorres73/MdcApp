@@ -10,12 +10,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun BillingInputChip(
     onClick: () -> Unit = {},
-    rowAlignment: Alignment.Vertical,
-    rowArrangement: Arrangement.HorizontalOrVertical,
+    rowAlignment: Alignment.Vertical = Alignment.CenterVertically,
+    rowArrangement: Arrangement.HorizontalOrVertical = Arrangement.spacedBy(4.dp),
     text: String,
     imageVector: ImageVector = Icons.Default.AddCircle
 ) {

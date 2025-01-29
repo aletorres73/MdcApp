@@ -23,7 +23,8 @@ class BuyOrdersViewModel(
     private val getPaymentsConditions: PaymentConditionsUseCase.GetPaymentsConditions,
     private val addPaymentToRegister: BuyOrderUseCase.AddPaymentToRegister,
     private val getLastId: BuyOrderUseCase.GetLastIdPaymentFromRegister,
-    private val updateBilling: BuyOrderUseCase.UpdateBilling
+    private val updateBilling: BuyOrderUseCase.UpdateBilling,
+    private val getPaymentsRegister: BuyOrderUseCase.GetPaymentsRegister
 //    private val addPaymentConditionsUseCase: PaymentConditionsUseCase.SetPaymentsConditionsFactory
 ) : ViewModel() {
     var state by mutableStateOf(UiState())
@@ -35,6 +36,7 @@ class BuyOrdersViewModel(
         val loadingOrder: Boolean = false,
         val loadingBillings: Boolean = false,
         val loadingPayments: Boolean = false,
+        val loadingPaymentsRegister: Boolean = false,
         val orderId: String = "",
         val factoryName: String = "",
         val buyOrder: BuyOrderModel = BuyOrderModel(),
@@ -46,7 +48,9 @@ class BuyOrdersViewModel(
         var totalRest: Double = 0.0,
         val error: String? = null,
         val paymentsConditions: List<PaymentCondition> = emptyList(),
-        var result: Boolean = true
+        var result: Boolean = true,
+        var paymentsRegisterNotEmpty: Boolean = false,
+        var paymentList: List<PaymentRegisterModel> = emptyList()
     )
 
     fun init(orderId: String, factoryName: String) {
@@ -56,15 +60,68 @@ class BuyOrdersViewModel(
                 orderId = orderId,
                 factoryName = factoryName
             )
+            loadPaymentConditions()
             loadBuyOrder()
             loadBillings()
-            loadPaymentConditions()
-            if (state.loadingOrder && state.loadingBillings && state.loadingPayments) {
-                tempState = state
-                loadTotalsPayments()
-            } else tempState = state
-
+            loadPaymentsRegister()
+            tempState = state
         }
+    }
+
+    private suspend fun loadPaymentsRegister() {
+        state = state.copy(loadingPaymentsRegister = true)
+        try {
+            if (state.orderId.isNotEmpty()) {
+                val documentsList = state.billings.map { it.billingNumber }
+                val payments = getPaymentsRegister(documentsList)
+                println("Payments loaded: $payments")
+                state = if (payments.isNotEmpty()) state.copy(
+                    loadingPaymentsRegister = false,
+                    paymentsRegisterNotEmpty = true,
+                    paymentList = payments
+                )
+                else state.copy(
+                    loadingPaymentsRegister = false,
+                    paymentsRegisterNotEmpty = false
+                )
+                checkPaymentsOnBillings()
+            }
+        } catch (e: Exception) {
+            Log.e("LoadPaymentsRegister", "Error loading payments: ${e.message}")
+            state = state.copy(
+                loadingPaymentsRegister = false,
+                error = e.message
+            )
+        }
+    }
+
+    private fun checkPaymentsOnBillings() {
+        state.billings.forEach { billing ->
+            var payed = billing.payed
+            if (payed == 0.0) {
+                val payedRegistered =
+                    state.paymentList.filter { it.documentNumber == billing.billingNumber }
+                if (payedRegistered.isNotEmpty()) {
+                    payedRegistered.forEach { payed += it.total }
+                    println("Total on ${billing.billingNumber}: $payedRegistered")
+                    println("Total sum: $payed")
+                    state = state.copy(
+                        billings = state.billings.map {
+                            if (it.billingNumber == billing.billingNumber) {
+                                val toPay = it.toPay
+                                it.copy(
+                                    payed = "%.2f".format(payed).toDouble(),
+                                    rest = "%.2f".format(toPay - payed).toDouble()
+                                )
+                            } else {
+                                it
+                            }
+                        }
+                    )
+                }
+            }
+        }
+//        loadTotalsPayments()
     }
 
     private fun loadTotalsPayments() {
@@ -73,13 +130,13 @@ class BuyOrdersViewModel(
         var totalPayed = 0.0
         var totalRest = 0.0
 
-        tempState.billings.forEach {
+        state.billings.forEach {
             totalToyPay += it.toPay
-            totalDiscount += (it.discount * it.toPay)
+            totalDiscount += it.discount
             totalPayed += it.payed
             totalRest += it.rest
         }
-        tempState = tempState.copy(
+        state = state.copy(
             totalDiscount = totalDiscount,
             totalToyPay = totalToyPay,
             totalPayed = totalPayed,
@@ -257,6 +314,7 @@ class BuyOrdersViewModel(
                     billings = billings,
                     totalAmount = totalAmount
                 )
+                loadTotalsPayments()
             }
         } catch (e: Exception) {
             state = state.copy(

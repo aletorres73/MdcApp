@@ -49,4 +49,8 @@ class OrderRepository(private val service: OrderService) {
     suspend fun updateBillingOnService(documentId: String, data: BillingModel): Boolean {
         return service.updateBilling(documentId, data.toDomain())
     }
+
+    suspend fun getPaymentsRegisterByNumberDocument(documentList: List<String>): List<PaymentRegisterModel> {
+        return service.fetchPaymentRegisterByNumberList(documentList).map { it.toDomain() }
+    }
 }

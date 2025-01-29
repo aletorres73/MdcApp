@@ -33,6 +33,7 @@ val appModule = module {
     single<BuyOrderUseCase.AddPaymentToRegister> { get<BuyOrderUseCase>().AddPaymentToRegister() }
     single<BuyOrderUseCase.GetLastIdPaymentFromRegister> { get<BuyOrderUseCase>().GetLastIdPaymentFromRegister() }
     single<BuyOrderUseCase.UpdateBilling> { get<BuyOrderUseCase>().UpdateBilling() }
+    single<BuyOrderUseCase.GetPaymentsRegister> { get<BuyOrderUseCase>().GetPaymentsRegister() }
 
     single<PaymentConditionsUseCase.GetPaymentsConditions> { get<PaymentConditionsUseCase>().GetPaymentsConditions() }
     single<PaymentConditionsUseCase.SetPaymentsConditionsFactory> { get<PaymentConditionsUseCase>().SetPaymentsConditionsFactory() }

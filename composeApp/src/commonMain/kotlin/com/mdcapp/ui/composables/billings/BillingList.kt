@@ -3,11 +3,13 @@ package com.mdcapp.ui.composables.billings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -27,14 +29,15 @@ fun BillingList(
     onAddDeliveryDate: (billingNumber: String) -> Unit,
     onPaymentRegister: (billingNumber: String) -> Unit,
 ) {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(4.dp)
     ) {
         items(billings, key = { it.billingNumber }) { billing ->
             ElevatedCard(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .width(IntrinsicSize.Max)
                     .clickable { onBillingClicked(billing) },
                 shape = MaterialTheme.shapes.medium,
                 elevation = CardDefaults.cardElevation(4.dp)
@@ -93,7 +96,7 @@ fun BillingList(
                     HorizontalDivider()
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.Top
                     ) {
                         Column(
@@ -120,24 +123,16 @@ fun BillingList(
                         Column(
                             modifier = Modifier.weight(1f)
                         ) {
-                            val rowAlignment = Alignment.CenterVertically
-                            val rowArrangement = Arrangement.spacedBy(4.dp)
                             BillingInputChip(
                                 onClick = { onAddDeliveryDate(billing.billingNumber) },
-                                rowAlignment = rowAlignment,
-                                rowArrangement = rowArrangement,
                                 text = "Agregar recepción"
                             )
                             BillingInputChip(
                                 onClick = { onAddPaymentCondition(billing.billingNumber) },
-                                rowAlignment = rowAlignment,
-                                rowArrangement = rowArrangement,
                                 text = "Condición de pago"
                             )
                             BillingInputChip(
                                 onClick = { onPaymentRegister(billing.billingNumber) },
-                                rowAlignment = rowAlignment,
-                                rowArrangement = rowArrangement,
                                 text = "Registrar pago"
                             )
                         }

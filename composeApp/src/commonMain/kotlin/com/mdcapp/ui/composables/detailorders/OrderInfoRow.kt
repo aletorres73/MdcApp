@@ -14,6 +14,9 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun OrderInfoRow(enable: Boolean = true, label: String, value: String) {
     if (enable) {
+        val titleStyle = MaterialTheme.typography.titleSmall
+        val textStyle = MaterialTheme.typography.bodySmall
+
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -21,12 +24,12 @@ fun OrderInfoRow(enable: Boolean = true, label: String, value: String) {
         ) {
             Text(
                 text = "$label:",
-                style = MaterialTheme.typography.titleMedium,
+                style = titleStyle,
                 modifier = Modifier.weight(1.2f)
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.bodyMedium,
+                style = textStyle,
                 modifier = Modifier.weight(1f)
             )
         }

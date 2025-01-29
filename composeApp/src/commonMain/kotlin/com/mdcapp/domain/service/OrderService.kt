@@ -20,7 +20,7 @@ class OrderService(
         const val BUY_ORDERS = "buyOrders"
         const val BILLINGS = "billings"
         const val FACTORIES = "factories"
-        const val PAYMENTS_REGISTER = "paymentsRegister"
+        const val PAYMENTS_REGISTER = "paymentRegister"
     }
 
     suspend fun fetchAllOrders(): List<RemoteResultOrder> {
@@ -155,5 +155,24 @@ class OrderService(
             false
         }
 
+    }
+
+    suspend fun fetchPaymentRegisterByNumberList(documentList: List<String>): List<RemotePaymentRegisterResult> {
+        val paymentRegisterResult: MutableList<RemotePaymentRegisterResult> = mutableListOf()
+        return try {
+            documentList.forEach { numberDocument ->
+                val data = db.collection(PAYMENTS_REGISTER)
+                    .where { FieldPath("Remito").equalTo(numberDocument) }
+                    .get()
+                    .documents
+                    .map { it.data<RemotePaymentRegisterResult>() }
+
+                if (data.isNotEmpty()) paymentRegisterResult.addAll(data)
+            }
+            paymentRegisterResult
+        } catch (e: Exception) {
+            Log.e("firestore", "on fetchPaymentRegisterByNumberList: $e ")
+            paymentRegisterResult
+        }
     }
 }

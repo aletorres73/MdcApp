@@ -29,7 +29,7 @@ data class RemotePaymentRegisterResult(
     @SerialName("Razón Social") val clientName: String = "",
     @SerialName("Remito") val documentNumber: String = "",
     @SerialName("Tipo") val type: String = "",
-    @SerialName("Monto Pagado") val total: Double = 0.0,
+    @SerialName("Monto pagado") val total: Double = 0.0,
     /*
         @SerialName("iva") val iva: Double = 0.0,
         @SerialName("Comisión %") val commission: Double = 0.0*/

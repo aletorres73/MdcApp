@@ -19,6 +19,7 @@ fun OrderSection(
     onClick: () -> Unit
 ) {
     Card(
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
         elevation = CardDefaults.elevatedCardElevation(32.dp)
     ) {
         Column(
