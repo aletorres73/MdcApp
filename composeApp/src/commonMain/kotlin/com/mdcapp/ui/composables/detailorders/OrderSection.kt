@@ -19,14 +19,14 @@ fun OrderSection(
     onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
         elevation = CardDefaults.elevatedCardElevation(32.dp)
     ) {
         Column(
             modifier = Modifier
                 .clickable { onClick() }
-                .padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+                .padding(4.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             if (title.isNotEmpty())
                 Text(

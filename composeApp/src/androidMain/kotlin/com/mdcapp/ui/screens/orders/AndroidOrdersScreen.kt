@@ -1,5 +1,6 @@
 package com.mdcapp.ui.screens.orders
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.mdcapp.ui.Screen
 import com.mdcapp.ui.composables.common.LoadingIndicator
@@ -56,10 +56,18 @@ fun AndroidOrdersScreen(
     LaunchedEffect(factoryName) {
         vm.init(if (factoryName == "IBA") "Gummi" else factoryName)
     }
+
     Screen {
         val state = vm.state
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
         var isSearchBar by remember { mutableStateOf(false) }
+        var resetFilters by remember { mutableStateOf(false) }
+
+        BackHandler(enabled = isSearchBar) {
+            isSearchBar = false
+            resetFilters = true
+            vm.cleanSearchQuery()
+        }
 
         Scaffold(
             topBar = {
@@ -89,12 +97,16 @@ fun AndroidOrdersScreen(
                     )
                 }
                 AnimatedVisibility(visible = isSearchBar) {
-                    var query by remember { mutableStateOf(TextFieldValue()) }
+                    val query = state.query
                     SearchbarTopBar(
                         query = query,
-                        onQueryChange = { newQuery -> query = newQuery },
-                        onCleanQuery = { query = TextFieldValue() },
-                        onClose = { isSearchBar = false },
+                        onQueryChange = { newQuery -> vm.searchOrders(newQuery) },
+                        onCleanQuery = {},
+                        onClose = {
+                            isSearchBar = false
+                            resetFilters = true
+                            vm.cleanSearchQuery()
+                        },
                     )
                 }
             },
@@ -114,9 +126,13 @@ fun AndroidOrdersScreen(
                         .fillMaxSize()
                 ) {
                     HorizontalDivider()
-                    FilterTextButtons { filter, isPressed ->
-                        vm.filterListByOrderState(filter, isPressed)
-                    }
+                    FilterTextButtons(
+                        reset = resetFilters,
+                        onReset = { resetFilters = false },
+                        onFilterPressed = { filter, isPressed ->
+                            vm.filterListByOrderState(filter, isPressed)
+                        }
+                    )
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally

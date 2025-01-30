@@ -80,7 +80,7 @@ fun OrderDetailInfo(
         ),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Pedido:", style = MaterialTheme.typography.titleMedium)
+        Text("Pedido:\t${state.buyOrder.id}", style = MaterialTheme.typography.titleMedium)
         OrderSection(
             onClick = { isBuyOrderClicked = !isBuyOrderClicked },
             content = {
@@ -88,7 +88,7 @@ fun OrderDetailInfo(
                 OrderInfoRow(label = "Marca", value = state.buyOrder.branch)
                 OrderInfoRow(label = "Comentarios", value = state.buyOrder.comments)
                 OrderInfoRow(label = "Fecha de Carga", value = state.buyOrder.loadedDate)
-                OrderInfoRow(label = "Número de Pedido", value = state.buyOrder.id)
+//                OrderInfoRow(label = "Número de Pedido", value = state.buyOrder.id)
             }
         )
         AnimatedVisibility(isBuyOrderClicked) {

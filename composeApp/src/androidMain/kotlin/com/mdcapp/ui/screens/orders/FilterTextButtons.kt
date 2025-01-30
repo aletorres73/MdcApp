@@ -18,7 +18,9 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun FilterTextButtons(
-    onFilterPressed: (filter: String, isPressed: Boolean) -> Unit
+    onFilterPressed: (filter: String, isPressed: Boolean) -> Unit,
+    onReset: (Boolean) -> Unit,
+    reset: Boolean = false
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -29,6 +31,13 @@ fun FilterTextButtons(
         var isClosedPressed by remember { mutableStateOf(false) }
 
         val spacerSize = Modifier.size(8.dp)
+
+        if (reset) {
+            isPendingPressed = false
+            isInProgressPressed = false
+            isClosedPressed = false
+            onReset(false)
+        }
 
         FilterChip(
             selected = isPendingPressed,

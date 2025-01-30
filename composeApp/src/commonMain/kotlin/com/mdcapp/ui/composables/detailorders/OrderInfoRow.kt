@@ -25,12 +25,12 @@ fun OrderInfoRow(enable: Boolean = true, label: String, value: String) {
             Text(
                 text = "$label:",
                 style = titleStyle,
-                modifier = Modifier.weight(1.2f)
+                modifier = Modifier.weight(1f)
             )
             Text(
                 text = value,
                 style = textStyle,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1.5f)
             )
         }
     }

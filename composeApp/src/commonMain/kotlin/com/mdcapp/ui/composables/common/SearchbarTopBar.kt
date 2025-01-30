@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -48,11 +47,6 @@ fun SearchbarTopBar(
         placeholder = { Text(text = "Buscar por artículo...", fontSize = 18.sp) },
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
-        trailingIcon = {
-            IconButton(onClick = onCleanQuery) {
-                Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear query")
-            }
-        },
         leadingIcon = {
             IconButton(onClick = onClose) {
                 Icon(
