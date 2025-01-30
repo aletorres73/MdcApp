@@ -87,9 +87,11 @@ class OrdersViewModel(
     fun filterListByOrderState(filter: String, value: Boolean) {
         viewModelScope.launch {
             state = state.copy(loading = true)
-            val updatedFilters = state.filters.toMutableMap().apply {
-                this[filter] = value
-            }
+            val updatedFilters = state.filters
+                .toMutableMap()
+                .apply {
+                    this[filter] = value
+                }
             state = if (value) {
                 val originalList = (state.orderList + state.filteredOrderList).distinct()
                 state.copy(

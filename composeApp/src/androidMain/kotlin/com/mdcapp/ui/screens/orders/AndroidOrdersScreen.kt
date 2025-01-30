@@ -1,14 +1,19 @@
 package com.mdcapp.ui.screens.orders
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -17,13 +22,20 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.mdcapp.ui.Screen
 import com.mdcapp.ui.composables.common.LoadingIndicator
 import com.mdcapp.ui.composables.common.MainTopAppBar
+import com.mdcapp.ui.composables.common.SearchbarTopBar
 import com.mdcapp.ui.composables.orders.OrderItems
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
 import kotlinx.coroutines.launch
@@ -46,30 +58,47 @@ fun AndroidOrdersScreen(
     }
     Screen {
         val state = vm.state
-        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+        var isSearchBar by remember { mutableStateOf(false) }
 
         Scaffold(
             topBar = {
-                MainTopAppBar(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    titleContent = {
-                        Column(
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            Text(
-                                "MDC Ordenes \t $factoryName",
-                                modifier = Modifier.padding(vertical = 6.dp),
-                                style = MaterialTheme.typography.titleMediumEmphasized
-                            )
-                        }
-                    },
-                    scrollBehavior = scrollBehavior,
-                    onBack = onBackPressed,
-                    isNavigationOn = true
-                )
+                AnimatedVisibility(visible = !isSearchBar) {
+                    MainTopAppBar(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        titleContent = {
+                            Column(
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                Text(
+                                    "MDC Ordenes \t $factoryName",
+                                    modifier = Modifier.padding(vertical = 6.dp),
+                                    style = MaterialTheme.typography.titleMediumEmphasized
+                                )
+                            }
+                        },
+                        onActions = {
+                            IconButton(onClick = { isSearchBar = true }) {
+                                Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
+                            }
+                        },
+                        scrollBehavior = scrollBehavior,
+                        onBack = onBackPressed,
+                        isNavigationOn = true
+                    )
+                }
+                AnimatedVisibility(visible = isSearchBar) {
+                    var query by remember { mutableStateOf(TextFieldValue()) }
+                    SearchbarTopBar(
+                        query = query,
+                        onQueryChange = { newQuery -> query = newQuery },
+                        onCleanQuery = { query = TextFieldValue() },
+                        onClose = { isSearchBar = false },
+                    )
+                }
             },
-
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
         ) { padding ->
             val refreshState = rememberPullToRefreshState()
             val scope = rememberCoroutineScope()

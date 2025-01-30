@@ -179,7 +179,7 @@ fun OrderDetailInfo(
                 onDismissRequest = { isAddPaymentRegister = false },
                 onConfirm = { payed ->
                     println(payed)
-                    isAddPaymentCondition = false
+                    isAddPaymentRegister = false
                     scope.launch { vm.addPayment(billingNumber, payed) }
                 },
                 billingNumber = billingNumber
