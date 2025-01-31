@@ -102,22 +102,23 @@ class BuyOrdersViewModel(
                 val payedRegistered =
                     state.paymentList.filter { it.documentNumber == billing.billingNumber }
                 if (payedRegistered.isNotEmpty()) {
-                    payedRegistered.forEach { payed += it.total }
                     println("Total on ${billing.billingNumber}: $payedRegistered")
-                    println("Total sum: $payed")
-                    state = state.copy(
-                        billings = state.billings.map {
-                            if (it.billingNumber == billing.billingNumber) {
-                                val toPay = it.toPay
-                                it.copy(
-                                    payed = "%.2f".format(payed).toDouble(),
-                                    rest = "%.2f".format(toPay - payed).toDouble()
-                                )
-                            } else {
-                                it
+                    payedRegistered.forEach {
+                        payed = it.total
+                        state = state.copy(
+                            billings = state.billings.map { document ->
+                                if (document.billingNumber == billing.billingNumber) {
+                                    val toPay = document.toPay
+                                    document.copy(
+                                        payed = "%.2f".format(Locale.US, payed).toDouble(),
+                                        rest = "%.2f".format(Locale.US, toPay - payed).toDouble()
+                                    )
+                                } else {
+                                    document
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
