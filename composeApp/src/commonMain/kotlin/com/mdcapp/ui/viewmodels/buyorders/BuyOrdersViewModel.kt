@@ -1,9 +1,6 @@
 package com.mdcapp.ui.viewmodels.buyorders
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
@@ -12,6 +9,10 @@ import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.data.model.PaymentRegisterModel
 import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -25,13 +26,17 @@ class BuyOrdersViewModel(
     private val getLastId: BuyOrderUseCase.GetLastIdPaymentFromRegister,
     private val updateBilling: BuyOrderUseCase.UpdateBilling,
     private val getPaymentsRegister: BuyOrderUseCase.GetPaymentsRegister
-//    private val addPaymentConditionsUseCase: PaymentConditionsUseCase.SetPaymentsConditionsFactory
 ) : ViewModel() {
-    var state by mutableStateOf(UiState())
-        private set
-    var tempState by mutableStateOf(state)
-        private set
 
+    // Estado inmutable expuesto a la UI
+    private val _state = MutableStateFlow(UiState())
+    val state: StateFlow<UiState> = _state.asStateFlow()
+
+    // Estado temporal para ediciones
+    private val _tempState = MutableStateFlow(_state.value)
+    val tempState: StateFlow<UiState> = _tempState.asStateFlow()
+
+    // Definición del estado de la UI
     data class UiState(
         val loadingOrder: Boolean = false,
         val loadingBillings: Boolean = false,
@@ -42,148 +47,177 @@ class BuyOrdersViewModel(
         val buyOrder: BuyOrderModel = BuyOrderModel(),
         val billings: List<BillingModel> = emptyList(),
         val totalAmount: Double = 0.0,
-        var totalToyPay: Double = 0.0,
-        var totalDiscount: Double = 0.0,
-        var totalPayed: Double = 0.0,
-        var totalRest: Double = 0.0,
+        val totalToPay: Double = 0.0,
+        val totalDiscount: Double = 0.0,
+        val totalPayed: Double = 0.0,
+        val totalRest: Double = 0.0,
         val error: String? = null,
         val paymentsConditions: List<PaymentCondition> = emptyList(),
-        var result: Boolean = true,
-        var paymentsRegisterNotEmpty: Boolean = false,
-        var paymentList: List<PaymentRegisterModel> = emptyList()
+        val result: Boolean = true,
+        val paymentsRegisterNotEmpty: Boolean = false,
+        val paymentList: List<PaymentRegisterModel> = emptyList()
     )
 
+    // Inicialización del ViewModel
     fun init(orderId: String, factoryName: String) {
         viewModelScope.launch {
-            println("Init called with orderId: $orderId")
-            state = state.copy(
-                orderId = orderId,
-                factoryName = factoryName
-            )
-            loadPaymentConditions()
-            loadBuyOrder()
-            loadBillings()
-            loadPaymentsRegister()
-            tempState = state
+            _state.value = _state.value.copy(orderId = orderId, factoryName = factoryName)
+
+            // Cargar datos en paralelo
+            val paymentConditionsDeferred = async { loadPaymentConditions() }
+            val buyOrderDeferred = async { loadBuyOrder() }
+            val billingsDeferred = async { loadBillings() }
+            val paymentsRegisterDeferred = async { loadPaymentsRegister() }
+
+            paymentConditionsDeferred.await()
+            buyOrderDeferred.await()
+            billingsDeferred.await()
+            paymentsRegisterDeferred.await()
+
+            _tempState.value = _state.value
         }
     }
 
-    private suspend fun loadPaymentsRegister() {
-        state = state.copy(loadingPaymentsRegister = true)
+    fun dataChanged(): Boolean {
+        return state != tempState
+    }
+
+    // Cargar condiciones de pago
+    private suspend fun loadPaymentConditions() {
+        _state.value = _state.value.copy(loadingPayments = true)
         try {
-            if (state.orderId.isNotEmpty()) {
-                val documentsList = state.billings.map { it.billingNumber }
+            val paymentsConditions = getPaymentsConditions(factoryName = _state.value.factoryName)
+            _state.value = _state.value.copy(
+                paymentsConditions = paymentsConditions,
+                loadingPayments = false
+            )
+        } catch (e: Exception) {
+            handleError(e)
+        }
+    }
+
+    // Cargar la orden de compra
+    private suspend fun loadBuyOrder() {
+        _state.value = _state.value.copy(loadingOrder = true)
+        try {
+            if (_state.value.orderId.isNotEmpty()) {
+                val buyOrder = getBuyOrder(_state.value.orderId)
+                _state.value = _state.value.copy(
+                    loadingOrder = false,
+                    buyOrder = buyOrder
+                )
+            }
+        } catch (e: Exception) {
+            handleError(e)
+        }
+    }
+
+    // Cargar facturas
+    private suspend fun loadBillings() {
+        _state.value = _state.value.copy(loadingBillings = true)
+        try {
+            if (_state.value.orderId.isNotEmpty()) {
+                val billings = getBillings(_state.value.orderId)
+                val totalAmount = calculateTotalBillingAmount(billings)
+                _state.value = _state.value.copy(
+                    loadingBillings = false,
+                    billings = billings,
+                    totalAmount = totalAmount
+                )
+                loadTotalsPayments()
+            }
+        } catch (e: Exception) {
+            handleError(e)
+        }
+    }
+
+    // Cargar registros de pagos
+    private suspend fun loadPaymentsRegister() {
+        _state.value = _state.value.copy(loadingPaymentsRegister = true)
+        try {
+            if (_state.value.orderId.isNotEmpty()) {
+                val documentsList = _state.value.billings.map { it.billingNumber }
                 val payments = getPaymentsRegister(documentsList)
-                println("Payments loaded: $payments")
-                state = if (payments.isNotEmpty()) state.copy(
-                    loadingPaymentsRegister = false,
-                    paymentsRegisterNotEmpty = true,
-                    paymentList = payments
-                )
-                else state.copy(
-                    loadingPaymentsRegister = false,
-                    paymentsRegisterNotEmpty = false
-                )
+                _state.value = if (payments.isNotEmpty()) {
+                    _state.value.copy(
+                        loadingPaymentsRegister = false,
+                        paymentsRegisterNotEmpty = true,
+                        paymentList = payments
+                    )
+                } else {
+                    _state.value.copy(
+                        loadingPaymentsRegister = false,
+                        paymentsRegisterNotEmpty = false
+                    )
+                }
                 checkPaymentsOnBillings()
             }
         } catch (e: Exception) {
-            Log.e("LoadPaymentsRegister", "Error loading payments: ${e.message}")
-            state = state.copy(
-                loadingPaymentsRegister = false,
-                error = e.message
-            )
+            handleError(e)
         }
     }
 
+    // Verificar pagos en facturas
     private fun checkPaymentsOnBillings() {
-        state.billings.forEach { billing ->
-            var payed = billing.payed
-            if (payed == 0.0) {
-                val payedRegistered =
-                    state.paymentList.filter { it.documentNumber == billing.billingNumber }
-                if (payedRegistered.isNotEmpty()) {
-                    println("Total on ${billing.billingNumber}: $payedRegistered")
-                    payedRegistered.forEach {
-                        payed = it.total
-                        state = state.copy(
-                            billings = state.billings.map { document ->
-                                if (document.billingNumber == billing.billingNumber) {
-                                    val toPay = document.toPay
-                                    document.copy(
-                                        payed = "%.2f".format(Locale.US, payed).toDouble(),
-                                        rest = "%.2f".format(Locale.US, toPay - payed).toDouble()
-                                    )
-                                } else {
-                                    document
-                                }
-                            }
-                        )
-                    }
-                }
+        val paymentsByBilling = _state.value.paymentList.groupBy { it.documentNumber }
+        _state.value = _state.value.copy(
+            billings = _state.value.billings.map { billing ->
+                val payments = paymentsByBilling[billing.billingNumber] ?: emptyList()
+                val totalPayed = payments.sumOf { it.total }
+                billing.copy(
+                    payed = totalPayed,
+                    rest = billing.toPay - totalPayed
+                )
             }
-        }
-//        loadTotalsPayments()
+        )
+        loadTotalsPayments()
     }
 
+    // Calcular totales de pagos
     private fun loadTotalsPayments() {
-        var totalToyPay = 0.0
-        var totalDiscount = 0.0
-        var totalPayed = 0.0
-        var totalRest = 0.0
-
-        state.billings.forEach {
-            totalToyPay += it.toPay
-            totalDiscount += it.discount
-            totalPayed += it.payed
-            totalRest += it.rest
+        val totals =
+            _state.value.billings.fold(Triple(0.0, 0.0, 0.0)) { (toPay, payed, rest), billing ->
+                Triple(toPay + billing.toPay, payed + billing.payed, rest + billing.rest)
         }
-        state = state.copy(
-            totalDiscount = totalDiscount,
-            totalToyPay = totalToyPay,
-            totalPayed = totalPayed,
-            totalRest = totalRest
+        _state.value = _state.value.copy(
+            totalToPay = totals.first,
+            totalPayed = totals.second,
+            totalRest = totals.third
         )
     }
 
-    fun dataChanged() = state != tempState
-
-    fun saveData() {
-        viewModelScope.launch {
-            var result = true // Inicializar result en true
-            tempState.billings.forEach {
-                result =
-                    result && updateBilling(it.billingNumber, it) // Acumular el resultado booleano
-                if (result) {
-                    println("Billing ${it.billingNumber} updated")
-                } else {
-                    println("Error on update billing ${it.billingNumber}")
-                }
-            }
-            if (result) {
-                state = tempState
-                println("All billings updated successfully")
-            } else {
-                println("Error updating some billings")
-            }
-        }
+    // Manejo de errores centralizado
+    private fun handleError(e: Exception) {
+        _state.value = _state.value.copy(error = e.message)
+        Log.e("BuyOrdersViewModel", "Error: ${e.message}")
     }
 
+    // Guardar datos editados
+    fun saveData(): Boolean {
+        var result = false
+        viewModelScope.launch {
+            result = _tempState.value.billings.all { billing ->
+                updateBilling(billing.billingNumber, billing)
+            }
+            if (result) {
+                _state.value = _tempState.value
+            } else {
+                handleError(Exception("Error updating some billings"))
+            }
+        }
+        return result
+    }
 
+    // Seleccionar condición de pago
     fun onSelectedPaymentCondition(paymentCondition: PaymentCondition, billingNumber: String) {
-        tempState = tempState.copy(
-            billings = tempState.billings.map { billing ->
+        _tempState.value = _tempState.value.copy(
+            billings = _tempState.value.billings.map { billing ->
                 if (billing.billingNumber == billingNumber) {
                     val total =
-                        billing.total
-                            .replace("$", "")
-                            .replace(",", "")
-                            .toDoubleOrNull() ?: 0.0
+                        billing.total.replace("$", "").replace(",", "").toDoubleOrNull() ?: 0.0
                     val discount = paymentCondition.discount * total
                     val toPay = total * (1.0 - paymentCondition.discount)
-                    val payDate = getPayDate(
-                        billingNumber,
-                        paymentCondition.expiration
-                    )
+                    val payDate = getPayDate(billingNumber, paymentCondition.expiration)
                     billing.copy(
                         paymentCondition = paymentCondition.paymentName,
                         total = "$%.2f".format(Locale.US, total),
@@ -198,38 +232,15 @@ class BuyOrdersViewModel(
         )
     }
 
-    fun saveDateSelected(newDate: String, billingNumber: String) {
-        val formatDate = formatDateString(newDate)
-        val paymentConditionName =
-            tempState.billings.find { it.billingNumber == billingNumber }?.paymentCondition
-        val expiration = paymentConditionName
-            ?.let { name -> tempState.paymentsConditions.find { it.paymentName == name }?.expiration }
-        try {
-            tempState = tempState.copy(
-                billings = tempState.billings.map { billing ->
-                    if (billing.billingNumber == billingNumber) {
-                        billing.copy(
-                            deliveryDate = formatDate,
-                            payDate = expiration?.let { getPayDate(billingNumber, it, formatDate) }
-                                ?: ""
-                        )
-                    } else
-                        billing
-                }
-            )
-        } catch (e: Exception) {
-            Log.e("BuyOrdersViewModel", "saveDateSelected : $e")
-        }
-    }
-
+    // Obtener fecha de pago
     private fun getPayDate(
         billingNumber: String,
         expiration: Int,
         newDeliveryDate: String = ""
     ): String {
         val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        val billing = tempState.billings.find { it.billingNumber == billingNumber }
-        val newPayDate = billing?.let {
+        val billing = _tempState.value.billings.find { it.billingNumber == billingNumber }
+        return billing?.let {
             try {
                 val deliveryDateStr = formatDateString(
                     newDeliveryDate.ifEmpty { it.deliveryDate.ifEmpty { newDeliveryDate } }
@@ -241,139 +252,116 @@ class BuyOrdersViewModel(
                 Log.e("BuyOrdersViewModel", "getPayDate: $e")
                 ""
             }
-        }
-        return newPayDate ?: ""
+        } ?: ""
     }
 
+    // Formatear fecha
     private fun formatDateString(dateStr: String): String {
         val parts = dateStr.split("/")
-        if (parts.size == 3 &&
-            parts[0].length == 2 &&
-            parts[1].length == 2 &&
-            parts[2].length == 4
-        ) {
-            return dateStr // La fecha ya está en el formato correcto
+        if (parts.size == 3 && parts[0].length == 2 && parts[1].length == 2 && parts[2].length == 4) {
+            return dateStr
         }
-        // Formatear fecha si no está en el formato correcto
         val day = parts[0].padStart(2, '0')
         val month = parts[1].padStart(2, '0')
         val year = parts[2]
         return "$day/$month/$year"
     }
 
+    // Obtener fecha actual
     private fun getCurrentDate(): String {
         val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        val currentDate = LocalDate.now()
-        return currentDate.format(dateFormatter)
+        return LocalDate.now().format(dateFormatter)
     }
 
-    private suspend fun loadPaymentConditions() {
-        state = state.copy(loadingPayments = true)
-        state = try {
-            state.copy(
-                paymentsConditions = getPaymentsConditions(factoryName = state.factoryName),
-                loadingPayments = false
-            )
-        } catch (e: Exception) {
-            state.copy(
-                loadingPayments = false,
-                error = e.message
-            )
-        }
-        println("${state.paymentsConditions}")
-    }
-
-    private suspend fun loadBuyOrder() {
-        state = state.copy(loadingOrder = true)
+    fun saveDateSelected(newDate: String, billingNumber: String) {
         try {
-            if (state.orderId.isNotEmpty()) {
-                val buyOrder = getBuyOrder(state.orderId)
-                println("BuyOrder loaded: $buyOrder")
-                state = state.copy(
-                    loadingOrder = false,
-                    buyOrder = buyOrder,
-                )
-            }
-        } catch (e: Exception) {
-            state = state.copy(
-                loadingOrder = false,
-                error = e.message
-            )
-        }
-    }
+            val formatDate = formatDateString(newDate)
+            val billing = _tempState.value.billings.find { it.billingNumber == billingNumber }
+            val paymentConditionName = billing?.paymentCondition
+            val expiration = paymentConditionName
+                ?.let { name -> _tempState.value.paymentsConditions.find { it.paymentName == name }?.expiration }
 
-    private suspend fun loadBillings() {
-        state = state.copy(loadingBillings = true)
-        try {
-            if (state.orderId.isNotEmpty()) {
-                val billings = getBillings(state.orderId)
-                val totalAmount = calculateTotalBillingAmount(billings)
-                println("Billings loaded: $billings")
-                println("Total amount calculated: $totalAmount")
-                state = state.copy(
-                    loadingBillings = false,
-                    billings = billings,
-                    totalAmount = totalAmount
-                )
-                loadTotalsPayments()
-            }
-        } catch (e: Exception) {
-            state = state.copy(
-                loadingBillings = false,
-                error = e.message
-            )
-        }
-    }
-
-    private fun calculateTotalBillingAmount(billings: List<BillingModel>): Double {
-        var total = 0.0
-        billings.forEach {
-            val amount = it.total
-                .replace("$", "")
-                .replace(",", "")
-                .toDouble()
-            total += amount
-        }
-        return total
-    }
-
-    suspend fun addPayment(billingNumber: String, payed: Double) {
-        viewModelScope.launch {
-            val paymentToRegister = PaymentRegisterModel(
-                id = getLastId() + 1,
-                branch = tempState.factoryName,
-                date = getCurrentDate(),
-                clientName = tempState.buyOrder.client,
-                documentNumber = billingNumber,
-                type = tempState.billings.find { it.billingNumber == billingNumber }?.type ?: "",
-                total = payed,
-                clientId = tempState.buyOrder.clientId
-            )
-            if (addPaymentToRegister(paymentToRegister)) {
-                tempState = tempState.copy(
-                    billings = tempState.billings.map { billing ->
-                        if (billing.billingNumber == billingNumber) {
-                            billing.copy(
-                                payed = billing.payed + payed,
-                            )
-                        } else billing
+            _tempState.value = _tempState.value.copy(
+                billings = _tempState.value.billings.map { billing ->
+                    if (billing.billingNumber == billingNumber) {
+                        billing.copy(
+                            deliveryDate = formatDate,
+                            payDate = expiration?.let { getPayDate(billingNumber, it, formatDate) }
+                                ?: ""
+                        )
+                    } else {
+                        billing
                     }
-                )
-                setRest(billingNumber)
-            } else
-                tempState = tempState.copy(error = " fail addPaymentToRegister")
+                }
+            )
+        } catch (e: Exception) {
+            Log.e("BuyOrdersViewModel", "saveDateSelected: $e")
+            _tempState.value =
+                _tempState.value.copy(error = "Error al guardar la fecha: ${e.message}")
         }
+    }
+
+    fun addPayment(billingNumber: String, payed: Double) {
+        viewModelScope.launch {
+            try {
+                val billing = _tempState.value.billings.find { it.billingNumber == billingNumber }
+                val paymentToRegister = PaymentRegisterModel(
+                    id = getLastId() + 1,
+                    branch = _tempState.value.factoryName,
+                    date = getCurrentDate(),
+                    clientName = _tempState.value.buyOrder.client,
+                    documentNumber = billingNumber,
+                    type = billing?.type ?: "",
+                    total = payed,
+                    clientId = _tempState.value.buyOrder.clientId
+                )
+
+                if (addPaymentToRegister(paymentToRegister)) {
+                    updateBillingPayment(billingNumber, payed)
+                } else {
+                    _tempState.value = _tempState.value.copy(error = "Error al registrar el pago")
+                }
+            } catch (e: Exception) {
+                Log.e("BuyOrdersViewModel", "addPayment: $e")
+                _tempState.value =
+                    _tempState.value.copy(error = "Error al agregar el pago: ${e.message}")
+            }
+        }
+    }
+
+    private fun updateBillingPayment(billingNumber: String, payed: Double) {
+        _tempState.value = _tempState.value.copy(
+            billings = _tempState.value.billings.map { billing ->
+                if (billing.billingNumber == billingNumber) {
+                    billing.copy(
+                        payed = billing.payed + payed
+                    )
+                } else {
+                    billing
+                }
+            }
+        )
+        setRest(billingNumber)
     }
 
     private fun setRest(billingNumber: String) {
-        tempState = tempState.copy(
-            billings = tempState.billings.map { billing ->
+        _tempState.value = _tempState.value.copy(
+            billings = _tempState.value.billings.map { billing ->
                 if (billing.billingNumber == billingNumber) {
                     billing.copy(
                         rest = "%.2f".format(Locale.US, billing.toPay - billing.payed).toDouble()
                     )
-                } else billing
+                } else {
+                    billing
+                }
             }
         )
+    }
+
+    // Calcular el monto total de las facturas
+    private fun calculateTotalBillingAmount(billings: List<BillingModel>): Double {
+        return billings.sumOf {
+            it.total.replace("$", "").replace(",", "").toDouble()
+        }
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +51,11 @@ fun OrderDetailInfo(
     vm: BuyOrdersViewModel,
     onBillingClicked: (BillingModel) -> Unit
 ) {
-    val state = vm.state
+    // Estado del ViewModel
+    val state by vm.state.collectAsState()
+    val tempState by vm.tempState.collectAsState()
+
+    // Estados locales para controlar la visibilidad de los componentes
     var isBuyOrderClicked by remember { mutableStateOf(false) }
     var isBillingClicked by remember { mutableStateOf(false) }
     var isDateSelect by remember { mutableStateOf(false) }
@@ -58,28 +63,33 @@ fun OrderDetailInfo(
     var isAddPaymentRegister by remember { mutableStateOf(false) }
     var isCheckPaymentRegister by remember { mutableStateOf(false) }
     var billingNumber by remember { mutableStateOf("") }
+
+    // CoroutineScope para lanzar corrutinas
     val scope = rememberCoroutineScope()
 
-
-    LaunchedEffect(orderId) {
+    // Inicializar el ViewModel cuando se carga la pantalla
+    LaunchedEffect(orderId, factoryName) {
         vm.init(orderId, factoryName)
     }
+
+    // Mostrar indicador de carga si alguna operación está en progreso
     LoadingIndicator(
-        enabled = state.loadingOrder
-                || state.loadingBillings
-                || state.loadingPayments
-                || state.loadingPaymentsRegister
+        enabled = state.loadingOrder || state.loadingBillings || state.loadingPayments || state.loadingPaymentsRegister
     )
-    BottomSheetPaymentRegister(isCheckPaymentRegister, state.paymentList) {
-        isCheckPaymentRegister = false
-    }
+
+    // BottomSheet para mostrar el registro de pagos
+    BottomSheetPaymentRegister(
+        isVisible = isCheckPaymentRegister,
+        paymentList = state.paymentList,
+        onDismiss = { isCheckPaymentRegister = false }
+    )
+
+    // Contenido principal de la pantalla
     Column(
-        modifier = Modifier.padding(
-            horizontal = 4.dp,
-            vertical = 12.dp
-        ),
+        modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        // Información del pedido
         Text("Pedido:\t${state.buyOrder.id}", style = MaterialTheme.typography.titleMedium)
         OrderSection(
             onClick = { isBuyOrderClicked = !isBuyOrderClicked },
@@ -88,30 +98,30 @@ fun OrderDetailInfo(
                 OrderInfoRow(label = "Marca", value = state.buyOrder.branch)
                 OrderInfoRow(label = "Comentarios", value = state.buyOrder.comments)
                 OrderInfoRow(label = "Fecha de Carga", value = state.buyOrder.loadedDate)
-//                OrderInfoRow(label = "Número de Pedido", value = state.buyOrder.id)
             }
         )
-        AnimatedVisibility(isBuyOrderClicked) {
-            BuyOrderItem(vm.state.buyOrder)
+        AnimatedVisibility(visible = isBuyOrderClicked) {
+            BuyOrderItem(buyOrder = state.buyOrder)
         }
+
+        // Divisor horizontal
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+        // Información de facturación
         Text("Facturación:", style = MaterialTheme.typography.titleMedium)
         OrderSection(
             onClick = { isBillingClicked = !isBillingClicked },
             content = {
-                OrderInfoRow(
-                    label = "Importe total",
-                    value = formatValue(state.totalAmount)
-                )
+                OrderInfoRow(label = "Importe total", value = formatValue(state.totalAmount))
                 OrderInfoRow(
                     enable = state.totalDiscount != 0.0,
                     label = "Dto total",
                     value = formatValue(state.totalDiscount)
                 )
                 OrderInfoRow(
-                    enable = state.totalToyPay != 0.0,
+                    enable = state.totalToPay != 0.0,
                     label = "Total a cobrar",
-                    value = formatValue(state.totalToyPay)
+                    value = formatValue(state.totalToPay)
                 )
                 OrderInfoRow(
                     enable = state.totalPayed != 0.0,
@@ -137,10 +147,12 @@ fun OrderDetailInfo(
                 }
             }
         )
-        AnimatedVisibility(isBillingClicked) {
+
+        // Lista de facturas y componentes relacionados
+        AnimatedVisibility(visible = isBillingClicked) {
             BillingList(
-                billings = if (vm.dataChanged()) vm.tempState.billings else state.billings,
-                onBillingClicked = { billing -> onBillingClicked(billing) },
+                billings = if (vm.dataChanged()) tempState.billings else state.billings,
+                onBillingClicked = onBillingClicked,
                 onAddPaymentCondition = { number ->
                     billingNumber = number
                     isAddPaymentCondition = true
@@ -154,6 +166,8 @@ fun OrderDetailInfo(
                     isAddPaymentRegister = true
                 },
             )
+
+            // BottomSheet para seleccionar condiciones de pago
             BottomSheetPaymentCondition(
                 enable = isAddPaymentCondition,
                 paymentCondition = state.paymentsConditions,
@@ -164,21 +178,23 @@ fun OrderDetailInfo(
                     isAddPaymentCondition = false
                 }
             )
+
+            // Selector de fecha
             DatePicker(
                 enable = isDateSelect,
                 onDismissButton = { isDateSelect = false },
                 onDismissRequest = { isDateSelect = false },
                 onConfirmButton = { newDate ->
-                    println(newDate)
                     vm.saveDateSelected(newDate, billingNumber)
                     isDateSelect = false
                 }
             )
+
+            // Registro de pagos
             PaymentsRegister(
                 enable = isAddPaymentRegister,
                 onDismissRequest = { isAddPaymentRegister = false },
                 onConfirm = { payed ->
-                    println(payed)
                     isAddPaymentRegister = false
                     scope.launch { vm.addPayment(billingNumber, payed) }
                 },
@@ -187,52 +203,52 @@ fun OrderDetailInfo(
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetPaymentRegister(
-    enable: Boolean,
+    isVisible: Boolean,
     paymentList: List<PaymentRegisterModel>,
-    onDismissRequest: () -> Unit
+    onDismiss: () -> Unit
 ) {
-    if (enable) {
+    if (isVisible) {
         val sheetState = rememberModalBottomSheetState()
         val scope = rememberCoroutineScope()
 
         ModalBottomSheet(
-            modifier = Modifier
-                .wrapContentHeight(),
+            modifier = Modifier.wrapContentHeight(),
             sheetState = sheetState,
             onDismissRequest = {
                 scope.launch {
                     sheetState.hide()
-                    onDismissRequest()
+                    onDismiss()
                 }
             },
         ) {
-            Text(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                text = "Registro de pagos",
-                style = MaterialTheme.typography.titleMedium
-            )
-            PaymentHeaderRow()
-            LazyColumn(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                contentPadding = PaddingValues(8.dp)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(paymentList, key = null) { payment ->
-                    Column {
-                        PaymentRow(payment)
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp))
+                Text(
+                    text = "Registro de pagos",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                PaymentHeaderRow()
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = PaddingValues(8.dp)
+                ) {
+                    items(paymentList) { payment ->
+                        Column {
+                            PaymentRow(payment)
+                            HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp))
+                        }
                     }
                 }
             }
         }
     }
 }
-
 @Composable
 fun PaymentHeaderRow() {
     val styleText = MaterialTheme.typography.titleSmall
@@ -243,34 +259,17 @@ fun PaymentHeaderRow() {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "Fecha",
-            modifier = Modifier.weight(1f),
-            style = styleText
-        )
-        Text(
-            text = "Documento",
-            modifier = Modifier.weight(1f),
-            style = styleText
-        )
-        Text(
-            text = "Tipo",
-            modifier = Modifier.weight(1f),
-            style = styleText
-        )
-        Text(
-            text = "Monto",
-            modifier = Modifier.weight(1f),
-            style = styleText
-        )
+        Text(text = "Fecha", modifier = Modifier.weight(1f), style = styleText)
+        Text(text = "Documento", modifier = Modifier.weight(1f), style = styleText)
+        Text(text = "Tipo", modifier = Modifier.weight(1f), style = styleText)
+        Text(text = "Monto", modifier = Modifier.weight(1f), style = styleText)
     }
 }
 
 @Composable
 fun PaymentRow(payment: PaymentRegisterModel) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
