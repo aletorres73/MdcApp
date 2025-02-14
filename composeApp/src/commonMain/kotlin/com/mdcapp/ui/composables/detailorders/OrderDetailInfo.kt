@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -86,11 +87,18 @@ fun OrderDetailInfo(
 
     // Contenido principal de la pantalla
     Column(
-        modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Información del pedido
-        Text("Pedido:\t${state.buyOrder.id}", style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = "Pedido: ${state.buyOrder.id}",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
         OrderSection(
             onClick = { isBuyOrderClicked = !isBuyOrderClicked },
             content = {
@@ -105,10 +113,19 @@ fun OrderDetailInfo(
         }
 
         // Divisor horizontal
-        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 8.dp),
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+        )
 
         // Información de facturación
-        Text("Facturación:", style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = "Facturación:",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
         OrderSection(
             onClick = { isBillingClicked = !isBillingClicked },
             content = {
@@ -203,6 +220,7 @@ fun OrderDetailInfo(
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetPaymentRegister(
