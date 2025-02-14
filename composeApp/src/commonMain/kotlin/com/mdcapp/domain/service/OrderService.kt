@@ -5,6 +5,7 @@ package com.mdcapp.domain.service
 import android.util.Log
 import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.data.model.RemotePaymentRegisterResult
+import com.mdcapp.data.remote.RemoteBranchOrder
 import com.mdcapp.data.remote.RemoteResultBillingModel
 import com.mdcapp.data.remote.RemoteResultBuyOrder
 import com.mdcapp.data.remote.RemoteResultFactoryModel
@@ -37,6 +38,21 @@ class OrderService(
             println("Firestore : on firestore getCollections: $e")
             emptyList()
         }
+    }
+
+    suspend fun fetchOrderBranch(orderId: String): String {
+        return try {
+            val data = db.collection(BUY_ORDERS)
+                .where { FieldPath("Orden Id").equalTo(orderId) }
+                .get()
+                .documents
+                .map { it.data<RemoteBranchOrder>() }
+            data.first().branch
+        } catch (e: Exception) {
+            Log.e("firestore", "on fetchOrderBranchList: $e")
+            ""
+        }
+
     }
 
     suspend fun fetchOrdersByFactory(name: String): List<RemoteResultOrder> {

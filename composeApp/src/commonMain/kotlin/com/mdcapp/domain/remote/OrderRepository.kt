@@ -53,4 +53,8 @@ class OrderRepository(private val service: OrderService) {
     suspend fun getPaymentsRegisterByNumberDocument(documentList: List<String>): List<PaymentRegisterModel> {
         return service.fetchPaymentRegisterByNumberList(documentList).map { it.toDomain() }
     }
+
+    suspend fun getOrderBranch(orderId: String): String {
+        return service.fetchOrderBranch(orderId)
+    }
 }

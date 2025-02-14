@@ -141,8 +141,15 @@ fun AndroidOrdersScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         items(state.orderList, key = { it.orderNumber }) { order ->
+                            val branch = vm.branch[order.orderNumber]
+                            if (branch == null) {
+                                // Iniciar la descarga de la marca si no está cargada
+                                vm.getBranchOrder(order.orderNumber)
+                            }
                             OrderItems(
                                 order = order,
+                                orderBranch = branch ?: "",
+//                                billingList = emptyList(),
                                 onCardClick = {
                                     onDetailClick(order.orderNumber)
                                 }

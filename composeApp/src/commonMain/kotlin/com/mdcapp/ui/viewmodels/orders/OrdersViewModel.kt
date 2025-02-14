@@ -2,6 +2,7 @@ package com.mdcapp.ui.viewmodels.orders
 
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.TextFieldValue
@@ -13,9 +14,13 @@ import kotlinx.coroutines.launch
 
 class OrdersViewModel(
     private val getOrdersByFactory: OrdersUseCase.GetOrdersByFactory,
+    private val getBranchUseCase: OrdersUseCase.GetOrderBranch
 ) : ViewModel() {
     var state by mutableStateOf(UiState())
         private set
+
+    private val _branches = mutableStateMapOf<String, String>()
+    val branch: Map<String, String> get() = _branches
 
     data class UiState(
         val loading: Boolean = false,
@@ -29,7 +34,8 @@ class OrdersViewModel(
             "Closed" to false,
         ),
         var query: TextFieldValue = TextFieldValue(),
-        val isSearchBar: Boolean = false
+        val isSearchBar: Boolean = false,
+//        val branch: String = ""
     )
 
     fun init(factoryName: String) {
@@ -46,6 +52,13 @@ class OrdersViewModel(
     fun setSearchBar(value: Boolean) {
         viewModelScope.launch {
             state = state.copy(isSearchBar = value)
+        }
+    }
+
+    fun getBranchOrder(orderId: String) {
+        viewModelScope.launch {
+            val branch = getBranchUseCase(orderId)
+            _branches[orderId] = branch
         }
     }
 

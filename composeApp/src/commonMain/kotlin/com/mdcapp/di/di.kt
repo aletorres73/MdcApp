@@ -27,6 +27,7 @@ val appModule = module {
 
     single<OrdersUseCase.GetAllOrders> { get<OrdersUseCase>().GetAllOrders() }
     single<OrdersUseCase.GetOrdersByFactory> { get<OrdersUseCase>().GetOrdersByFactory() }
+    single<OrdersUseCase.GetOrderBranch> { get<OrdersUseCase>().GetOrderBranch() }
 
     single<BuyOrderUseCase.GetBuyOrderById> { get<BuyOrderUseCase>().GetBuyOrderById() }
     single<BuyOrderUseCase.GetBillings> { get<BuyOrderUseCase>().GetBillings() }
