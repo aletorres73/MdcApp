@@ -58,11 +58,13 @@ fun AndroidOrdersScreen(
     Screen {
         val state = vm.state
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-        var isSearchBar by remember { mutableStateOf(false) }
+//        var isSearchBar by remember { mutableStateOf(false) }
+        val isSearchBar = vm.state.isSearchBar
         var resetFilters by remember { mutableStateOf(false) }
 
         BackHandler(enabled = isSearchBar) {
-            isSearchBar = false
+//            isSearchBar = false
+            vm.setSearchBar(false)
             resetFilters = true
             vm.cleanSearchQuery()
         }
@@ -85,7 +87,9 @@ fun AndroidOrdersScreen(
                             }
                         },
                         onActions = {
-                            IconButton(onClick = { isSearchBar = true }) {
+                            IconButton(onClick = { /*isSearchBar = true*/
+                                vm.setSearchBar(true)
+                            }) {
                                 Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
                             }
                         },
@@ -101,7 +105,8 @@ fun AndroidOrdersScreen(
                         onQueryChange = { newQuery -> vm.searchOrders(newQuery) },
                         onCleanQuery = {},
                         onClose = {
-                            isSearchBar = false
+//                            isSearchBar = false
+                            vm.setSearchBar(false)
                             resetFilters = true
                             vm.cleanSearchQuery()
                         },

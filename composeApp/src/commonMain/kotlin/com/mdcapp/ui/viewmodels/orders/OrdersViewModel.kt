@@ -28,13 +28,24 @@ class OrdersViewModel(
             "Progress" to false,
             "Closed" to false,
         ),
-        var query: TextFieldValue = TextFieldValue()
+        var query: TextFieldValue = TextFieldValue(),
+        val isSearchBar: Boolean = false
     )
 
     fun init(factoryName: String) {
         viewModelScope.launch {
             state = state.copy(factoryName = factoryName)
             fetchFromRepository()
+            if (state.query.text.isNotEmpty()) {
+                searchOrders(state.query)
+                setSearchBar(true)
+            }
+        }
+    }
+
+    fun setSearchBar(value: Boolean) {
+        viewModelScope.launch {
+            state = state.copy(isSearchBar = value)
         }
     }
 
