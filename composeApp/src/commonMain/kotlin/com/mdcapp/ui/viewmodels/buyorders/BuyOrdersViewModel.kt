@@ -67,19 +67,17 @@ class BuyOrdersViewModel(
             val paymentConditionsDeferred = async { loadPaymentConditions() }
             val buyOrderDeferred = async { loadBuyOrder() }
             val billingsDeferred = async { loadBillings() }
-            val paymentsRegisterDeferred = async { loadPaymentsRegister() }
+//            val paymentsRegisterDeferred = async {  loadPaymentsRegister() }
 
             paymentConditionsDeferred.await()
             buyOrderDeferred.await()
             billingsDeferred.await()
-            paymentsRegisterDeferred.await()
-
             _tempState.value = _state.value
         }
     }
 
     fun dataChanged(): Boolean {
-        return state != tempState
+        return _state.value != _tempState.value
     }
 
     // Cargar condiciones de pago
@@ -124,6 +122,7 @@ class BuyOrdersViewModel(
                     billings = billings,
                     totalAmount = totalAmount
                 )
+                loadPaymentsRegister()
                 loadTotalsPayments()
             }
         } catch (e: Exception) {
@@ -142,7 +141,7 @@ class BuyOrdersViewModel(
                     _state.value.copy(
                         loadingPaymentsRegister = false,
                         paymentsRegisterNotEmpty = true,
-                        paymentList = payments
+                        paymentList = payments.sortedByDescending { it.date }
                     )
                 } else {
                     _state.value.copy(
@@ -166,7 +165,7 @@ class BuyOrdersViewModel(
                 val totalPayed = payments.sumOf { it.total }
                 billing.copy(
                     payed = totalPayed,
-                    rest = billing.toPay - totalPayed
+                    rest = "%.2f".format(Locale.US, billing.toPay - totalPayed).toDouble()
                 )
             }
         )

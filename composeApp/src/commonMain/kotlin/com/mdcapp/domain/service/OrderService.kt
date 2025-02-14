@@ -167,7 +167,9 @@ class OrderService(
                     .documents
                     .map { it.data<RemotePaymentRegisterResult>() }
 
-                if (data.isNotEmpty()) paymentRegisterResult.addAll(data)
+                Log.e("firestore", "on fetchPaymentRegisterByNumberList: $data")
+                if (data.isNotEmpty())
+                    paymentRegisterResult.addAll(data)
             }
             paymentRegisterResult
         } catch (e: Exception) {
