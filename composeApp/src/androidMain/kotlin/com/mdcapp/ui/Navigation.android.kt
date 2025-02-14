@@ -29,7 +29,7 @@ actual fun PlatformNavigation() {
                     .padding(paddingValues)
             ) {
                 AndroidNavigation(
-                    route = route
+                    startRoute = route
                 )
             }
         }
