@@ -88,7 +88,7 @@ fun OrderDetailInfo(
     // Contenido principal de la pantalla
     Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 4.dp, vertical = 12.dp)
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {

@@ -2,7 +2,6 @@ package com.mdcapp.ui.composables.billings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,115 +31,116 @@ fun BillingList(
 ) {
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(4.dp)
+        contentPadding = PaddingValues(8.dp),
+        horizontalArrangement = Arrangement.Center
     ) {
         items(billings, key = { it.billingNumber }) { billing ->
-            Box(
+            ElevatedCard(
                 modifier = Modifier
-                    .fillParentMaxWidth(),
-                contentAlignment = Alignment.Center
+                    .width(IntrinsicSize.Max)
+                    .clickable { onBillingClicked(billing) }
+                    .padding(4.dp),
+                shape = MaterialTheme.shapes.medium,
+                elevation = CardDefaults.cardElevation(4.dp)
             ) {
-                ElevatedCard(
+                Column(
                     modifier = Modifier
-                        .width(IntrinsicSize.Max)
-                        .clickable { onBillingClicked(billing) }
-                        .padding(horizontal = 4.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    elevation = CardDefaults.cardElevation(4.dp)
-                ) {
-                    val columnModifier = Modifier
                         .padding(16.dp)
-                        .fillMaxWidth()
-                    val columnArrangement = Arrangement.spacedBy(6.dp)
-                    Column(
-                        modifier = columnModifier,
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Sección superior: Número de factura e importe
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = columnArrangement
-                            ) {
-                                RowInfoBilling(
-                                    key = "N°:",
-                                    value = billing.billingNumber
-                                )
-                                RowInfoBilling(
-                                    key = "Importe:",
-                                    value = if (billing.total.isNotEmpty())
-                                        billing.total.replace(",", "")
-                                    else
-                                        "$0.00"
-                                )
-                                RowInfoBilling(
-                                    key = "C.P:",
-                                    value = billing.paymentCondition
-                                )
-                            }
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = columnArrangement
-                            ) {
-                                RowInfoBilling(
-                                    key = "Facturación:",
-                                    value = billing.loadDate.ifEmpty { "-/-/-" }
-                                )
-                                RowInfoBilling(
-                                    key = "Recepción:",
-                                    value = billing.deliveryDate.ifEmpty { "-/-/-" }
-                                )
-                                RowInfoBilling(
-                                    key = "Pago:",
-                                    value = billing.payDate.ifEmpty { "-/-/-" }
-                                )
-                            }
+                            RowInfoBilling(
+                                key = "N°:",
+                                value = billing.billingNumber,
+                                isTitle = true // Estilo de título
+                            )
+                            RowInfoBilling(
+                                key = "Importe:",
+                                value = billing.total.replace(",", "").ifEmpty { "$0.00" }
+                            )
+                            RowInfoBilling(
+                                key = "C.P:",
+                                value = billing.paymentCondition
+                            )
                         }
-                        HorizontalDivider()
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.Top
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = columnArrangement
-                            ) {
-                                RowInfoBilling(
-                                    key = "Dtos:",
-                                    value = "$${billing.discount}"
-                                )
-                                RowInfoBilling(
-                                    key = "A cobrar:",
-                                    value = "$${billing.toPay}"
-                                )
-                                RowInfoBilling(
-                                    key = "Pagado:",
-                                    value = "$${billing.payed}"
-                                )
-                                RowInfoBilling(
-                                    key = "Saldo:",
-                                    value = "$${billing.rest}"
-                                )
-                            }
-                            Column(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                BillingInputChip(
-                                    onClick = { onAddDeliveryDate(billing.billingNumber) },
-                                    text = "Agregar recepción"
-                                )
-                                BillingInputChip(
-                                    onClick = { onAddPaymentCondition(billing.billingNumber) },
-                                    text = "Condición de pago"
-                                )
-                                BillingInputChip(
-                                    onClick = { onPaymentRegister(billing.billingNumber) },
-                                    text = "Registrar pago"
-                                )
-                            }
+                            RowInfoBilling(
+                                key = "Facturación:",
+                                value = billing.loadDate.ifEmpty { "-/-/-" }
+                            )
+                            RowInfoBilling(
+                                key = "Recepción:",
+                                value = billing.deliveryDate.ifEmpty { "-/-/-" }
+                            )
+                            RowInfoBilling(
+                                key = "Pago:",
+                                value = billing.payDate.ifEmpty { "-/-/-" }
+                            )
+                        }
+                    }
+
+                    // Divisor horizontal
+                    HorizontalDivider(
+                        modifier = Modifier.fillMaxWidth(),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+
+                    // Sección inferior: Descuentos, pagos y saldos
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            RowInfoBilling(
+                                key = "Dtos:",
+                                value = "$${billing.discount}"
+                            )
+                            RowInfoBilling(
+                                key = "A cobrar:",
+                                value = "$${billing.toPay}"
+                            )
+                            RowInfoBilling(
+                                key = "Pagado:",
+                                value = "$${billing.payed}"
+                            )
+                            RowInfoBilling(
+                                key = "Saldo:",
+                                value = "$${billing.rest}"
+                            )
+                        }
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            BillingInputChip(
+                                onClick = { onAddDeliveryDate(billing.billingNumber) },
+                                text = "Agregar recepción"
+                            )
+                            BillingInputChip(
+                                onClick = { onAddPaymentCondition(billing.billingNumber) },
+                                text = "Condición de pago"
+                            )
+                            BillingInputChip(
+                                onClick = { onPaymentRegister(billing.billingNumber) },
+                                text = "Registrar pago"
+                            )
                         }
                     }
                 }
@@ -148,6 +148,5 @@ fun BillingList(
         }
     }
 }
-
 
 

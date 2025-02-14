@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Save
 import androidx.compose.material3.AlertDialog
@@ -129,9 +131,11 @@ fun OrderDetailScreen(
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     ) { paddingValues ->
+        // Envolver el contenido en un Column con scroll vertical
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState()) // Habilita el scroll vertical
                 .padding(paddingValues),
             horizontalAlignment = Alignment.Start
         ) {
@@ -145,7 +149,6 @@ fun OrderDetailScreen(
         }
     }
 }
-
 @Composable
 private fun ShowDiscardChangesDialog(
     enable: Boolean,
