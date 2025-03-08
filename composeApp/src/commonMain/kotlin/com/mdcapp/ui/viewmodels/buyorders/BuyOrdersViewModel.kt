@@ -164,7 +164,7 @@ class BuyOrdersViewModel(
                 val payments = paymentsByBilling[billing.billingNumber] ?: emptyList()
                 val totalPayed = payments.sumOf { it.total }
                 billing.copy(
-                    payed = totalPayed,
+                    payed = "%.2f".format(Locale.US, totalPayed).toDouble(),
                     rest = "%.2f".format(Locale.US, billing.toPay - totalPayed).toDouble()
                 )
             }
@@ -177,7 +177,7 @@ class BuyOrdersViewModel(
         val totals =
             _state.value.billings.fold(Triple(0.0, 0.0, 0.0)) { (toPay, payed, rest), billing ->
                 Triple(toPay + billing.toPay, payed + billing.payed, rest + billing.rest)
-        }
+            }
         _state.value = _state.value.copy(
             totalToPay = totals.first,
             totalPayed = totals.second,

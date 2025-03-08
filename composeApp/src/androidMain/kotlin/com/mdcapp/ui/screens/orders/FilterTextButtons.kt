@@ -18,11 +18,13 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun FilterTextButtons(
+    modifier: Modifier = Modifier,
     onFilterPressed: (filter: String, isPressed: Boolean) -> Unit,
     onReset: (Boolean) -> Unit,
     reset: Boolean = false
 ) {
     Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround
     ) {

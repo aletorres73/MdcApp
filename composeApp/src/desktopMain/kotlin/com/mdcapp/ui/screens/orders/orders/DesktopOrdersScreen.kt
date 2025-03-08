@@ -38,7 +38,8 @@ fun DesktopOrdersScreen(
                 items(state.orderList, key = null) { order ->
                     OrderItems(
                         order = order,
-                        onCardClick = { onOpenOrderDetail(order) }
+                        onCardClick = { onOpenOrderDetail(order) },
+                        orderBranch = ""
                     )
                 }
             }

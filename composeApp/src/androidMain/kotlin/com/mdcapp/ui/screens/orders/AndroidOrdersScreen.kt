@@ -130,6 +130,7 @@ fun AndroidOrdersScreen(
                 ) {
                     HorizontalDivider()
                     FilterTextButtons(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         reset = resetFilters,
                         onReset = { resetFilters = false },
                         onFilterPressed = { filter, isPressed ->

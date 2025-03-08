@@ -13,12 +13,17 @@ import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.ui.Screen
 import com.mdcapp.ui.composables.detailorders.OrderDetailInfo
+import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun DesktopOrderDetailScreen(
     order: OrderModel,
     onBillingClicked: (BillingModel) -> Unit
 ) {
+    val vm: BuyOrdersViewModel = koinViewModel()
     Screen {
         Scaffold { padding ->
             Column(
@@ -31,7 +36,8 @@ fun DesktopOrderDetailScreen(
                 OrderDetailInfo(
                     orderId = order.orderNumber,
                     onBillingClicked = { billing -> onBillingClicked(billing) },
-                    factoryName = ""
+                    factoryName = "",
+                    vm = vm
                 )
             }
         }
