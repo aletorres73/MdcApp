@@ -39,6 +39,7 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
+            implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
 
@@ -50,13 +51,25 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serilization.json)
             implementation(libs.androidx.navigation.compose)
-            implementation(libs.material.icons.extended)
+//            implementation(libs.material.icons.extended) esta librería es una pija, rompe todo
 
+//            implementation(libs.compose.foundation.desktop)
+//            implementation(libs.compose.material3.desktop)
+//            implementation(libs.compose.runtime.desktop)
+//            implementation(libs.compose.ui.text.desktop)
+//            implementation(libs.compose.ui.util.desktop)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(compose.components.uiToolingPreview)
+//            implementation(compose.components.uiToolingPreview)
+//            implementation(libs.compose.ui.tooling)
+//            implementation(libs.compose.ui.util)
+//            implementation(libs.compose.foundation.desktop)
+//            implementation(libs.compose.material3.desktop)
+//            implementation(libs.compose.runtime.desktop)
+//            implementation(libs.compose.ui.text.desktop)
+//            implementation(libs.compose.ui.util.desktop)
         }
     }
     task("testClasses")

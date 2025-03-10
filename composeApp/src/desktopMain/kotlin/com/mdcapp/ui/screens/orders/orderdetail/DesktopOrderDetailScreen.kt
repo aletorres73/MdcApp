@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.mdcapp.data.model.BillingModel
@@ -21,9 +22,13 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun DesktopOrderDetailScreen(
     order: OrderModel,
+    vm: BuyOrdersViewModel = koinViewModel(),
+    factoryName: String,
     onBillingClicked: (BillingModel) -> Unit
 ) {
-    val vm: BuyOrdersViewModel = koinViewModel()
+    LaunchedEffect(Unit) {
+        vm.init(orderId = order.orderNumber, factoryName = factoryName)
+    }
     Screen {
         Scaffold { padding ->
             Column(
@@ -36,7 +41,7 @@ fun DesktopOrderDetailScreen(
                 OrderDetailInfo(
                     orderId = order.orderNumber,
                     onBillingClicked = { billing -> onBillingClicked(billing) },
-                    factoryName = "",
+                    factoryName = factoryName,
                     vm = vm
                 )
             }

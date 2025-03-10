@@ -57,6 +57,7 @@ class OrderService(
 
     suspend fun fetchOrdersByFactory(name: String): List<RemoteResultOrder> {
         return try {
+            if (name == "all") return fetchAllOrders()
             val document = db.collection(ORDERS)
                 .where { FieldPath("Marca").equalTo(name) }
                 .get()

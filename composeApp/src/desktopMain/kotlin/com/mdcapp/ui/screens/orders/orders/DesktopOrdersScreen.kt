@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.OrderModel
@@ -22,8 +23,11 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun DesktopOrdersScreen(
     vm: OrdersViewModel = koinViewModel(),
-    onOpenOrderDetail: (OrderModel) -> Unit
+    onOpenOrderDetail: (order: OrderModel, factoryName: String) -> Unit
 ) {
+    LaunchedEffect(Unit) {
+        vm.init("all")
+    }
     Screen {
         Scaffold { padding ->
             val state = vm.state
@@ -38,8 +42,13 @@ fun DesktopOrdersScreen(
                 items(state.orderList, key = null) { order ->
                     OrderItems(
                         order = order,
-                        onCardClick = { onOpenOrderDetail(order) },
-                        orderBranch = ""
+                        onCardClick = {
+                            onOpenOrderDetail(
+                                order,
+                                order.branch
+                            )
+                        },
+                        orderBranch = order.branch
                     )
                 }
             }

@@ -24,22 +24,27 @@ fun DesktopNavigation() {
     val navController = rememberNavController()
     var openDetailOrderWindow by remember { mutableStateOf(false) }
     var openDetailBillingWindow by remember { mutableStateOf(false) }
-    var order by remember { mutableStateOf(OrderModel()) }
+    var orderModel by remember { mutableStateOf(OrderModel()) }
+    var factoryName by remember { mutableStateOf("") }
     var billing by remember { mutableStateOf(RemoteResultBillingModel().toDomain()) }
 
     NavHost(navController = navController, startDestination = "Orders") {
         composable(route = "Orders") {
-            DesktopOrdersScreen(onOpenOrderDetail = {
-                openDetailOrderWindow = true
-                order = it
-            })
+            DesktopOrdersScreen(
+                onOpenOrderDetail = { order, branch ->
+                    openDetailOrderWindow = true
+                    orderModel = order
+                    factoryName = if (branch == "Gummi") "IBA" else factoryName
+                }
+            )
             if (openDetailOrderWindow)
                 OpenWindow(
                     onCloseRequest = { openDetailOrderWindow = false },
-                    title = "Detalle de orden: ${order.orderNumber}",
+                    title = "Detalle de orden: ${orderModel.orderNumber}",
                     content = {
                         DesktopOrderDetailScreen(
-                            order = order,
+                            order = orderModel,
+                            factoryName = factoryName,
                             onBillingClicked = {
                                 billing = it
                                 openDetailBillingWindow = true
