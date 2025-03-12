@@ -7,6 +7,7 @@ import com.mdcapp.domain.service.OrderService
 import com.mdcapp.domain.usescases.homeusescases.HomeUseCase
 import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
+import com.mdcapp.domain.usescases.ordersusescases.GetFactoriesListUseCase
 import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
 import com.mdcapp.ui.viewmodels.HomeViewModel
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
@@ -35,6 +36,7 @@ val appModule = module {
     single<BuyOrderUseCase.GetLastIdPaymentFromRegister> { get<BuyOrderUseCase>().GetLastIdPaymentFromRegister() }
     single<BuyOrderUseCase.UpdateBilling> { get<BuyOrderUseCase>().UpdateBilling() }
     single<BuyOrderUseCase.GetPaymentsRegister> { get<BuyOrderUseCase>().GetPaymentsRegister() }
+    single<GetFactoriesListUseCase> { get<GetFactoriesListUseCase>() }
 
     single<PaymentConditionsUseCase.GetPaymentsConditions> { get<PaymentConditionsUseCase>().GetPaymentsConditions() }
     single<PaymentConditionsUseCase.SetPaymentsConditionsFactory> { get<PaymentConditionsUseCase>().SetPaymentsConditionsFactory() }
@@ -52,6 +54,7 @@ val dataModule = module {
     factoryOf(::BuyOrderUseCase)
     factoryOf(::HomeUseCase)
     factoryOf(::PaymentConditionsUseCase)
+    factoryOf(::GetFactoriesListUseCase)
 }
 
 val viewModelModule = module {

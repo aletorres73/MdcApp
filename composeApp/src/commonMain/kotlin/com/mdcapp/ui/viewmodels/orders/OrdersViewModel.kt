@@ -9,12 +9,14 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.OrderModel
+import com.mdcapp.domain.usescases.ordersusescases.GetFactoriesListUseCase
 import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
 import kotlinx.coroutines.launch
 
 class OrdersViewModel(
     private val getOrdersByFactory: OrdersUseCase.GetOrdersByFactory,
-    private val getBranchUseCase: OrdersUseCase.GetOrderBranch
+    private val getBranchUseCase: OrdersUseCase.GetOrderBranch,
+    private val getFactoriesList: GetFactoriesListUseCase
 ) : ViewModel() {
     var state by mutableStateOf(UiState())
         private set
@@ -25,6 +27,7 @@ class OrdersViewModel(
     data class UiState(
         val loading: Boolean = false,
         val factoryName: String = "",
+        val factoriesList: List<String> = emptyList(),
         val backupList: List<OrderModel> = emptyList(), // copia original de la lista del repo
         val orderList: List<OrderModel> = emptyList(), // lista para mostrar en pantalla
         val filteredOrderList: List<OrderModel> = emptyList(),
@@ -33,6 +36,7 @@ class OrdersViewModel(
             "Progress" to false,
             "Closed" to false,
         ),
+        val filterFactory: MutableMap<String, Boolean> = mutableMapOf(),
         var query: TextFieldValue = TextFieldValue(),
         val isSearchBar: Boolean = false,
 //        val branch: String = ""
@@ -66,17 +70,22 @@ class OrdersViewModel(
         state = state.copy(loading = true)
         val remoteList =
             getOrdersByFactory(state.factoryName).sortedByDescending { it.orderNumber }
+        val factoriesList = getFactoriesList()
+        if (factoriesList.isNotEmpty()) factoriesList.forEach { factory ->
+            state.filterFactory[factory] = false
+        }
         state = state.copy(
             loading = false,
             orderList = remoteList,
-            backupList = remoteList
+            backupList = remoteList,
+            factoriesList = factoriesList
         )
     }
 
     private fun applyFilters(
         list: List<OrderModel>,
         filters: Map<String, Boolean> = state.filters,
-        flag: String
+        flag: String,
     ): List<OrderModel> {
         return when (flag) {
             "filtered" -> {
@@ -113,13 +122,79 @@ class OrdersViewModel(
         }
     }
 
+    private fun applyFilterFactory(
+        list: List<OrderModel>,
+        filters: Map<String, Boolean> = state.filters,
+        flag: String,
+    ): List<OrderModel> {
+        println(filters)
+        if (state.factoriesList.isEmpty() && flag == "filtered") return list
+        if (state.factoriesList.isEmpty() && flag == "no_filtered") return emptyList()
+        return when (flag) {
+            "filtered" -> {
+                list.filter { order ->
+                    !filters.any { (factory, isSelected) ->
+                        if (factory == "IBA") {
+                            !(isSelected && order.branch == "Gummi" || isSelected && order.branch == "Kids" || isSelected && order.branch == "Diamond")
+                        } else
+                            isSelected && order.branch != factory
+                    }
+                }
+            }
+
+            "no_filtered" -> {
+                list.filter { order ->
+                    filters.any { (factory, isSelected) ->
+                        if (factory == "IBA")
+                            (isSelected && order.branch == "Gummi" || isSelected && order.branch == "Kids" || isSelected && order.branch == "Diamond")
+                        else
+                            isSelected && order.branch == factory
+                    }
+                }
+            }
+
+            else -> {
+                list
+            }
+        }
+
+    }
+
+    fun filterOrdersByFactory(factory: String, pressed: Boolean) {
+        viewModelScope.launch {
+            updateFilters(factory, pressed, "factory")
+            if (state.query.text.isEmpty()) {
+                state = if (isAnyFilterFactoryActive()) {
+                    val newList =
+                        applyFilterFactory(
+                            state.backupList,
+                            state.filterFactory,
+                            flag = "no_filtered"
+                        )
+                    val filteredList =
+                        applyFilterFactory(state.backupList, state.filterFactory, flag = "filtered")
+                    state.copy(
+                        loading = false,
+                        orderList = newList,
+                        filteredOrderList = filteredList
+                    )
+                } else {
+                    state.copy(
+                        loading = false,
+                        orderList = state.backupList,
+                        filteredOrderList = emptyList()
+                    )
+                }
+            } else {
+                searchOrders(state.query, true)
+            }
+            Log.i("Home", "OrdersViewModel: ${state.filters}")
+        }
+    }
+
     fun filterListByOrderState(filter: String, value: Boolean) {
         viewModelScope.launch {
-            state = state.copy(loading = true)
-            val updatedFilters = state.filters.mapValues { (key, filterValue) ->
-                key == filter && value
-            }.toMutableMap()
-            state = state.copy(filters = updatedFilters)
+            updateFilters(filter, value)
 
             if (state.query.text.isEmpty()) {
                 state = if (isAnyFilterActive()) {
@@ -137,13 +212,28 @@ class OrdersViewModel(
                         filteredOrderList = emptyList()
                     )
             } else {
-                searchOrders(state.query)
+                searchOrders(state.query, true)
             }
             Log.i("Home", "OrdersViewModel: ${state.filters}")
         }
     }
 
-    fun searchOrders(query: TextFieldValue) {
+    private fun updateFilters(keyFilter: String, value: Boolean, flag: String = "") {
+        state = state.copy(loading = true)
+        if (flag != "factory") {
+            val updatedFilters = state.filters.mapValues { (key, _) ->
+                key == keyFilter && value
+            }.toMutableMap()
+            state = state.copy(filters = updatedFilters)
+        } else {
+            val updatedFilters = state.filterFactory.mapValues { (key, _) ->
+                key == keyFilter && value
+            }.toMutableMap()
+            state = state.copy(filterFactory = updatedFilters)
+        }
+    }
+
+    fun searchOrders(query: TextFieldValue, factoryFilter: Boolean = false) {
         fun searchInList(list: List<OrderModel>, searchText: String): List<List<OrderModel>> {
             val matchedOrders = list.filter { order ->
                 order.orderNumber.contains(searchText, ignoreCase = true) ||
@@ -159,12 +249,19 @@ class OrdersViewModel(
             val searchText = query.text.trim().lowercase()
             state = if (searchText.isNotEmpty()) {
                 val filteredBySearch =
-                    if (isAnyFilterActive())
+                    if (isAnyFilterFactoryActive())
                         searchInList(
-                            applyFilters(
-                                state.backupList,
-                                flag = "no_filtered"
-                            ),
+                            if (!factoryFilter)
+                                applyFilters(
+                                    state.backupList,
+                                    flag = "no_filtered"
+                                )
+                            else
+                                applyFilterFactory(
+                                    state.backupList,
+                                    state.filterFactory,
+                                    flag = "no_filtered"
+                                ),
                             searchText
                         )
                     else
@@ -186,6 +283,8 @@ class OrdersViewModel(
     }
 
     private fun isAnyFilterActive() = state.filters.any { it.value }
+
+    private fun isAnyFilterFactoryActive() = state.filterFactory.any { it.value }
 
     fun cleanSearchQuery() {
         fun reset() {

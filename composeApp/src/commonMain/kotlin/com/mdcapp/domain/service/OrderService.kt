@@ -194,4 +194,19 @@ class OrderService(
             paymentRegisterResult
         }
     }
+
+    suspend fun fetchFactoriesLisName(): List<String> {
+        return try {
+            val documents = db.collection(FACTORIES)
+                .get()
+                .documents
+                .map { it.data<RemoteResultFactoryModel>() }
+            val nameList = emptyList<String>().toMutableList()
+            documents.forEach { nameList.add(it.name) }
+            nameList
+        } catch (e: Exception) {
+            Log.e("firestore", "on fetchFactoriesLisName: $e ")
+            emptyList()
+        }
+    }
 }
