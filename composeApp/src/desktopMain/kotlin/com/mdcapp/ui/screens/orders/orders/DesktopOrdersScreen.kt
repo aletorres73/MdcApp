@@ -1,7 +1,9 @@
 package com.mdcapp.ui.screens.orders.orders
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -11,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.Scaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBarDefaults
@@ -25,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.ui.Screen
+import com.mdcapp.ui.composables.common.BottomBarOrderScreen
 import com.mdcapp.ui.composables.common.MainTopAppBar
 import com.mdcapp.ui.composables.common.SearchButton
 import com.mdcapp.ui.composables.common.SearchbarTopBar
@@ -37,7 +42,8 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun DesktopOrdersScreen(
     vm: OrdersViewModel = koinViewModel(),
-    onOpenOrderDetail: (order: OrderModel, factoryName: String) -> Unit
+    onOpenOrderDetail: (order: OrderModel, factoryName: String) -> Unit,
+    onBottomBarClick: () -> Unit = {}
 ) {
     val state = vm.state
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -78,6 +84,9 @@ fun DesktopOrdersScreen(
                         },
                     )
                 }
+            },
+            bottomBar = {
+                BottomBarOrderScreen { onBottomBarClick() }
             }
         ) { padding ->
             Column(
@@ -94,30 +103,41 @@ fun DesktopOrdersScreen(
                     onReset = { resetFilters = false },
                     reset = resetFilters
                 )
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(350.dp),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier
-                        .fillMaxHeight()
-                ) {
-                    items(state.orderList, key = null) { order ->
-                        val branch = vm.branch[order.orderNumber]
-                        if (branch == null) {
-                            // Iniciar la descarga de la marca si no está cargada
-                            vm.getBranchOrder(order.orderNumber)
+
+                Box(contentAlignment = Alignment.CenterStart) {
+                    val stateList = rememberLazyGridState()
+
+                    LazyVerticalGrid(
+                        state = stateList,
+                        columns = GridCells.Adaptive(350.dp),
+                        contentPadding = PaddingValues(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                    )
+                    {
+                        items(state.orderList, key = null) { order ->
+                            val branch = vm.branch[order.orderNumber]
+                            if (branch == null) {
+                                // Iniciar la descarga de la marca si no está cargada
+                                vm.getBranchOrder(order.orderNumber)
+                            }
+                            OrderItems(
+                                order = order,
+                                orderBranch = branch ?: "",
+                                onCardClick = {
+                                    onOpenOrderDetail(
+                                        order,
+                                        order.branch
+                                    )
+                                },
+                            )
                         }
-                        OrderItems(
-                            order = order,
-                            orderBranch = branch ?: "",
-                            onCardClick = {
-                                onOpenOrderDetail(
-                                    order,
-                                    order.branch
-                                )
-                            },
-                        )
                     }
+                    VerticalScrollbar(
+                        modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                        adapter = rememberScrollbarAdapter(stateList)
+                    )
                 }
             }
         }
