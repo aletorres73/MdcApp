@@ -11,14 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.Scaffold
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.ui.Screen
 import com.mdcapp.ui.composables.common.MainTopAppBar
+import com.mdcapp.ui.composables.common.SearchButton
 import com.mdcapp.ui.composables.common.SearchbarTopBar
 import com.mdcapp.ui.composables.orders.OrderItems
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
@@ -62,17 +57,10 @@ fun DesktopOrdersScreen(
                 AnimatedVisibility(visible = !isSearchBar) {
                     MainTopAppBar(
                         modifier = Modifier.fillMaxWidth(),
-                        titleContent = {
-                            Text(
-                                "MDC Ordenes",
-                                modifier = Modifier.padding(6.dp),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        },
+                        title = "MDC App",
                         onActions = {
-                            IconButton(onClick = { vm.setSearchBar(true) }) {
-                                Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
-                            }
+
+                            SearchButton(false, onSearchIconClick = { vm.setSearchBar(true) })
                         },
                         scrollBehavior = scrollBehavior,
                         isNavigationOn = false
@@ -121,13 +109,13 @@ fun DesktopOrdersScreen(
                         }
                         OrderItems(
                             order = order,
+                            orderBranch = branch ?: "",
                             onCardClick = {
                                 onOpenOrderDetail(
                                     order,
-                                    branch ?: ""
+                                    order.branch
                                 )
                             },
-                            orderBranch = order.branch
                         )
                     }
                 }

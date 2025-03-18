@@ -8,15 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -34,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.mdcapp.ui.Screen
 import com.mdcapp.ui.composables.common.LoadingIndicator
 import com.mdcapp.ui.composables.common.MainTopAppBar
+import com.mdcapp.ui.composables.common.SearchButton
 import com.mdcapp.ui.composables.common.SearchbarTopBar
 import com.mdcapp.ui.composables.orders.OrderItems
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
@@ -75,23 +70,9 @@ fun AndroidOrdersScreen(
                     MainTopAppBar(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        titleContent = {
-                            Column(
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                Text(
-                                    "MDC Ordenes \t $factoryName",
-                                    modifier = Modifier.padding(vertical = 6.dp),
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            }
-                        },
+                        title = "MDC App",
                         onActions = {
-                            IconButton(onClick = { /*isSearchBar = true*/
-                                vm.setSearchBar(true)
-                            }) {
-                                Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
-                            }
+                            SearchButton(false, onSearchIconClick = { vm.setSearchBar(true) })
                         },
                         scrollBehavior = scrollBehavior,
                         onBack = onBackPressed,
