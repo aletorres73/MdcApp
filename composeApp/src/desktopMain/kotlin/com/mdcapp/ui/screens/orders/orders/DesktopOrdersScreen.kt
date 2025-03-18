@@ -86,7 +86,6 @@ fun DesktopOrdersScreen(
                         onCleanQuery = {},
                         onClose = {
                             vm.setSearchBar(false)
-//                            resetFilters = true
                             vm.cleanSearchQuery()
                         },
                     )
@@ -113,15 +112,19 @@ fun DesktopOrdersScreen(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier
                         .fillMaxHeight()
-//                        .padding(padding)
                 ) {
                     items(state.orderList, key = null) { order ->
+                        val branch = vm.branch[order.orderNumber]
+                        if (branch == null) {
+                            // Iniciar la descarga de la marca si no está cargada
+                            vm.getBranchOrder(order.orderNumber)
+                        }
                         OrderItems(
                             order = order,
                             onCardClick = {
                                 onOpenOrderDetail(
                                     order,
-                                    order.branch
+                                    branch ?: ""
                                 )
                             },
                             orderBranch = order.branch

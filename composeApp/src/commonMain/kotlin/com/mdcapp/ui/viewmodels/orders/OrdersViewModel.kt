@@ -273,12 +273,23 @@ class OrdersViewModel(
                     query = query
                 )
             } else
-                state.copy(
-                    loading = false,
-                    filteredOrderList = emptyList(),
-                    orderList = state.backupList,
-                    query = query
-                )
+                if (isAnyFilterFactoryActive())
+                    state.copy(
+                        loading = false,
+                        orderList = applyFilterFactory(
+                            state.backupList,
+                            state.filterFactory,
+                            flag = "no_filtered"
+                        ),
+                        query = query
+                    )
+                else
+                    state.copy(
+                        loading = false,
+                        filteredOrderList = emptyList(),
+                        orderList = state.backupList,
+                        query = query
+                    )
         }
     }
 
