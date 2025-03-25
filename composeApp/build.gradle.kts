@@ -117,7 +117,7 @@ compose.desktop {
                 includeAllModules = true
             }
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.mdcapp"
+            packageName = "MDCApp"
             packageVersion = "1.0.0"
         }
     }
