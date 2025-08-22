@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.twotone.Save
+import androidx.compose.material.icons.twotone.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -97,12 +97,13 @@ fun OrderDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.onPrimaryContainer),
-                titleContent = {
-                    Text(
-                        "Orden \t$orderId",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                },
+                /*   titleContent = {
+                       Text(
+                           "Orden \t$orderId",
+                           style = MaterialTheme.typography.titleMedium
+                       )
+                   }*/
+                title = "Orden 	$orderId",
                 isNavigationOn = true,
                 onBack = {
                     if (vm.dataChanged()) isDataChanged = true
@@ -124,7 +125,7 @@ fun OrderDetailScreen(
                             }
                         }
                     ) {
-                        Icon(imageVector = Icons.TwoTone.Save, contentDescription = null)
+                        Icon(imageVector = Icons.TwoTone.Star, contentDescription = null)
                     }
                 }
             )
