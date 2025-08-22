@@ -30,7 +30,7 @@ fun AndroidNavigation(startRoute: String) {
             ClientsScreen()
         }
         composable(
-            route = AppRoute.Orders.BaseRoute,
+            route = AppRoute.Orders.BASE_ROUTE,
             arguments = listOf(navArgument("factoryName") { type = NavType.StringType })
         ) { backStackEntry ->
             val factoryName = checkNotNull(backStackEntry.arguments?.getString("factoryName"))
@@ -43,7 +43,7 @@ fun AndroidNavigation(startRoute: String) {
             )
         }
         composable(
-            route = AppRoute.OrderDetail.BaseRoute,
+            route = AppRoute.OrderDetail.BASE_ROUTE,
             arguments = listOf(
                 navArgument("orderId") { type = NavType.StringType },
                 navArgument("factoryName") { type = NavType.StringType }
