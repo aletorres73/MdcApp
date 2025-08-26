@@ -1,6 +1,9 @@
 package com.mdcapp.data.model
 
-data class ClientModel(
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+data class InfoClientModel(
     val clientId: Int,
     var clientName: String,
     var fantasyName: String,
@@ -13,4 +16,32 @@ data class ClientModel(
     var email: String,
     var phone: String,
     var contactName: String
+)
+
+data class ClientModel(
+    val clientId: String,
+    val clientName: String,
+)
+
+@Serializable
+data class RemoteResultClientModel(
+    @SerialName("Cliente Id") val clientId: String = "",
+    @SerialName("Razón Social") val clientName: String = "",
+)
+
+
+@Serializable
+data class RemoteResultInfoClientModel(
+    @SerialName("Cliente Id") val clientId: String = "",
+    @SerialName("Razón Social") val clientName: String = "",
+    @SerialName("Nombre fantasia") val fantasyName: String = "",
+    @SerialName("CUIT") val cuit: String = "",
+    @SerialName("Direccion Comercio") val address: String = "",
+    @SerialName("Direccion Fiscal") val taxAddress: String = "",
+    @SerialName("Localidad Comercio") val city: String = "",
+    @SerialName("Localidad Fiscal") val taxCity: String = "",
+    @SerialName("Horario de entrega") val deliveryTime: String = "",
+    @SerialName("Email") val email: String = "",
+    @SerialName("Telefono") val phone: String = "",
+    @SerialName("Contacto") val contactName: String = ""
 )
