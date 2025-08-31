@@ -29,6 +29,12 @@ data class RemoteResultClientModel(
     @SerialName("Razón Social") val clientName: String = "",
 )
 
+fun RemoteResultClientModel.toDomain() =
+    ClientModel(
+        clientId = clientId,
+        clientName = clientName,
+    )
+
 
 @Serializable
 data class RemoteResultInfoClientModel(
