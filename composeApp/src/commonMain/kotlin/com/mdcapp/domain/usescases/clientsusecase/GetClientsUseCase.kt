@@ -16,8 +16,16 @@ class GetClientsUseCase(private val service: ClientService) {
 
     }
 
+    suspend fun getAmountClients(): Long {
+        return service.fetchAmountClients()
+    }
+
     fun resetPagination() {
         currentPage = 0
         service.resetPagination()
+    }
+
+    suspend fun search(clientName: String): List<ClientModel> {
+        return service.searchClientsByName(clientName).map { it.toDomain() }
     }
 }

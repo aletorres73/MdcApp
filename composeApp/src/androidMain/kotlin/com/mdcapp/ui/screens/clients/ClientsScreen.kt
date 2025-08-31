@@ -59,7 +59,6 @@ fun ClientsScreen(
     val statusScreenStatus by vm.statusScreen.collectAsState()
 
     var isSearchEnable by remember { mutableStateOf(false) }
-    var nextPage by remember { mutableStateOf(false) }
 
     val snackBarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -117,50 +116,59 @@ fun ClientsScreen(
                     query = query.value,
                     onQueryChange = { newQuery -> query.value = newQuery },
                     onCleanQuery = { query.value = TextFieldValue("") },
-                    onClose = { isSearchEnable = false },
+                    onClose = {
+                        isSearchEnable = false
+                        vm.resetView()
+                    },
                     onSearch = {
                         Log.i("Search", "Search: ${query.value.text}")
+                        vm.searchClients(query.value.text)
                     }
                 )
             }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "ID",
-                    modifier = Modifier.weight(0.2f),
+                    modifier = Modifier,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
                     "Razón Social",
-                    modifier = Modifier.weight(0.8f),
+                    modifier = Modifier,
                     style = MaterialTheme.typography.titleMedium
+                )
+
+                Text(
+                    "Clientes ${state.amountClients}",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(horizontal = 8.dp)
                 )
             }
             when (statusScreenStatus) {
-                ClientsViewModel.ClientScreenStatus.Idle -> {
+                is ClientsViewModel.ClientScreenStatus.Idle -> {
+                    val message =
+                        (statusScreenStatus as ClientsViewModel.ClientScreenStatus.Idle).message
                     Column {
                         ShowClientList(state.data, state, listState)
                     }
+                    LaunchedEffect(message) {
+                        if (message.isNotEmpty())
+                            snackBarHostState.showSnackbar(
+                                message = message,
+                                duration = SnackbarDuration.Short
+                            )
+                    }
                 }
 
-                /*                ClientsViewModel.ClientScreenStatus.Loading -> {
-                                    LoadingIndicator(state.updatingData)
-                                }*/
-
-                is ClientsViewModel.ClientScreenStatus.Error -> {
-                    val message =
-                        (statusScreenStatus as ClientsViewModel.ClientScreenStatus.Error).message
-                    LaunchedEffect(message) {
-                        snackBarHostState.showSnackbar(
-                            message = message,
-                            duration = SnackbarDuration.Short
-                        )
-                    }
-                    ShowClientList(state.data, state, listState)
+                ClientsViewModel.ClientScreenStatus.Search -> {
+                    ShowClientList(state.dataSearch, state, listState)
                 }
             }
         }
@@ -180,41 +188,45 @@ private fun ShowClientList(
         verticalArrangement = Arrangement.spacedBy(18.dp),
         state = listState
     ) {
-        items(clientList, key = { it.clientId }) { client ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .animateItem(),
-                shape = RoundedCornerShape(4.dp),
-            ) {
-                Row(
+        try {
+            items(clientList) { client ->
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .height(35.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .animateItem(),
+                    shape = RoundedCornerShape(4.dp),
                 ) {
-                    Text(client.clientId, modifier = Modifier.weight(0.2f))
-                    VerticalDivider(
+                    Row(
                         modifier = Modifier
-                            .size(16.dp)
-                            .weight(0.2f)
-                    )
-                    Text(client.clientName, modifier = Modifier.weight(1f))
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                            .height(35.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(client.clientId, modifier = Modifier.weight(0.2f))
+                        VerticalDivider(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .weight(0.2f)
+                        )
+                        Text(client.clientName, modifier = Modifier.weight(1f))
+                    }
                 }
             }
-        }
-        if (state.updatingData) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(Modifier.size(24.dp))
+            if (state.updatingData) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(Modifier.size(24.dp))
+                    }
                 }
             }
+        } catch (e: Exception) {
+            Log.e("LazyColumn", "Error: ${e.message}")
         }
     }
 }

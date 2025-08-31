@@ -1,6 +1,7 @@
 package com.mdcapp.data.service
 
 import android.util.Log
+import com.google.firebase.firestore.AggregateSource
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -64,4 +65,46 @@ class ClientService(
             emptyList<RemoteResultClientModel>() to false
         }
     }
+
+    suspend fun fetchAmountClients(): Long {
+        return try {
+            val snapshot = db.collection(CLIENTS)
+                .count()
+                .get(AggregateSource.SERVER)
+                .await()
+
+            snapshot.count
+        } catch (e: Exception) {
+            Log.e("firestore", "Error on fetchClients: $e")
+            0
+        }
+    }
+
+    suspend fun searchClientsByName(query: String): List<RemoteResultClientModel> {
+        val searchTerm = query.trim().lowercase()
+        if (searchTerm.isEmpty()) return emptyList()
+
+        return try {
+            val snapshot = db.collection(CLIENTS).get().await()
+
+            snapshot.documents.mapNotNull { doc ->
+                try {
+                    RemoteResultClientModel(
+                        clientId = doc.getString("Cliente Id") ?: "",
+                        clientName = doc.getString("Razon Social") ?: ""
+                    )
+                } catch (e: Exception) {
+                    Log.e("firestore", "Error mapping client: $e")
+                    null
+                }
+            }.filter { client ->
+                client.clientName.lowercase().contains(searchTerm)
+            }
+        } catch (e: Exception) {
+            Log.e("firestore", "Error fetching clients: $e")
+            emptyList()
+        }
+    }
+
+
 }
