@@ -1,9 +1,9 @@
 package com.mdcapp.di
 
-import com.mdcapp.domain.remote.HomeRepository
-import com.mdcapp.domain.remote.OrderRepository
-import com.mdcapp.domain.service.HomeService
-import com.mdcapp.domain.service.OrderService
+import com.mdcapp.data.service.HomeService
+import com.mdcapp.data.service.OrderService
+import com.mdcapp.domain.repositories.HomeRepository
+import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.usescases.homeusescases.HomeUseCase
 import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase

@@ -1,6 +1,6 @@
 @file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
 
-package com.mdcapp.domain.service
+package com.mdcapp.data.service
 
 import com.mdcapp.data.remote.RemoteResultFactoryModel
 import dev.gitlive.firebase.firestore.FirebaseFirestore

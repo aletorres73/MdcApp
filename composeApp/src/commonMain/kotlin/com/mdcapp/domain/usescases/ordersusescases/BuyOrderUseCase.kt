@@ -3,7 +3,7 @@ package com.mdcapp.domain.usescases.ordersusescases
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
 import com.mdcapp.data.model.PaymentRegisterModel
-import com.mdcapp.domain.remote.OrderRepository
+import com.mdcapp.domain.repositories.OrderRepository
 
 class BuyOrderUseCase(private val repository: OrderRepository) {
     inner class GetBuyOrderById {

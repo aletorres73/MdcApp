@@ -1,7 +1,7 @@
 package com.mdcapp.domain.usescases.homeusescases
 
 import com.mdcapp.data.model.PaymentCondition
-import com.mdcapp.domain.remote.OrderRepository
+import com.mdcapp.domain.repositories.OrderRepository
 
 class PaymentConditionsUseCase(private val repository: OrderRepository) {
     inner class GetPaymentsConditions {

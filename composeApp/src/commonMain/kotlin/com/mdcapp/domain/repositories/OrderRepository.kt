@@ -1,4 +1,4 @@
-package com.mdcapp.domain.remote
+package com.mdcapp.domain.repositories
 
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.OrderModel
@@ -7,7 +7,7 @@ import com.mdcapp.data.model.PaymentRegisterModel
 import com.mdcapp.data.model.toDomain
 import com.mdcapp.data.remote.toDomain
 import com.mdcapp.data.remote.toPaymentConditions
-import com.mdcapp.domain.service.OrderService
+import com.mdcapp.data.service.OrderService
 
 class OrderRepository(private val service: OrderService) {
     suspend fun getAllOrders(): List<OrderModel> = service.fetchAllOrders().map { it.toDomain() }

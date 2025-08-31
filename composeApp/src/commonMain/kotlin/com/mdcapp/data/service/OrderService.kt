@@ -1,6 +1,6 @@
 @file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
 
-package com.mdcapp.domain.service
+package com.mdcapp.data.service
 
 import android.util.Log
 import com.mdcapp.data.model.PaymentCondition

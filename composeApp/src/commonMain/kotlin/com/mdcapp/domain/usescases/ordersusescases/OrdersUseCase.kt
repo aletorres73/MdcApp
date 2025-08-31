@@ -1,7 +1,7 @@
 package com.mdcapp.domain.usescases.ordersusescases
 
 import com.mdcapp.data.model.OrderModel
-import com.mdcapp.domain.remote.OrderRepository
+import com.mdcapp.domain.repositories.OrderRepository
 
 class OrdersUseCase(private val repository: OrderRepository) {
     inner class GetAllOrders {

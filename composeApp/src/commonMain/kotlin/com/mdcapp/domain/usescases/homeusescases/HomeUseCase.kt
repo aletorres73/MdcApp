@@ -1,7 +1,7 @@
 package com.mdcapp.domain.usescases.homeusescases
 
 import com.mdcapp.data.model.FactoryModel
-import com.mdcapp.domain.remote.HomeRepository
+import com.mdcapp.domain.repositories.HomeRepository
 
 class HomeUseCase(private val repository: HomeRepository) {
     inner class GetAllFactories {
