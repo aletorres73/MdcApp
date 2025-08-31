@@ -3,8 +3,11 @@ package com.mdcapp.ui.composables.common
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -17,6 +20,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,6 +31,7 @@ fun SearchbarTopBar(
     onQueryChange: (TextFieldValue) -> Unit,
     onCleanQuery: () -> Unit,
     onClose: () -> Unit,
+    onSearch: (TextFieldValue) -> Unit = {}
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
@@ -55,6 +60,23 @@ fun SearchbarTopBar(
                 )
             }
         },
+        trailingIcon = {
+            if (query.text.isNotEmpty()) {
+                IconButton(onClick = onCleanQuery) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Clear query"
+                    )
+                }
+            }
+        },
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Search
+        ),
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                onSearch(query)
+            }
+        )
     )
-
 }
