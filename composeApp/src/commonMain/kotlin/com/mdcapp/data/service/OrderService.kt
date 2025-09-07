@@ -102,6 +102,22 @@ class OrderService(
         }
     }
 
+    suspend fun fetchBillingsByClient(clientId: String): List<RemoteResultBillingModel> {
+        return try {
+            val document = db.collection(BILLINGS)
+                .where { FieldPath("Cliente id").equalTo(clientId) }
+//                .where { FieldPath("Marca").equalTo("Pendiente") }
+                .get()
+                .documents
+                .map { it.data<RemoteResultBillingModel>() }
+            Log.i("OrderService", "on fetchBillingsByClient in firestore : $document")
+            document
+        } catch (e: Exception) {
+            println("OrderService: on fetchBillingsByClient $e")
+            emptyList()
+        }
+    }
+
     suspend fun fetchPaymentsTypesFactory(factoryName: String): Map<String, Map<String, Any>> {
         return try {
             val document = db.collection(FACTORIES)

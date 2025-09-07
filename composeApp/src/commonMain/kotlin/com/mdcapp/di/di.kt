@@ -11,13 +11,16 @@ import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.usescases.clientsusecase.GetClientsUseCase
 import com.mdcapp.domain.usescases.homeusescases.HomeUseCase
 import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
+import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import com.mdcapp.domain.usescases.ordersusescases.GetFactoriesListUseCase
 import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import com.mdcapp.ui.viewmodels.HomeViewModel
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
+import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
+import dev.gitlive.firebase.firestore.firestore
 import org.koin.compose.viewmodel.dsl.viewModelOf
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.factoryOf
@@ -26,6 +29,7 @@ import org.koin.dsl.module
 
 val appModule = module {
     single<FirebaseFirestore> { Firebase.firestore }
+    single<dev.gitlive.firebase.firestore.FirebaseFirestore> { dev.gitlive.firebase.Firebase.firestore }
 
     single<HomeUseCase.GetAllFactories> { get<HomeUseCase>().GetAllFactories() }
 
@@ -45,6 +49,8 @@ val appModule = module {
     single<PaymentConditionsUseCase.SetPaymentsConditionsFactory> { get<PaymentConditionsUseCase>().SetPaymentsConditionsFactory() }
 
     single<GetClientsUseCase> { get<GetClientsUseCase>() }
+
+    single<InvoiceUseCase.GetBillingsByClient> { get<InvoiceUseCase>().GetBillingsByClient() }
 }
 
 val dataModule = module {
@@ -62,6 +68,7 @@ val dataModule = module {
     factoryOf(::PaymentConditionsUseCase)
     factoryOf(::GetFactoriesListUseCase)
     factoryOf(::GetClientsUseCase)
+    factoryOf(::InvoiceUseCase)
 }
 
 val viewModelModule = module {
@@ -69,6 +76,7 @@ val viewModelModule = module {
     viewModelOf(::BuyOrdersViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::ClientsViewModel)
+    viewModelOf(::InvoicesViewModel)
 }
 
 //expect val nativeModule: Module

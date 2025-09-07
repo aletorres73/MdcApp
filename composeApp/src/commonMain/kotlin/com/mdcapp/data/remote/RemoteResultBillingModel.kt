@@ -20,7 +20,8 @@ data class RemoteResultBillingModel(
     @SerialName("Pagado") var payed: Double = 0.0,
     @SerialName("Saldo") var rest: Double = 0.0,
     @SerialName("Estado") var stateBilling: String = "",
-    @SerialName("Cliente Id") var clientId: String = ""
+    @SerialName("Cliente Id") var clientId: String = "",
+    @SerialName("Marca") var brand: String = ""
 
 
 )
@@ -40,5 +41,6 @@ fun RemoteResultBillingModel.toDomain() = BillingModel(
     payed = payed,
     rest = rest,
     stateBilling = stateBilling,
-    clientId = clientId
+    clientId = clientId,
+    brand = brand
 )

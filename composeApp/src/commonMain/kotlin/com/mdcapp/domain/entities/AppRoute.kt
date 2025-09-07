@@ -5,6 +5,13 @@ sealed class AppRoute(val route: String) {
     data object Home : AppRoute("Home")
     data object Clients : AppRoute("Clients")
 
+    data class Invoices(val clientId: String) : AppRoute("Invoices") {
+        companion object {
+            const val BASE_ROUTE = "Invoices/{clientId}"
+            fun createRoute(clientId: String) = "Invoices/$clientId"
+        }
+    }
+
 
     data class Orders(val factoryName: String) : AppRoute("Orders/$factoryName") {
         companion object {

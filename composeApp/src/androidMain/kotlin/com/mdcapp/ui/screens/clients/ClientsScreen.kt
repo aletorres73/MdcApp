@@ -4,22 +4,13 @@ import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,7 +21,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.ClientModel
 import com.mdcapp.ui.composables.common.SearchbarTopBar
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -53,7 +42,8 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
 fun ClientsScreen(
-    vm: ClientsViewModel = koinViewModel()
+    vm: ClientsViewModel = koinViewModel(),
+    onItemClick: (id: String) -> Unit
 ) {
     val state by vm.state.collectAsState()
     val statusScreenStatus by vm.statusScreen.collectAsState()
@@ -156,7 +146,10 @@ fun ClientsScreen(
                     val message =
                         (statusScreenStatus as ClientsViewModel.ClientScreenStatus.Idle).message
                     Column {
-                        ShowClientList(state.data, state, listState)
+                        ShowClientList(state.data, state, listState) { id ->
+                            onItemClick(id)
+                            Log.i("Client", "Client: $id")
+                        }
                     }
                     LaunchedEffect(message) {
                         if (message.isNotEmpty())
@@ -168,65 +161,12 @@ fun ClientsScreen(
                 }
 
                 ClientsViewModel.ClientScreenStatus.Search -> {
-                    ShowClientList(state.dataSearch, state, listState)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ShowClientList(
-    clientList: List<ClientModel>,
-    state: ClientsViewModel.UiState,
-    listState: LazyListState,
-) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-        state = listState
-    ) {
-        try {
-            items(clientList) { client ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateItem(),
-                    shape = RoundedCornerShape(4.dp),
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp)
-                            .height(35.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(client.clientId, modifier = Modifier.weight(0.2f))
-                        VerticalDivider(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .weight(0.2f)
-                        )
-                        Text(client.clientName, modifier = Modifier.weight(1f))
+                    ShowClientList(state.dataSearch, state, listState) { id ->
+                        onItemClick(id)
+                        Log.i("Client", "Client: $id")
                     }
                 }
             }
-            if (state.updatingData) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(Modifier.size(24.dp))
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("LazyColumn", "Error: ${e.message}")
         }
     }
 }

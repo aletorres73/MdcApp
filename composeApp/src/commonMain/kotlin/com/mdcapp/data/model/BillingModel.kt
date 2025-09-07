@@ -17,7 +17,8 @@ data class BillingModel(
     var payed: Double,
     var rest: Double,
     var stateBilling: String,
-    var clientId: String
+    var clientId: String,
+    var brand: String
 )
 
 fun BillingModel.toDomain() = RemoteResultBillingModel(
@@ -35,7 +36,8 @@ fun BillingModel.toDomain() = RemoteResultBillingModel(
     payed,
     rest,
     stateBilling,
-    clientId
+    clientId,
+    brand
 )
 
 data class PaymentCondition(

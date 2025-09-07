@@ -1,6 +1,5 @@
 package com.mdcapp.ui.composables.billings
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -149,37 +148,6 @@ fun BillingList(
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun BillingListPreview() {
-    val billingList = listOf(
-        BillingModel(
-            billingNumber = "123456",
-            total = "100.00",
-            discount = 10.00,
-            toPay = 100.00,
-            orderId = "A10",
-            type = "fc",
-            loadDate = "01/01/2025",
-            deliveryDate = "01/01/2025",
-            payDate = "10/01/2025",
-            articles = emptyList(),
-            paymentCondition = "Condicion",
-            payed = 50.00,
-            rest = 50.00,
-            stateBilling = "estado",
-            clientId = "35",
-        )
-    )
-    BillingList(
-        billingList,
-        onBillingClicked = {},
-        onAddPaymentCondition = {},
-        onAddDeliveryDate = {},
-        onPaymentRegister = {}
-    )
 }
 
 

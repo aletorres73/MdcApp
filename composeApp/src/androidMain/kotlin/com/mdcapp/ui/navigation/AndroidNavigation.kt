@@ -11,8 +11,11 @@ import com.mdcapp.domain.entities.AppRoute
 import com.mdcapp.ui.screens.clients.ClientsScreen
 import com.mdcapp.ui.screens.detailorder.OrderDetailScreen
 import com.mdcapp.ui.screens.home.HomeScreen
+import com.mdcapp.ui.screens.invoices.InvoicesScreen
 import com.mdcapp.ui.screens.orders.AndroidOrdersScreen
+import org.koin.core.annotation.KoinExperimentalAPI
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun AndroidNavigation(startRoute: String) {
     val navController = rememberNavController()
@@ -27,7 +30,7 @@ fun AndroidNavigation(startRoute: String) {
             }
         }
         composable(route = AppRoute.Clients.route) {
-            ClientsScreen()
+            ClientsScreen { clientId -> navController.navigateToInvoices(clientId) }
         }
         composable(
             route = AppRoute.Orders.BASE_ROUTE,
@@ -42,6 +45,18 @@ fun AndroidNavigation(startRoute: String) {
                 onBackPressed = { navController.navigate(AppRoute.Home.route) }
             )
         }
+
+        composable(
+            route = AppRoute.Invoices.BASE_ROUTE,
+            arguments = listOf(navArgument("clientId") { type = NavType.StringType })
+        ) {
+            val clientId = it.arguments?.getString("clientId") ?: return@composable
+            InvoicesScreen(clientId) {
+                navController.popBackStack()
+            }
+        }
+
+
         composable(
             route = AppRoute.OrderDetail.BASE_ROUTE,
             arguments = listOf(
@@ -65,4 +80,8 @@ fun NavHostController.navigateToOrders(factoryName: String) {
 
 fun NavHostController.navigateToOrderDetail(orderId: String, factoryName: String) {
     this.navigate(AppRoute.OrderDetail.createRoute(orderId, factoryName))
+}
+
+fun NavHostController.navigateToInvoices(clientId: String) {
+    this.navigate(AppRoute.Invoices.createRoute(clientId))
 }
