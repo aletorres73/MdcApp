@@ -16,13 +16,15 @@ import java.time.format.DateTimeFormatter
 class InvoicesViewModel(
     clientId: String,
     private val getDocumentsUseCase: InvoiceUseCase.GetBillingsByClient,
-    private val getClientNameUseCase: InvoiceUseCase.GetClientName
+    private val getClientNameUseCase: InvoiceUseCase.GetClientName,
+    private val filterByBrandUseCase: InvoiceUseCase.FilterByBrand
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(UiState())
+    private val _state = MutableStateFlow(UiState(clientId = clientId))
     val state = _state.asStateFlow()
 
     data class UiState(
+        val clientId: String = "",
         val isLoading: Boolean = false,
         val client: ClientModel = ClientModel("", ""),
         val documents: List<BillingModel> = emptyList(),
@@ -30,49 +32,73 @@ class InvoicesViewModel(
         val error: String? = null
     )
 
+    private val dateFormatter = DateTimeFormatter.ofPattern("d/MM/yyyy")
+
     init {
         Log.i("InvoicesViewModel", "clientId: $clientId")
-        getDocuments(clientId)
         getClientName(clientId)
+        getDocuments(clientId)
     }
 
-    private fun getClientName(clientId: String) {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            try {
-                val client = getClientNameUseCase(clientId)
-                _state.update { it.copy(client = client, isLoading = false) }
-            } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.message) }
-            }
+    private fun launchWithState(block: suspend () -> Unit) = viewModelScope.launch {
+        _state.update { it.copy(isLoading = true, error = null) }
+        try {
+            block()
+        } catch (e: Exception) {
+            Log.e("InvoicesViewModel", "Error", e)
+            _state.update { it.copy(isLoading = false, error = e.message ?: "Error desconocido") }
         }
     }
 
-    private fun getDocuments(clientId: String) {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            try {
-                val documents = getDocumentsUseCase(clientId)
-
-                val formatter = DateTimeFormatter.ofPattern("d/MM/yyyy")
-                val sorted = documents.sortedBy { LocalDate.parse(it.loadDate, formatter) }
-                _state.update { it.copy(isLoading = false, documents = sorted) }
-                getBrandList()
-
-            } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.message) }
-            }
-        }
+    private fun getClientName(clientId: String) = launchWithState {
+        val client = getClientNameUseCase(clientId)
+        _state.update { it.copy(client = client, isLoading = false) }
     }
 
-    private fun getBrandList() {
-        val data = _state.value.documents
+    private fun getDocuments(clientId: String) = launchWithState {
+        val documents = getDocumentsUseCase(clientId)
+
+        // Generar lista de marcas únicas
+        val brands = documents.asSequence()
             .map { it.brand }
             .filter { it.isNotBlank() }
             .distinct()
-        _state.update { it.copy(brandList = data) }
-        Log.i("InvoicesViewModel", "brandList: $data")
+            .toList()
+
+        // Si hay al menos una marca, filtramos automáticamente por la primera
+        if (brands.isNotEmpty()) {
+            val firstBrand = brands.first()
+            val filteredDocs = filterByBrandUseCase(firstBrand, clientId)
+            val sorted = sortDocuments(filteredDocs)
+
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    documents = sorted,
+                    brandList = brands
+                )
+            }
+        } else {
+            // Si no hay marcas, simplemente mostramos
+            val sorted = sortDocuments(documents)
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    documents = sorted,
+                    brandList = emptyList()
+                )
+            }
+        }
     }
 
+    fun filterByMarca(brandSelected: String) = launchWithState {
+        val docs = filterByBrandUseCase(brandSelected, _state.value.clientId)
+        val sorted = sortDocuments(docs)
+        _state.update { it.copy(isLoading = false, documents = sorted) }
+    }
 
+    private fun sortDocuments(docs: List<BillingModel>) =
+        docs.sortedBy { LocalDate.parse(it.loadDate, dateFormatter) }
 }
+
+

@@ -53,6 +53,7 @@ val appModule = module {
 
     single<InvoiceUseCase.GetBillingsByClient> { get<InvoiceUseCase>().GetBillingsByClient() }
     single<InvoiceUseCase.GetClientName> { get<InvoiceUseCase>().GetClientName() }
+    single<InvoiceUseCase.FilterByBrand> { get<InvoiceUseCase>().FilterByBrand() }
 }
 
 val dataModule = module {
@@ -79,7 +80,7 @@ val viewModelModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::ClientsViewModel)
 //    viewModelOf(::InvoicesViewModel)
-    viewModel { (clientId: String) -> InvoicesViewModel(get(), get(), get()) }
+    viewModel { (clientId: String) -> InvoicesViewModel(get(), get(), get(), get()) }
 }
 
 //expect val nativeModule: Module

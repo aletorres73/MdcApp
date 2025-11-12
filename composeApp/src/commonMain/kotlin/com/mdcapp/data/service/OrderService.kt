@@ -106,7 +106,6 @@ class OrderService(
         return try {
             val document = db.collection(BILLINGS)
                 .where { FieldPath("Cliente id").equalTo(clientId) }
-//                .where { FieldPath("Marca").equalTo("Pendiente") }
                 .get()
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }
@@ -222,6 +221,25 @@ class OrderService(
             nameList
         } catch (e: Exception) {
             Log.e("firestore", "on fetchFactoriesLisName: $e ")
+            emptyList()
+        }
+    }
+
+    suspend fun fetchBillingsByBrand(
+        brand: String,
+        clientId: String
+    ): List<RemoteResultBillingModel> {
+        return try {
+            val documents = db.collection(BILLINGS)
+                .where { FieldPath("Cliente id").equalTo(clientId) }
+                .where { FieldPath("Marca").equalTo(brand) }
+                .get()
+                .documents
+                .map { it.data<RemoteResultBillingModel>() }
+            Log.i("OrderService", "on fetchBillingsByClient in firestore : $documents")
+            documents
+        } catch (e: Exception) {
+            println("OrderService: on fetchBillingsByClient $e")
             emptyList()
         }
     }

@@ -46,11 +46,11 @@ fun InvoicesScreen(
     val state by vm.state.collectAsState()
 
     var expanded by remember { mutableStateOf(false) }
-    var selectedMarca by remember { mutableStateOf(String()) }
+    var brandSelected by remember { mutableStateOf(String()) }
 
     val brands = state.brandList
     LaunchedEffect(brands) {
-        if (brands.isNotEmpty()) selectedMarca = brands.first()
+        if (brands.isNotEmpty()) brandSelected = brands.first()
     }
 
     Scaffold(
@@ -76,7 +76,7 @@ fun InvoicesScreen(
                     Box {
                         AssistChip(
                             onClick = { expanded = true },
-                            label = { Text(text = selectedMarca) },
+                            label = { Text(text = brandSelected) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.ArrowDropDown,
@@ -88,14 +88,13 @@ fun InvoicesScreen(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
-                            brands.forEach { marca ->
+                            brands.forEach { brand ->
                                 DropdownMenuItem(
-                                    text = { Text(marca) },
+                                    text = { Text(brand) },
                                     onClick = {
-                                        selectedMarca = marca
+                                        brandSelected = brand
                                         expanded = false
-                                        // Aquí podés filtrar los documentos según la marca
-                                        // vm.filterByMarca(marca)
+                                        vm.filterByMarca(brandSelected)
                                     }
                                 )
                             }

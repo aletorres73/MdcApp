@@ -20,6 +20,9 @@ class OrderRepository(private val service: OrderService) {
     suspend fun getBillingsByClientID(clientId: String) =
         service.fetchBillingsByClient(clientId).map { it.toDomain() }
 
+    suspend fun getBillingsByBrand(brand: String, clientId: String) =
+        service.fetchBillingsByBrand(brand, clientId).map { it.toDomain() }
+
     suspend fun getOrdersByFactory(name: String) =
         service.fetchOrdersByFactory(name).map { it.toDomain() }
 
