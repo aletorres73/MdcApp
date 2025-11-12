@@ -14,6 +14,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class InvoicesViewModel(
+    clientId: String,
     private val getDocumentsUseCase: InvoiceUseCase.GetBillingsByClient,
     private val getClientNameUseCase: InvoiceUseCase.GetClientName
 ) : ViewModel() {
@@ -25,11 +26,11 @@ class InvoicesViewModel(
         val isLoading: Boolean = false,
         val client: ClientModel = ClientModel("", ""),
         val documents: List<BillingModel> = emptyList(),
+        val brandList: List<String> = emptyList(),
         val error: String? = null
     )
 
-
-    fun init(clientId: String) {
+    init {
         Log.i("InvoicesViewModel", "clientId: $clientId")
         getDocuments(clientId)
         getClientName(clientId)
@@ -55,12 +56,23 @@ class InvoicesViewModel(
 
                 val formatter = DateTimeFormatter.ofPattern("d/MM/yyyy")
                 val sorted = documents.sortedBy { LocalDate.parse(it.loadDate, formatter) }
-
                 _state.update { it.copy(isLoading = false, documents = sorted) }
+                getBrandList()
+
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }
+
+    private fun getBrandList() {
+        val data = _state.value.documents
+            .map { it.brand }
+            .filter { it.isNotBlank() }
+            .distinct()
+        _state.update { it.copy(brandList = data) }
+        Log.i("InvoicesViewModel", "brandList: $data")
+    }
+
 
 }

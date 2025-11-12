@@ -13,7 +13,10 @@ import com.mdcapp.ui.screens.detailorder.OrderDetailScreen
 import com.mdcapp.ui.screens.home.HomeScreen
 import com.mdcapp.ui.screens.invoices.InvoicesScreen
 import com.mdcapp.ui.screens.orders.AndroidOrdersScreen
+import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
+import org.koin.core.parameter.parametersOf
 
 @OptIn(KoinExperimentalAPI::class)
 @Composable
@@ -51,7 +54,8 @@ fun AndroidNavigation(startRoute: String) {
             arguments = listOf(navArgument("clientId") { type = NavType.StringType })
         ) {
             val clientId = it.arguments?.getString("clientId") ?: return@composable
-            InvoicesScreen(clientId) {
+            val vm: InvoicesViewModel = koinViewModel(parameters = { parametersOf(clientId) })
+            InvoicesScreen(vm) {
                 navController.popBackStack()
             }
         }

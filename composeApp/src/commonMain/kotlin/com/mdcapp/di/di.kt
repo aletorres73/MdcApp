@@ -21,6 +21,7 @@ import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
 import dev.gitlive.firebase.firestore.firestore
+import org.koin.compose.viewmodel.dsl.viewModel
 import org.koin.compose.viewmodel.dsl.viewModelOf
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.factoryOf
@@ -77,7 +78,8 @@ val viewModelModule = module {
     viewModelOf(::BuyOrdersViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::ClientsViewModel)
-    viewModelOf(::InvoicesViewModel)
+//    viewModelOf(::InvoicesViewModel)
+    viewModel { (clientId: String) -> InvoicesViewModel(get(), get(), get()) }
 }
 
 //expect val nativeModule: Module
