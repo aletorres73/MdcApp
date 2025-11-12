@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class InvoicesViewModel(
     private val getDocumentsUseCase: InvoiceUseCase.GetBillingsByClient,
@@ -49,8 +51,12 @@ class InvoicesViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
-                val documents = getDocumentsUseCase(clientId).sortedByDescending { it.loadDate }
-                _state.update { it.copy(isLoading = false, documents = documents) }
+                val documents = getDocumentsUseCase(clientId)
+
+                val formatter = DateTimeFormatter.ofPattern("d/MM/yyyy")
+                val sorted = documents.sortedBy { LocalDate.parse(it.loadDate, formatter) }
+
+                _state.update { it.copy(isLoading = false, documents = sorted) }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }

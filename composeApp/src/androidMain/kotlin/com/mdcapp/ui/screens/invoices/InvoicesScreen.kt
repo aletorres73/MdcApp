@@ -90,7 +90,11 @@ fun InvoicesScreen(
     ) { paddingValues ->
         when {
             state.isLoading -> {
-                LoadingIndicator(true)
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                )
+                { LoadingIndicator(true) }
             }
 
             state.error != null -> {
