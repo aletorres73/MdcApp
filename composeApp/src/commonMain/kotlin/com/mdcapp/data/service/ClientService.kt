@@ -106,5 +106,21 @@ class ClientService(
         }
     }
 
+    suspend fun fetchClientName(clientId: String): RemoteResultClientModel {
+        return try {
+            val snapshot = db.collection(CLIENTS).document(clientId).get().await()
+            val client = RemoteResultClientModel(
+                clientId = snapshot.getString("Cliente Id") ?: "",
+                clientName = snapshot.getString("Razon Social") ?: ""
+            )
+
+            Log.i("ClientService", "fetClientName: $client")
+            client
+        } catch (e: Exception) {
+            Log.e("firestore", "Error fetching client name: $e")
+            RemoteResultClientModel("", "")
+        }
+    }
+
 
 }

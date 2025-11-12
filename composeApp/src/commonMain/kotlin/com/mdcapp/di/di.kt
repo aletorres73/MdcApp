@@ -51,6 +51,7 @@ val appModule = module {
     single<GetClientsUseCase> { get<GetClientsUseCase>() }
 
     single<InvoiceUseCase.GetBillingsByClient> { get<InvoiceUseCase>().GetBillingsByClient() }
+    single<InvoiceUseCase.GetClientName> { get<InvoiceUseCase>().GetClientName() }
 }
 
 val dataModule = module {

@@ -2,6 +2,7 @@ package com.mdcapp.ui.screens.invoices
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,8 +11,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -30,7 +33,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.ui.composables.common.LoadingIndicator
@@ -53,7 +59,7 @@ fun InvoicesScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Cliente: $clientId",
+                        text = "Cliente: ${state.client.clientName}",
                         style = MaterialTheme.typography.titleMedium
                     )
                 },
@@ -109,7 +115,6 @@ fun InvoicesScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DetailClientBalance(paddingValues: PaddingValues, documents: List<BillingModel>) {
     Box(
@@ -130,55 +135,102 @@ fun DetailClientBalance(paddingValues: PaddingValues, documents: List<BillingMod
 
             HorizontalDivider()
             Text("Estado de cuenta", style = MaterialTheme.typography.titleMedium)
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                stickyHeader {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        val style = MaterialTheme.typography.labelMedium
-                        Text("Documento", style = style)
-                        Text("Importe", style = style)
-                        Text("Pagado", style = style)
-                        Text("Saldo", style = style)
-                    }
-                }
 
-                items(documents) { doc ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val styleText = MaterialTheme.typography.bodySmall
-                        val weight = Modifier.weight(1f)
-                        val alignText = TextAlign.End
-                        Text(doc.billingNumber, style = styleText, modifier = weight)
-                        Text(doc.total, style = styleText, modifier = weight, textAlign = alignText)
-                        Text(
-                            doc.payed.ifBlank { "$0.00" },
-                            style = styleText,
-                            modifier = weight,
-                            textAlign = alignText
-                        )
-                        Text(
-                            doc.rest.ifBlank { "$0.00" },
-                            style = styleText,
-                            modifier = weight,
-                            textAlign = alignText
-                        )
-                    }
-                    HorizontalDivider()
+            DocumentList(documents)
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun DocumentList(documents: List<BillingModel>) {
+    val horizontalScroll = rememberScrollState()
+
+    // 🔹 Ancho fijo por columna (ajústalos según tu diseño o proporciones reales)
+    val colFecha = 85.dp
+    val colNumero = 65.dp
+    val colImporte = 110.dp
+    val colPagado = 110.dp
+    val colSaldo = 110.dp
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(horizontalScroll)
+    ) {
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            stickyHeader {
+                Row(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(vertical = 8.dp, horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val style = MaterialTheme.typography.labelMedium
+                    HeaderCell("Fecha", style, colFecha)
+                    HeaderCell("Número", style, colNumero)
+                    HeaderCell("Importe", style, colImporte, TextAlign.End)
+                    HeaderCell("Pagado", style, colPagado, TextAlign.End)
+                    HeaderCell("Saldo", style, colSaldo, TextAlign.End)
                 }
+                HorizontalDivider(thickness = 1.dp)
+            }
+
+            items(documents) { doc ->
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val styleText = MaterialTheme.typography.bodySmall
+                    DataCell(doc.loadDate, styleText, colFecha)
+                    DataCell(doc.billingNumber, styleText, colNumero)
+                    DataCell(doc.total, styleText, colImporte, TextAlign.End)
+                    DataCell(doc.payed.ifBlank { "$0.00" }, styleText, colPagado, TextAlign.End)
+                    DataCell(doc.rest.ifBlank { "$0.00" }, styleText, colSaldo, TextAlign.End)
+                }
+                HorizontalDivider(thickness = 0.5.dp)
             }
         }
     }
+}
+
+@Composable
+private fun HeaderCell(
+    text: String,
+    style: TextStyle,
+    width: Dp,
+    textAlign: TextAlign = TextAlign.Start
+) {
+    Text(
+        text = text,
+        style = style,
+        textAlign = textAlign,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier
+            .width(width)
+            .padding(horizontal = 4.dp)
+    )
+}
+
+@Composable
+private fun DataCell(
+    text: String,
+    style: TextStyle,
+    width: Dp,
+    textAlign: TextAlign = TextAlign.Start
+) {
+    Text(
+        text = text,
+        style = style,
+        textAlign = textAlign,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier
+            .width(width)
+            .padding(horizontal = 4.dp)
+    )
 }
