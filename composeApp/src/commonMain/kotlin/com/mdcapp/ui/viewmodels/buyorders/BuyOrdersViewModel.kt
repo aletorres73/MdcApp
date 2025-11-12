@@ -158,31 +158,31 @@ class BuyOrdersViewModel(
 
     // Verificar pagos en facturas
     private fun checkPaymentsOnBillings() {
-        val paymentsByBilling = _state.value.paymentList.groupBy { it.documentNumber }
-        _state.value = _state.value.copy(
-            billings = _state.value.billings.map { billing ->
-                val payments = paymentsByBilling[billing.billingNumber] ?: emptyList()
-                val totalPayed = payments.sumOf { it.total }
-                billing.copy(
-                    payed = "%.2f".format(Locale.US, totalPayed).toDouble(),
-                    rest = "%.2f".format(Locale.US, billing.toPay - totalPayed).toDouble()
-                )
-            }
-        )
-        loadTotalsPayments()
+        /* val paymentsByBilling = _state.value.paymentList.groupBy { it.documentNumber }
+         _state.value = _state.value.copy(
+             billings = _state.value.billings.map { billing ->
+                 val payments = paymentsByBilling[billing.billingNumber] ?: emptyList()
+                 val totalPayed = payments.sumOf { it.total }
+                 billing.copy(
+                     payed = "%.2f".format(Locale.US, totalPayed).toDouble(),
+                     rest = "%.2f".format(Locale.US, billing.toPay - totalPayed).toDouble()
+                 )
+             }
+         )
+         loadTotalsPayments()*/
     }
 
     // Calcular totales de pagos
     private fun loadTotalsPayments() {
-        val totals =
-            _state.value.billings.fold(Triple(0.0, 0.0, 0.0)) { (toPay, payed, rest), billing ->
-                Triple(toPay + billing.toPay, payed + billing.payed, rest + billing.rest)
-            }
-        _state.value = _state.value.copy(
-            totalToPay = totals.first,
-            totalPayed = totals.second,
-            totalRest = totals.third
-        )
+        /*        val totals =
+                    _state.value.billings.fold(Triple(0.0, 0.0, 0.0)) { (toPay, payed, rest), billing ->
+                        Triple(toPay + billing.toPay, payed + billing.payed, rest + billing.rest)
+                    }
+                _state.value = _state.value.copy(
+                    totalToPay = totals.first,
+                    totalPayed = totals.second,
+                    totalRest = totals.third
+                )*/
     }
 
     // Manejo de errores centralizado
@@ -344,17 +344,17 @@ class BuyOrdersViewModel(
     }
 
     private fun setRest(billingNumber: String) {
-        _tempState.value = _tempState.value.copy(
-            billings = _tempState.value.billings.map { billing ->
-                if (billing.billingNumber == billingNumber) {
-                    billing.copy(
-                        rest = "%.2f".format(Locale.US, billing.toPay - billing.payed).toDouble()
-                    )
-                } else {
-                    billing
-                }
-            }
-        )
+        /*        _tempState.value = _tempState.value.copy(
+                    billings = _tempState.value.billings.map { billing ->
+                        if (billing.billingNumber == billingNumber) {
+                            billing.copy(
+                                rest = "%.2f".format(Locale.US, billing.toPay - billing.payed).toDouble()
+                            )
+                        } else {
+                            billing
+                        }
+                    }
+                )*/
     }
 
     // Calcular el monto total de las facturas

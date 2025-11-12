@@ -17,8 +17,8 @@ data class RemoteResultBillingModel(
     @SerialName("Condicion de pago") var paymentCondition: String = "",
     @SerialName("Dto") var discount: Double = 0.0,
     @SerialName("A cobrar") var toPay: Double = 0.0,
-    @SerialName("Pagado") var payed: Double = 0.0,
-    @SerialName("Saldo") var rest: Double = 0.0,
+    @SerialName("Pagado") var payed: String = "",
+    @SerialName("Saldo") var rest: String = "",
     @SerialName("Estado") var stateBilling: String = "",
     @SerialName("Cliente Id") var clientId: String = "",
     @SerialName("Marca") var brand: String = ""

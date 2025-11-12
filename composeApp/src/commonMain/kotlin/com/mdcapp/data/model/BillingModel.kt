@@ -14,8 +14,8 @@ data class BillingModel(
     var paymentCondition: String,
     var discount: Double,
     var toPay: Double,
-    var payed: Double,
-    var rest: Double,
+    var payed: String,
+    var rest: String,
     var stateBilling: String,
     var clientId: String,
     var brand: String

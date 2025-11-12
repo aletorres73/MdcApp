@@ -30,6 +30,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.ui.composables.common.LoadingIndicator
@@ -157,10 +158,23 @@ fun DetailClientBalance(paddingValues: PaddingValues, documents: List<BillingMod
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(doc.billingNumber, style = MaterialTheme.typography.bodyMedium)
-                        Text(doc.total, style = MaterialTheme.typography.bodyMedium)
-                        Text(doc.payed.toString(), style = MaterialTheme.typography.bodyMedium)
-                        Text(doc.rest.toString(), style = MaterialTheme.typography.bodyMedium)
+                        val styleText = MaterialTheme.typography.bodySmall
+                        val weight = Modifier.weight(1f)
+                        val alignText = TextAlign.End
+                        Text(doc.billingNumber, style = styleText, modifier = weight)
+                        Text(doc.total, style = styleText, modifier = weight, textAlign = alignText)
+                        Text(
+                            doc.payed.ifBlank { "$0.00" },
+                            style = styleText,
+                            modifier = weight,
+                            textAlign = alignText
+                        )
+                        Text(
+                            doc.rest.ifBlank { "$0.00" },
+                            style = styleText,
+                            modifier = weight,
+                            textAlign = alignText
+                        )
                     }
                     HorizontalDivider()
                 }
