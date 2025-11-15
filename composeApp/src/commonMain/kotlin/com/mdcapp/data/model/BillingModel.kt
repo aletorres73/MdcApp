@@ -25,14 +25,14 @@ data class BillingModel(
 data class ArticleModel(
     val name: String = "",
     val color: String = "",
-    val delivered: Int = 0,
+    val value: String = "",
     val pairs: Int = 0
 )
 
 fun ArticleModel.toRemote() = RemoteArticle(
     name = name,
     color = color,
-    delivered = delivered.toString(),
+    value = value,
     pairs = pairs.toString()
 )
 

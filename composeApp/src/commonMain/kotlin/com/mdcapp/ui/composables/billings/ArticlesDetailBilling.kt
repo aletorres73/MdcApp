@@ -62,7 +62,7 @@ fun ArticlesDetailBilling(
             Text(text = "Entregados", style = styleTitle)
             billingArticles.forEach { article ->
                 Text(
-                    text = article.delivered.toString(),
+                    text = article.value,
                     style = styleArticle
                 )
             }

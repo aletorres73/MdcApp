@@ -29,14 +29,14 @@ data class RemoteResultBillingModel(
 data class RemoteArticle(
     @SerialName("Articulo") val name: String = "",
     @SerialName("Color") val color: String = "",
-    @SerialName("Entregados") val delivered: String = "",
+    @SerialName("Importe") val value: String = "",
     @SerialName("Pares") val pairs: String = ""
 )
 
 fun RemoteArticle.toDomain() = ArticleModel(
     name = name,
     color = color,
-    delivered = delivered.toIntOrNull() ?: 0,
+    value = value,
     pairs = pairs.toIntOrNull() ?: 0
 )
 
