@@ -35,9 +35,8 @@ import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.ui.composables.common.LoadingIndicator
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
-import org.koin.core.annotation.KoinExperimentalAPI
 
-@OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InvoicesScreen(
     vm: InvoicesViewModel,
@@ -154,7 +153,7 @@ fun DetailClientBalance(paddingValues: PaddingValues, documents: List<BillingMod
             ) { Text("Saldo total de cuenta:", style = MaterialTheme.typography.titleMedium) }
 
             HorizontalDivider()
-            Text("Estado de cuenta", style = MaterialTheme.typography.titleMedium)
+            Text("Documentos en cuenta", style = MaterialTheme.typography.titleMedium)
 
             DocumentList(documents)
         }

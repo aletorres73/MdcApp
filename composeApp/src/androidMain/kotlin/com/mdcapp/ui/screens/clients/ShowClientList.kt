@@ -35,7 +35,7 @@ fun ShowClientList(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
         state = listState
     ) {
         try {
