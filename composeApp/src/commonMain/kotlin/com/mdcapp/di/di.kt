@@ -18,6 +18,7 @@ import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import com.mdcapp.ui.viewmodels.HomeViewModel
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
+import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
 import dev.gitlive.firebase.firestore.firestore
@@ -54,6 +55,7 @@ val appModule = module {
     single<InvoiceUseCase.GetBillingsByClient> { get<InvoiceUseCase>().GetBillingsByClient() }
     single<InvoiceUseCase.GetClientName> { get<InvoiceUseCase>().GetClientName() }
     single<InvoiceUseCase.FilterByBrand> { get<InvoiceUseCase>().FilterByBrand() }
+    single<InvoiceUseCase.GetInvoiceByNumber> { get<InvoiceUseCase>().GetInvoiceByNumber() }
 }
 
 val dataModule = module {
@@ -80,7 +82,8 @@ val viewModelModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::ClientsViewModel)
 //    viewModelOf(::InvoicesViewModel)
-    viewModel { (clientId: String) -> InvoicesViewModel(get(), get(), get(), get()) }
+    viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get(), get()) }
+    viewModel { (invoiceNumber: String) -> DetailInvoiceViewModel(invoiceNumber, get()) }
 }
 
 //expect val nativeModule: Module

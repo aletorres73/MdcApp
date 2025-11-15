@@ -1,5 +1,6 @@
 package com.mdcapp.ui.screens.invoices
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,8 +41,12 @@ import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 @Composable
 fun InvoicesScreen(
     vm: InvoicesViewModel,
-    onNavigate: () -> Unit
+    onNavigate: () -> Unit,
+    onBack: () -> Unit,
+    onInvoiceClick: (String) -> Unit
 ) {
+    BackHandler { onBack() }
+
     val state by vm.state.collectAsState()
 
     var expanded by remember { mutableStateOf(false) }
@@ -127,7 +132,7 @@ fun InvoicesScreen(
             }
 
             else -> {
-                DetailClientBalance(paddingValues, state.documents)
+                DetailClientBalance(paddingValues, state.documents) { onInvoiceClick(it) }
             }
         }
 
@@ -135,7 +140,11 @@ fun InvoicesScreen(
 }
 
 @Composable
-fun DetailClientBalance(paddingValues: PaddingValues, documents: List<BillingModel>) {
+fun DetailClientBalance(
+    paddingValues: PaddingValues,
+    documents: List<BillingModel>,
+    onInvoiceClick: (String) -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -155,7 +164,7 @@ fun DetailClientBalance(paddingValues: PaddingValues, documents: List<BillingMod
             HorizontalDivider()
             Text("Documentos en cuenta", style = MaterialTheme.typography.titleMedium)
 
-            DocumentList(documents)
+            DocumentList(documents) { onInvoiceClick(it) }
         }
     }
 }

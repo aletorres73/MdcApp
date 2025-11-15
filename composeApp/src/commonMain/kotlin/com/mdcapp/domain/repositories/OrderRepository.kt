@@ -49,4 +49,8 @@ class OrderRepository(private val service: OrderService) {
     suspend fun getOrderBranch(orderId: String) = service.fetchOrderBranch(orderId)
 
     suspend fun getFactoriesList() = service.fetchFactoriesLisName()
+
+    suspend fun getInvoiceByNumber(invoiceNumber: String): BillingModel {
+        return service.fetchInvoiceByNumber(invoiceNumber).toDomain()
+    }
 }

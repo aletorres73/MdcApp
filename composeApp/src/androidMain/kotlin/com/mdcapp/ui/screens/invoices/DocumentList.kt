@@ -2,6 +2,7 @@ package com.mdcapp.ui.screens.invoices
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,7 +23,7 @@ import com.mdcapp.data.model.BillingModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun DocumentList(documents: List<BillingModel>) {
+fun DocumentList(documents: List<BillingModel>, onInvoiceClick: (String) -> Unit) {
     val horizontalScroll = rememberScrollState()
 
     // 🔹 Ancho fijo por columna (ajústalos según tu diseño o proporciones reales)
@@ -60,6 +61,7 @@ fun DocumentList(documents: List<BillingModel>) {
             items(documents) { doc ->
                 Row(
                     modifier = Modifier
+                        .clickable { onInvoiceClick(doc.billingNumber) }
                         .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

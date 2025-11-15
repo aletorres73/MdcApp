@@ -1,6 +1,8 @@
 package com.mdcapp.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -11,8 +13,10 @@ import com.mdcapp.domain.entities.AppRoute
 import com.mdcapp.ui.screens.clients.ClientsScreen
 import com.mdcapp.ui.screens.detailorder.OrderDetailScreen
 import com.mdcapp.ui.screens.home.HomeScreen
+import com.mdcapp.ui.screens.invoices.DetailInvoiceScreen
 import com.mdcapp.ui.screens.invoices.InvoicesScreen
 import com.mdcapp.ui.screens.orders.AndroidOrdersScreen
+import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -55,9 +59,27 @@ fun AndroidNavigation(startRoute: String) {
         ) {
             val clientId = it.arguments?.getString("clientId") ?: return@composable
             val vm: InvoicesViewModel = koinViewModel(parameters = { parametersOf(clientId) })
-            InvoicesScreen(vm) {
-                navController.popBackStack()
-            }
+            InvoicesScreen(
+                vm,
+                onBack = { navController.popBackStack() },
+                onNavigate = { navController.popBackStack() },
+                onInvoiceClick = { invoiceNumber ->
+                    navController.navigateToDetailInvoice(
+                        invoiceNumber
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = AppRoute.DetailInvoice.BASE_ROUTE,
+            arguments = listOf(navArgument("invoiceNumber") { type = NavType.StringType })
+        ) {
+            val invoiceNumber = it.arguments?.getString("invoiceNumber") ?: return@composable
+            val vm: DetailInvoiceViewModel =
+                koinViewModel(parameters = { parametersOf(invoiceNumber) })
+            val state by vm.state.collectAsState()
+            DetailInvoiceScreen(state.billing)
         }
 
 
@@ -88,4 +110,8 @@ fun NavHostController.navigateToOrderDetail(orderId: String, factoryName: String
 
 fun NavHostController.navigateToInvoices(clientId: String) {
     this.navigate(AppRoute.Invoices.createRoute(clientId))
+}
+
+fun NavHostController.navigateToDetailInvoice(invoiceNumber: String) {
+    this.navigate(AppRoute.DetailInvoice.createRoute(invoiceNumber))
 }

@@ -28,47 +28,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.ArticleModel
 import com.mdcapp.data.model.BillingModel
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PreviewDetailInvoiceScreen() {
-
-    // Datos dummy (solo lo necesario)
-    val previewArticles = listOf(
-        ArticleModel(name = "Zapatilla Runner", color = "Azul", pairs = 10, value = "$100,000"),
-        ArticleModel(name = "Botita Urban", color = "Negro", pairs = 10, value = "$100,000"),
-        ArticleModel(name = "Sandalia Kids", color = "Rosa", pairs = 10, value = "$100,000")
-    )
-
-    val previewBilling = BillingModel(
-        billingNumber = "F0001-000234",
-        orderId = "ORD-9912",
-        type = "A",
-        total = "45000",
-        loadDate = "2025-11-12",
-        deliveryDate = "2025-11-14",
-        payDate = "2025-11-20",
-        articles = previewArticles,
-        paymentCondition = "Cuenta Corriente",
-        discount = 0.0,
-        toPay = 45000.0,
-        payed = "0",
-        rest = "45000",
-        stateBilling = "Pendiente",
-        clientId = "CL-8891",
-        brand = "Nike"
-    )
-
-    MaterialTheme {
-        DetailInvoiceScreen(
-            billing = previewBilling
-        )
-    }
-}
 
 
 @Composable
@@ -76,7 +38,7 @@ fun DetailInvoiceScreen(
     billing: BillingModel,
     modifier: Modifier = Modifier
 ) {
-    var showArticles by remember { mutableStateOf(false) }
+    var showArticles by remember { mutableStateOf(true) }
 
     Scaffold { padding ->
         Column(
@@ -225,7 +187,7 @@ fun TotalRow(label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-        Text("$$value", style = MaterialTheme.typography.bodyMedium)
+        Text(value, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

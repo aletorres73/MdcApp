@@ -243,4 +243,22 @@ class OrderService(
             emptyList()
         }
     }
+
+    suspend fun fetchInvoiceByNumber(invoiceNumber: String): RemoteResultBillingModel {
+        return try {
+            val document = db.collection(BILLINGS)
+                .where { FieldPath("Numero").equalTo(invoiceNumber) }
+                .get()
+                .documents
+                .map { it.data<RemoteResultBillingModel>() }
+                .first()
+            Log.i("OrderService", "on fetchInvoiceByNumber in firestore : $document")
+
+            document
+        } catch (e: Exception) {
+            println("OrderService: on fetchInvoiceByNumber $e")
+            RemoteResultBillingModel()
+        }
+
+    }
 }
