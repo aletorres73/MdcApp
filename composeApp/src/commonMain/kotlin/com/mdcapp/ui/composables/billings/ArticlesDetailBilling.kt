@@ -8,62 +8,63 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.mdcapp.data.model.ArticleModel
 
 @Composable
 fun ArticlesDetailBilling(
-    billingArticles: List<HashMap<String, String>>,
+    billingArticles: List<ArticleModel>,
     modifier: Modifier = Modifier
 ) {
     val styleTitle = MaterialTheme.typography.titleMedium
     val styleArticle = MaterialTheme.typography.bodyMedium
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            Text(text = "Articulo", style = styleTitle)
-            billingArticles.forEach { article ->
-                article["Articulo"]?.let {
-                    Text(
-                        text = it,
-                        style = styleArticle
-                    )
-                }
-            }
 
+        // Columna Artículo
+        Column {
+            Text(text = "Artículo", style = styleTitle)
+            billingArticles.forEach { article ->
+                Text(
+                    text = article.name,
+                    style = styleArticle
+                )
+            }
         }
+
+        // Columna Color
         Column {
             Text(text = "Color", style = styleTitle)
             billingArticles.forEach { article ->
-                article["Color"]?.let {
-                    Text(
-                        text = it,
-                        style = styleArticle
-                    )
-                }
+                Text(
+                    text = article.color,
+                    style = styleArticle
+                )
             }
         }
+
+        // Columna Pares pedidos
         Column {
             Text(text = "Pares pedidos", style = styleTitle)
             billingArticles.forEach { article ->
-                article["Pares"]?.let {
-                    Text(
-                        text = it,
-                        style = styleArticle
-                    )
-                }
+                Text(
+                    text = article.pairs.toString(),
+                    style = styleArticle
+                )
             }
         }
+
+        // Columna Entregados
         Column {
-            Text(text = "Importe", style = styleTitle)
+            Text(text = "Entregados", style = styleTitle)
             billingArticles.forEach { article ->
-                article["Importe"]?.let {
-                    Text(
-                        text = it,
-                        style = styleArticle
-                    )
-                }
+                Text(
+                    text = article.delivered.toString(),
+                    style = styleArticle
+                )
             }
         }
     }

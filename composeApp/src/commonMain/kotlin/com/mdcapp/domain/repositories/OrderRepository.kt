@@ -5,6 +5,7 @@ import com.mdcapp.data.model.OrderModel
 import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.data.model.PaymentRegisterModel
 import com.mdcapp.data.model.toDomain
+import com.mdcapp.data.model.toRemote
 import com.mdcapp.data.remote.toDomain
 import com.mdcapp.data.remote.toPaymentConditions
 import com.mdcapp.data.service.OrderService
@@ -40,7 +41,7 @@ class OrderRepository(private val service: OrderService) {
     suspend fun getLastId() = service.fetchLastIdFromPayments()
 
     suspend fun updateBillingOnService(documentId: String, data: BillingModel) =
-        service.updateBilling(documentId, data.toDomain())
+        service.updateBilling(documentId, data.toRemote())
 
     suspend fun getPaymentsRegisterByNumberDocument(documentList: List<String>) =
         service.fetchPaymentRegisterByNumberList(documentList).map { it.toDomain() }

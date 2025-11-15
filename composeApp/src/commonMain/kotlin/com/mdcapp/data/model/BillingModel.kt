@@ -1,27 +1,43 @@
 package com.mdcapp.data.model
 
+import com.mdcapp.data.remote.RemoteArticle
 import com.mdcapp.data.remote.RemoteResultBillingModel
 
 data class BillingModel(
-    var billingNumber: String = "",
-    var orderId: String = "",
-    var type: String = "",
-    var total: String = "",
-    var loadDate: String = "",
-    var deliveryDate: String = "",
-    var payDate: String = "",
-    var articles: List<HashMap<String, String>> = emptyList(),
-    var paymentCondition: String,
-    var discount: Double,
-    var toPay: Double,
-    var payed: String,
-    var rest: String,
-    var stateBilling: String,
-    var clientId: String,
-    var brand: String
+    val billingNumber: String = "",
+    val orderId: String = "",
+    val type: String = "",
+    val total: String = "",
+    val loadDate: String = "",
+    val deliveryDate: String = "",
+    val payDate: String = "",
+    val articles: List<ArticleModel> = emptyList(),
+    val paymentCondition: String = "",
+    val discount: Double = 0.0,
+    val toPay: Double = 0.0,
+    val payed: String = "",
+    val rest: String = "",
+    val stateBilling: String = "",
+    val clientId: String = "",
+    val brand: String = ""
 )
 
-fun BillingModel.toDomain() = RemoteResultBillingModel(
+data class ArticleModel(
+    val name: String = "",
+    val color: String = "",
+    val delivered: Int = 0,
+    val pairs: Int = 0
+)
+
+fun ArticleModel.toRemote() = RemoteArticle(
+    name = name,
+    color = color,
+    delivered = delivered.toString(),
+    pairs = pairs.toString()
+)
+
+
+fun BillingModel.toRemote() = RemoteResultBillingModel(
     billingNumber,
     orderId,
     type,
@@ -29,7 +45,7 @@ fun BillingModel.toDomain() = RemoteResultBillingModel(
     loadDate,
     deliveryDate,
     payDate,
-    articles,
+    articles.map { it.toRemote() },
     paymentCondition,
     discount,
     toPay,
