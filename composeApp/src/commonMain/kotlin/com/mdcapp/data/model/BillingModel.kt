@@ -7,7 +7,7 @@ data class BillingModel(
     val billingNumber: String = "",
     val orderId: String = "",
     val type: String = "",
-    val total: String = "",
+    val total: Double = 0.0,
     val loadDate: String = "",
     val deliveryDate: String = "",
     val payDate: String = "",
@@ -15,8 +15,8 @@ data class BillingModel(
     val paymentCondition: String = "",
     val discount: Double = 0.0,
     val toPay: Double = 0.0,
-    val payed: String = "",
-    val rest: String = "",
+    val payed: Double = 0.0,
+    val rest: Double = 0.0,
     val stateBilling: String = "",
     val clientId: String = "",
     val brand: String = ""
@@ -25,14 +25,23 @@ data class BillingModel(
 data class ArticleModel(
     val name: String = "",
     val color: String = "",
-    val value: String = "",
+    val value: Double = 0.0,
     val pairs: Int = 0
 )
+
+fun String.toMoneyDouble(): Double {
+    return this
+        .replace("$", "")
+        .replace(",", "")
+        .trim()
+        .toDoubleOrNull() ?: 0.0
+}
+
 
 fun ArticleModel.toRemote() = RemoteArticle(
     name = name,
     color = color,
-    value = value,
+    value = value.toString(),
     pairs = pairs.toString()
 )
 
@@ -41,7 +50,7 @@ fun BillingModel.toRemote() = RemoteResultBillingModel(
     billingNumber,
     orderId,
     type,
-    total,
+    total.toString(),
     loadDate,
     deliveryDate,
     payDate,
@@ -49,8 +58,8 @@ fun BillingModel.toRemote() = RemoteResultBillingModel(
     paymentCondition,
     discount,
     toPay,
-    payed,
-    rest,
+    payed.toString(),
+    rest.toString(),
     stateBilling,
     clientId,
     brand

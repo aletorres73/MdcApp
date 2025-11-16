@@ -213,13 +213,14 @@ class BuyOrdersViewModel(
             billings = _tempState.value.billings.map { billing ->
                 if (billing.billingNumber == billingNumber) {
                     val total =
-                        billing.total.replace("$", "").replace(",", "").toDoubleOrNull() ?: 0.0
+                        billing.total.toString().replace("$", "").replace(",", "").toDoubleOrNull()
+                            ?: 0.0
                     val discount = paymentCondition.discount * total
                     val toPay = total * (1.0 - paymentCondition.discount)
                     val payDate = getPayDate(billingNumber, paymentCondition.expiration)
                     billing.copy(
                         paymentCondition = paymentCondition.paymentName,
-                        total = "$%.2f".format(Locale.US, total),
+                        total = total,
                         discount = "%.2f".format(Locale.US, discount).toDouble(),
                         toPay = "%.2f".format(Locale.US, toPay).toDouble(),
                         payDate = payDate
@@ -360,7 +361,7 @@ class BuyOrdersViewModel(
     // Calcular el monto total de las facturas
     private fun calculateTotalBillingAmount(billings: List<BillingModel>): Double {
         return billings.sumOf {
-            it.total.replace("$", "").replace(",", "").toDouble()
+            it.total.toString().replace("$", "").replace(",", "").toDouble()
         }
     }
 }

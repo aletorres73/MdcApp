@@ -24,7 +24,7 @@ fun BillingItem(billing: BillingModel) {
             modifier = modifier,
             order = billing.orderId,
             type = billing.type,
-            total = billing.total,
+            total = billing.total.toString(),
             loadDate = billing.loadDate,
             deliveryDate = billing.deliveryDate,
             payDate = billing.payDate

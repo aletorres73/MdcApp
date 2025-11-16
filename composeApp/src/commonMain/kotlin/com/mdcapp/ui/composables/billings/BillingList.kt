@@ -66,7 +66,7 @@ fun BillingList(
                             )
                             RowInfoBilling(
                                 key = "Importe:",
-                                value = billing.total.replace(",", "").ifEmpty { "$0.00" }
+                                value = billing.total.toString().ifEmpty { "$0.00" }
                             )
                             RowInfoBilling(
                                 key = "C.P:",

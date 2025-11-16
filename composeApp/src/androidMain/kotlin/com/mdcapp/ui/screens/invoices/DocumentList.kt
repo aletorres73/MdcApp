@@ -68,9 +68,9 @@ fun DocumentList(documents: List<BillingModel>, onInvoiceClick: (String) -> Unit
                     val styleText = MaterialTheme.typography.bodySmall
                     DataCell(doc.loadDate, styleText, colFecha)
                     DataCell(doc.billingNumber, styleText, colNumero)
-                    DataCell(doc.total, styleText, colImporte, TextAlign.End)
-                    DataCell(doc.payed.ifBlank { "$0.00" }, styleText, colPagado, TextAlign.End)
-                    DataCell(doc.rest.ifBlank { "$0.00" }, styleText, colSaldo, TextAlign.End)
+                    DataCell("$${doc.total}", styleText, colImporte, TextAlign.End)
+                    DataCell("$${doc.payed}", styleText, colPagado, TextAlign.End)
+                    DataCell("$${doc.rest}", styleText, colSaldo, TextAlign.End)
                 }
                 HorizontalDivider(thickness = 0.5.dp)
             }

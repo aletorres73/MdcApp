@@ -171,11 +171,11 @@ fun TotalsCard(billing: BillingModel) {
             Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            TotalRow("Total", billing.total)
+            TotalRow("Total", billing.total.toString())
             TotalRow("Descuento", billing.discount.toString())
-            TotalRow("A cobrar", billing.toPay.toString())
-            TotalRow("Pagado", billing.payed)
-            TotalRow("Saldo", billing.rest)
+            TotalRow("A cobrar", (billing.total - billing.discount).toString())
+            TotalRow("Pagado", billing.payed.toString())
+            TotalRow("Saldo", billing.rest.toString())
         }
     }
 }
@@ -187,7 +187,7 @@ fun TotalRow(label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-        Text(value, style = MaterialTheme.typography.bodyMedium)
+        Text("$$value", style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -228,8 +228,8 @@ fun ArticlesCard(
                     ) {
                         TableCell(a.name, modifier = Modifier.weight(0.35f))
                         TableCell(a.color, modifier = Modifier.weight(0.25f))
-                        TableCell(a.pairs.toString(), modifier = Modifier.weight(0.2f))
-                        TableCell(a.value, modifier = Modifier.weight(0.2f))
+                        TableCell("${a.pairs}", modifier = Modifier.weight(0.2f))
+                        TableCell("$${a.value}", modifier = Modifier.weight(0.2f))
                     }
                 }
             }

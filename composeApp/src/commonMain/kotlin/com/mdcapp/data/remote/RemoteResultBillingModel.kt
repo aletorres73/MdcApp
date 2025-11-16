@@ -2,6 +2,7 @@ package com.mdcapp.data.remote
 
 import com.mdcapp.data.model.ArticleModel
 import com.mdcapp.data.model.BillingModel
+import com.mdcapp.data.model.toMoneyDouble
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -36,7 +37,7 @@ data class RemoteArticle(
 fun RemoteArticle.toDomain() = ArticleModel(
     name = name,
     color = color,
-    value = value,
+    value = value.toMoneyDouble(),
     pairs = pairs.toIntOrNull() ?: 0
 )
 
@@ -46,7 +47,7 @@ fun RemoteResultBillingModel.toDomain(): BillingModel {
         billingNumber = billingNumber,
         orderId = orderId,
         type = type,
-        total = total,
+        total = total.toMoneyDouble(),
         loadDate = loadDate,
         deliveryDate = deliveryDate,
         payDate = payDate,
@@ -54,8 +55,8 @@ fun RemoteResultBillingModel.toDomain(): BillingModel {
         paymentCondition = paymentCondition,
         discount = discount,
         toPay = toPay,
-        payed = payed,
-        rest = rest,
+        payed = payed.toMoneyDouble(),
+        rest = rest.toMoneyDouble(),
         stateBilling = stateBilling,
         clientId = clientId,
         brand = brand
