@@ -29,46 +29,38 @@ fun BuyOrderItem(buyOrder: BuyOrderModel) {
         Column {
             Text(text = "Articulo", style = styleTitle)
             buyOrder.articles.forEach { article ->
-                article["Articulo"]?.let {
                     Text(
-                        text = it,
+                        text = article.name,
                         style = styleArticle
                     )
-                }
             }
 
         }
         Column {
             Text(text = "Color", style = styleTitle)
             buyOrder.articles.forEach { article ->
-                article["Color"]?.let {
                     Text(
-                        text = it,
+                        text = article.color,
                         style = styleArticle
                     )
-                }
             }
         }
         Column {
             Text(text = "P. Pedidos", style = styleTitle)
             buyOrder.articles.forEach { article ->
-                article["Pares"]?.let {
                     Text(
-                        text = it,
+                        text = article.pairs.toString(),
                         style = styleArticle
                     )
-                }
             }
         }
         Column {
             Text(text = "P. Facturados", style = styleTitle)
             buyOrder.articles.forEach { article ->
-                article["Entregados"]?.let {
                     Text(
-                        text = it,
+                        text = article.delivered.toString(),
                         style = styleArticle
                     )
-                }
             }
         }
     }

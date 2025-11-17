@@ -1,5 +1,6 @@
 package com.mdcapp.data.remote
 
+import com.mdcapp.data.model.ArticleOrderModel
 import com.mdcapp.data.model.BuyOrderModel
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,8 +14,8 @@ data class RemoteResultBuyOrder(
     @SerialName("Plazo de entrega") var deliveryDate: String = "",
     @SerialName("Tipo") var type: String = "",
     @SerialName("Facturación") var billing: String = "",
-    @SerialName("Comentarios") var coments: String = "",
-    @SerialName("Articulos") var articles: List<HashMap<String, String>> = emptyList(),
+    @SerialName("Comentarios") var comments: String = "",
+    @SerialName("Articulos") var articles: List<RemoteArticleOrderModel> = emptyList(),
     @SerialName("Fecha de carga") var loadedDate: String = "",
 )
 
@@ -26,7 +27,22 @@ fun RemoteResultBuyOrder.toDomain() = BuyOrderModel(
     deliveryDate = deliveryDate,
     type = type,
     billing = billing,
-    comments = coments,
-    articles = articles,
+    comments = comments,
+    articles = articles.map { it.toDomain() },
     loadedDate = loadedDate
+)
+
+@Serializable
+data class RemoteArticleOrderModel(
+    @SerialName("Articulo") val name: String = "",
+    @SerialName("Color") val color: String = "",
+    @SerialName("Entregados") val delivered: String = "",
+    @SerialName("Pares") val pairs: String = ""
+)
+
+fun RemoteArticleOrderModel.toDomain() = ArticleOrderModel(
+    name,
+    color,
+    delivered.toInt(),
+    pairs.toInt()
 )

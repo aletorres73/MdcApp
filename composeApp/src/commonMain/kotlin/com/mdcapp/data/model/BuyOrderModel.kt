@@ -10,6 +10,14 @@ data class BuyOrderModel(
     var type: String = "",
     var billing: String = "",
     var comments: String = "",
-    var articles: List<HashMap<String, String>> = emptyList(),
+    var articles: List<ArticleOrderModel> = emptyList(),
     var loadedDate: String = "",
 )
+
+data class ArticleOrderModel(
+    val name: String = "",
+    val color: String = "",
+    val delivered: Int = 0,
+    val pairs: Int = 0
+)
+
