@@ -1,6 +1,7 @@
 package com.mdcapp.data.model
 
 import com.mdcapp.data.remote.RemoteArticle
+import com.mdcapp.data.remote.RemoteBillingComments
 import com.mdcapp.data.remote.RemoteResultBillingModel
 
 data class BillingModel(
@@ -19,7 +20,13 @@ data class BillingModel(
     val rest: Double = 0.0,
     val stateBilling: String = "",
     val clientId: String = "",
-    val brand: String = ""
+    val brand: String = "",
+    val comments: List<BillingComments> = emptyList()
+)
+
+data class BillingComments(
+    val comments: String = "",
+    val date: String = ""
 )
 
 data class ArticleModel(
@@ -62,7 +69,8 @@ fun BillingModel.toRemote() = RemoteResultBillingModel(
     rest.toString(),
     stateBilling,
     clientId,
-    brand
+    brand,
+    comments.map { RemoteBillingComments(it.comments, it.date) }
 )
 
 data class PaymentCondition(

@@ -1,6 +1,7 @@
 package com.mdcapp.data.remote
 
 import com.mdcapp.data.model.ArticleModel
+import com.mdcapp.data.model.BillingComments
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.toMoneyDouble
 import kotlinx.serialization.SerialName
@@ -23,7 +24,8 @@ data class RemoteResultBillingModel(
     @SerialName("Saldo") var rest: String = "",
     @SerialName("Estado") var stateBilling: String = "",
     @SerialName("Cliente Id") var clientId: String = "",
-    @SerialName("Marca") var brand: String = ""
+    @SerialName("Marca") var brand: String = "",
+    @SerialName("Comentarios") var comments: List<RemoteBillingComments> = emptyList()
 )
 
 @Serializable
@@ -32,6 +34,12 @@ data class RemoteArticle(
     @SerialName("Color") val color: String = "",
     @SerialName("Importe") val value: String = "",
     @SerialName("Pares") val pairs: String = ""
+)
+
+@Serializable
+data class RemoteBillingComments(
+    val comments: String = "",
+    val date: String = ""
 )
 
 fun RemoteArticle.toDomain() = ArticleModel(
@@ -59,6 +67,7 @@ fun RemoteResultBillingModel.toDomain(): BillingModel {
         rest = rest.toMoneyDouble(),
         stateBilling = stateBilling,
         clientId = clientId,
-        brand = brand
+        brand = brand,
+        comments = comments.map { BillingComments(it.comments, it.date) }
     )
 }
