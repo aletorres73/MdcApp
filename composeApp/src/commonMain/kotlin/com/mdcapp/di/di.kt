@@ -83,7 +83,7 @@ val viewModelModule = module {
     viewModelOf(::ClientsViewModel)
 //    viewModelOf(::InvoicesViewModel)
     viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get(), get()) }
-    viewModel { (invoiceNumber: String) -> DetailInvoiceViewModel(invoiceNumber, get()) }
+    viewModel { (invoiceNumber: String) -> DetailInvoiceViewModel(invoiceNumber, get(), get()) }
 }
 
 //expect val nativeModule: Module

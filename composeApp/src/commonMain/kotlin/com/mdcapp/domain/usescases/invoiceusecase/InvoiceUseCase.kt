@@ -26,7 +26,8 @@ class InvoiceUseCase(private val repository: OrderRepository, private val servic
     }
 
     inner class GetInvoiceByNumber {
-        suspend operator fun invoke(invoiceNumber: String) =
-            repository.getInvoiceByNumber(invoiceNumber)
+        suspend operator fun invoke(invoiceNumber: String): BillingModel {
+            return repository.getInvoiceByNumber(invoiceNumber)
+        }
     }
 }

@@ -31,14 +31,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.ArticleModel
 import com.mdcapp.data.model.BillingModel
+import com.mdcapp.data.model.BuyOrderModel
+import com.mdcapp.ui.composables.common.infotables.TableCell
+import com.mdcapp.ui.composables.common.infotables.TableHeader
+import com.mdcapp.ui.screens.orders.OrderCard
 
 
 @Composable
 fun DetailInvoiceScreen(
     billing: BillingModel,
+    order: BuyOrderModel,
     modifier: Modifier = Modifier
 ) {
     var showArticles by remember { mutableStateOf(true) }
+    var showOrder by remember { mutableStateOf(false) }
 
     Scaffold { padding ->
         Column(
@@ -65,6 +71,13 @@ fun DetailInvoiceScreen(
 
             // Condición de pago
             PaymentConditionCard(billing = billing)
+
+            OrderCard(
+                order = order,
+                expanded = showOrder,
+                onToggle = { showOrder = !showOrder }
+            )
+
 
             // Artículos (expandible)
             ArticlesCard(
@@ -235,24 +248,6 @@ fun ArticlesCard(
             }
         }
     }
-}
-
-@Composable
-fun TableHeader(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        modifier = modifier,
-        style = MaterialTheme.typography.titleSmall
-    )
-}
-
-@Composable
-fun TableCell(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        modifier = modifier,
-        style = MaterialTheme.typography.bodyMedium
-    )
 }
 
 @Composable
