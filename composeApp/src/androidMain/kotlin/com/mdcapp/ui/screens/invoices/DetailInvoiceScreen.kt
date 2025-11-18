@@ -1,5 +1,6 @@
 package com.mdcapp.ui.screens.invoices
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,10 +43,15 @@ import com.mdcapp.ui.screens.orders.OrderCard
 fun DetailInvoiceScreen(
     billing: BillingModel,
     order: BuyOrderModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit = {}
 ) {
     var showArticles by remember { mutableStateOf(false) }
     var showOrder by remember { mutableStateOf(false) }
+
+    BackHandler {
+        onBack()
+    }
 
     Scaffold { padding ->
         Column(

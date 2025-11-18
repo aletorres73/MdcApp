@@ -27,11 +27,11 @@ fun DocumentList(documents: List<BillingModel>, onInvoiceClick: (String) -> Unit
     val horizontalScroll = rememberScrollState()
 
     // 🔹 Ancho fijo por columna (ajústalos según tu diseño o proporciones reales)
-    val colFecha = 85.dp
-    val colNumero = 65.dp
-    val colImporte = 110.dp
-    val colPagado = 110.dp
-    val colSaldo = 110.dp
+    val colFecha = 95.dp
+    val colNumero = 95.dp
+    val colImporte = 120.dp
+    val colPagado = 120.dp
+    val colSaldo = 120.dp
 
     Column(
         modifier = Modifier

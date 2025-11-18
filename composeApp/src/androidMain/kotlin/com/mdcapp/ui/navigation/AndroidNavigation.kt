@@ -79,7 +79,10 @@ fun AndroidNavigation(startRoute: String) {
             val vm: DetailInvoiceViewModel =
                 koinViewModel(parameters = { parametersOf(invoiceNumber) })
             val state by vm.state.collectAsState()
-            DetailInvoiceScreen(state.billing, state.buyOrder)
+
+            DetailInvoiceScreen(
+                state.billing, state.buyOrder,
+                onBack = { navController.popBackStack() })
         }
 
 

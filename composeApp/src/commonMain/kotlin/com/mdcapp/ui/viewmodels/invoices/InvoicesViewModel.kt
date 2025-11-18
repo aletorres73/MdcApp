@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -23,12 +24,20 @@ class InvoicesViewModel(
     private val _state = MutableStateFlow(UiState(clientId = clientId))
     val state = _state.asStateFlow()
 
+    private val _selectedBrand = MutableStateFlow("")
+    val selectedBrand = _selectedBrand.asStateFlow()
+
+    fun setBrand(brand: String) {
+        _selectedBrand.value = brand
+    }
+
     data class UiState(
         val clientId: String = "",
         val isLoading: Boolean = false,
         val client: ClientModel = ClientModel("", ""),
         val documents: List<BillingModel> = emptyList(),
         val brandList: List<String> = emptyList(),
+        val balance: Double = 0.0,
         val error: String? = null
     )
 
@@ -40,6 +49,21 @@ class InvoicesViewModel(
         getDocuments(clientId)
     }
 
+    //----------------------------------------------
+    // HELPERS
+    //----------------------------------------------
+
+    private fun calculateBalance(documents: List<BillingModel>): Double {
+        val total = documents.sumOf { it.rest }
+        return total.toBigDecimal()
+            .setScale(2, RoundingMode.HALF_UP)
+            .toDouble()
+    }
+
+
+    private fun sortDocuments(docs: List<BillingModel>) =
+        docs.sortedBy { LocalDate.parse(it.loadDate, dateFormatter) }
+
     private fun launchWithState(block: suspend () -> Unit) = viewModelScope.launch {
         _state.update { it.copy(isLoading = true, error = null) }
         try {
@@ -50,55 +74,77 @@ class InvoicesViewModel(
         }
     }
 
+    //----------------------------------------------
+    // LOAD CLIENT NAME
+    //----------------------------------------------
+
     private fun getClientName(clientId: String) = launchWithState {
         val client = getClientNameUseCase(clientId)
         _state.update { it.copy(client = client, isLoading = false) }
     }
 
+    //----------------------------------------------
+    // LOAD DOCUMENTS + AUTO-FILTER BY FIRST BRAND
+    //----------------------------------------------
+
     private fun getDocuments(clientId: String) = launchWithState {
         val documents = getDocumentsUseCase(clientId)
 
-        // Generar lista de marcas únicas
         val brands = documents.asSequence()
             .map { it.brand }
             .filter { it.isNotBlank() }
             .distinct()
             .toList()
 
-        // Si hay al menos una marca, filtramos automáticamente por la primera
         if (brands.isNotEmpty()) {
             val firstBrand = brands.first()
             val filteredDocs = filterByBrandUseCase(firstBrand, clientId)
             val sorted = sortDocuments(filteredDocs)
+            val balance = calculateBalance(sorted)
 
             _state.update {
                 it.copy(
                     isLoading = false,
                     documents = sorted,
-                    brandList = brands
+                    brandList = brands,
+                    balance = balance
                 )
             }
+            setBrand(firstBrand)
+
         } else {
-            // Si no hay marcas, simplemente mostramos
             val sorted = sortDocuments(documents)
+            val balance = calculateBalance(sorted)
+
             _state.update {
                 it.copy(
                     isLoading = false,
                     documents = sorted,
-                    brandList = emptyList()
+                    brandList = emptyList(),
+                    balance = balance
                 )
             }
         }
     }
 
-    fun filterByMarca(brandSelected: String) = launchWithState {
-        val docs = filterByBrandUseCase(brandSelected, _state.value.clientId)
-        val sorted = sortDocuments(docs)
-        _state.update { it.copy(isLoading = false, documents = sorted) }
-    }
+    //----------------------------------------------
+    // FILTER BY BRAND
+    //----------------------------------------------
 
-    private fun sortDocuments(docs: List<BillingModel>) =
-        docs.sortedBy { LocalDate.parse(it.loadDate, dateFormatter) }
+    fun filterByMarca() = launchWithState {
+        val docs = filterByBrandUseCase(_selectedBrand.value, _state.value.clientId)
+        val sorted = sortDocuments(docs)
+        val balance = calculateBalance(sorted)
+
+        _state.update {
+            it.copy(
+                isLoading = false,
+                documents = sorted,
+                balance = balance,
+            )
+        }
+        setBrand(_selectedBrand.value)
+    }
 }
 
 

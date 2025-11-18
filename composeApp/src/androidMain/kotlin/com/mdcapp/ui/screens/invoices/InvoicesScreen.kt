@@ -24,7 +24,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,14 +47,15 @@ fun InvoicesScreen(
     BackHandler { onBack() }
 
     val state by vm.state.collectAsState()
+    val brandSelected by vm.selectedBrand.collectAsState()
 
     var expanded by remember { mutableStateOf(false) }
-    var brandSelected by remember { mutableStateOf(String()) }
+//    var brandSelected by remember { mutableStateOf(String()) }
 
     val brands = state.brandList
-    LaunchedEffect(brands) {
-        if (brands.isNotEmpty()) brandSelected = brands.first()
-    }
+    /*    LaunchedEffect(brands) {
+            if (brands.isNotEmpty()) brandSelected = brands.first()
+        }*/
 
     Scaffold(
         topBar = {
@@ -96,9 +96,9 @@ fun InvoicesScreen(
                                 DropdownMenuItem(
                                     text = { Text(brand) },
                                     onClick = {
-                                        brandSelected = brand
+                                        vm.setBrand(brand)
                                         expanded = false
-                                        vm.filterByMarca(brandSelected)
+                                        vm.filterByMarca()
                                     }
                                 )
                             }
@@ -132,7 +132,11 @@ fun InvoicesScreen(
             }
 
             else -> {
-                DetailClientBalance(paddingValues, state.documents) { onInvoiceClick(it) }
+                DetailClientBalance(paddingValues, state.documents, state.balance) {
+                    onInvoiceClick(
+                        it
+                    )
+                }
             }
         }
 
@@ -143,6 +147,7 @@ fun InvoicesScreen(
 fun DetailClientBalance(
     paddingValues: PaddingValues,
     documents: List<BillingModel>,
+    balance: Double,
     onInvoiceClick: (String) -> Unit
 ) {
     Box(
@@ -158,8 +163,12 @@ fun DetailClientBalance(
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-            ) { Text("Saldo total de cuenta:", style = MaterialTheme.typography.titleMedium) }
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text("Saldo total de cuenta:", style = MaterialTheme.typography.titleMedium)
+                Text("$$balance", style = MaterialTheme.typography.bodyMedium)
+            }
 
             HorizontalDivider()
             Text("Documentos en cuenta", style = MaterialTheme.typography.titleMedium)
