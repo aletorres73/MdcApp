@@ -17,6 +17,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.ArticleOrderModel
 import com.mdcapp.data.model.BuyOrderModel
@@ -140,10 +141,10 @@ fun OrderArticlesTable(articles: List<ArticleOrderModel>) {
                     .fillMaxWidth()
                     .padding(vertical = 4.dp)
             ) {
-                TableCell(item.name, Modifier.weight(0.35f))
-                TableCell(item.color, Modifier.weight(0.25f))
-                TableCell(item.pairs.toString(), Modifier.weight(0.2f))
-                TableCell(item.delivered.toString(), Modifier.weight(0.2f))
+                TableCell(item.name, Modifier.weight(0.25f), TextAlign.Start)
+                TableCell(item.color, Modifier.weight(0.35f), TextAlign.Start)
+                TableCell(item.pairs.toString(), Modifier.weight(0.2f), TextAlign.Center)
+                TableCell(item.delivered.toString(), Modifier.weight(0.2f), TextAlign.Center)
             }
         }
     }

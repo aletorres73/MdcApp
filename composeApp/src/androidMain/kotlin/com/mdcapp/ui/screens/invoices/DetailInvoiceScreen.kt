@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.ArticleModel
 import com.mdcapp.data.model.BillingModel
@@ -236,7 +237,7 @@ fun ArticlesCard(
                 )
 
                 TextButton(onClick = onToggle) {
-                    Text(if (expanded) "Ocultar pedido" else "Ver pedido")
+                    Text(if (expanded) "Ocultar detalle" else "Ver detalle")
                 }
             }
             AnimatedVisibility(visible = expanded) {
@@ -258,11 +259,15 @@ fun ArticlesCard(
                         Row(
                             Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp)
+                                .padding(vertical = 4.dp),
                         ) {
-                            TableCell(a.name, modifier = Modifier.weight(0.35f))
-                            TableCell(a.color, modifier = Modifier.weight(0.25f))
-                            TableCell("${a.pairs}", modifier = Modifier.weight(0.2f))
+                            TableCell(a.name, modifier = Modifier.weight(0.25f), TextAlign.Start)
+                            TableCell(a.color, modifier = Modifier.weight(0.35f), TextAlign.Start)
+                            TableCell(
+                                "${a.pairs}",
+                                modifier = Modifier.weight(0.2f),
+                                TextAlign.Center
+                            )
                             TableCell("$${a.value}", modifier = Modifier.weight(0.2f))
                         }
                     }
