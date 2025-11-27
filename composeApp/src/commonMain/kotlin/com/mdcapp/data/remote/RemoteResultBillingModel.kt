@@ -25,7 +25,8 @@ data class RemoteResultBillingModel(
     @SerialName("Estado") var stateBilling: String = "",
     @SerialName("Cliente Id") var clientId: String = "",
     @SerialName("Marca") var brand: String = "",
-    @SerialName("Comentarios") var comments: List<RemoteBillingComments> = emptyList()
+    @SerialName("Comentarios") var comments: List<RemoteBillingComments> = emptyList(),
+    @SerialName("Razon Social") var clientName: String = ""
 )
 
 @Serializable
@@ -68,6 +69,7 @@ fun RemoteResultBillingModel.toDomain(): BillingModel {
         stateBilling = stateBilling,
         clientId = clientId,
         brand = brand,
-        comments = comments.map { BillingComments(it.comments, it.date) }
+        comments = comments.map { BillingComments(it.comments, it.date) },
+        clientName = clientName
     )
 }

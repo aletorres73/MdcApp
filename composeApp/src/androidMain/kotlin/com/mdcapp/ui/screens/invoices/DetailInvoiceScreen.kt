@@ -13,14 +13,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.ArticleModel
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
+import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.data.model.isEmpty
 import com.mdcapp.ui.composables.common.infotables.TableCell
 import com.mdcapp.ui.composables.common.infotables.TableHeader
 import com.mdcapp.ui.screens.orders.OrderCard
@@ -50,11 +59,16 @@ fun DetailInvoiceScreen(
     var showArticles by remember { mutableStateOf(false) }
     var showOrder by remember { mutableStateOf(false) }
 
-    BackHandler {
-        onBack()
-    }
+    BackHandler { onBack() }
 
-    Scaffold { padding ->
+    Scaffold(
+        topBar = {
+            InvoiceHeaderTopBar(
+                billing = billing,
+                onBack = onBack
+            )
+        }
+    ) { padding ->
         Column(
             modifier = modifier
                 .padding(padding)
@@ -64,28 +78,16 @@ fun DetailInvoiceScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // Encabezado
-            InvoiceHeaderCard(
-                billing = billing,
-            )
-
-            // Fechas
             DatesCard(billing = billing)
-
-            // Totales
             TotalsCard(billing = billing)
-
-            // Condición de pago
             PaymentConditionCard(billing = billing)
 
-            //Pedido
             OrderCard(
                 order = order,
                 expanded = showOrder,
                 onToggle = { showOrder = !showOrder }
             )
 
-            // Artículos (expandible)
             ArticlesCard(
                 articles = billing.articles,
                 expanded = showArticles,
@@ -95,41 +97,56 @@ fun DetailInvoiceScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InvoiceHeaderTopBar(
+    billing: BillingModel,
+    onBack: () -> Unit
+) {
+    TopAppBar(
+        scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
+        title = { InvoiceHeaderCard(billing = billing) },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+            }
+        }
+    )
+}
+
+
 @Composable
 fun InvoiceHeaderCard(
     billing: BillingModel,
 ) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-        ),
-        modifier = Modifier.fillMaxWidth()
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            // Número + Marca
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        "Factura Nº ${billing.billingNumber}",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(billing.brand, style = MaterialTheme.typography.bodyMedium)
+        // Número + Marca
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    "Factura Nº ${billing.billingNumber}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(billing.clientName, style = MaterialTheme.typography.bodySmall)
+                    Text(" - ", style = MaterialTheme.typography.bodySmall)
+                    Text(billing.brand, style = MaterialTheme.typography.bodySmall)
                 }
-
-                StateBadge(billing.stateBilling)
             }
 
-            Spacer(Modifier.height(16.dp))
-
-            /*            // Botón expandir artículos
-                        TextButton(onClick = onToggleArticles) {
-                            Text(if (showArticles) "Ocultar artículos" else "Ver artículos")
-                        }*/
+            StateBadge(billing.stateBilling)
         }
+
+        Spacer(Modifier.height(16.dp))
     }
 }
 
@@ -246,10 +263,10 @@ fun ArticlesCard(
                 ) {
                     // Encabezado tabla
                     Row(Modifier.fillMaxWidth()) {
-                        TableHeader("Artículo", modifier = Modifier.weight(0.35f))
+                        TableHeader("Artículo", modifier = Modifier.weight(0.25f))
                         TableHeader("Color", modifier = Modifier.weight(0.25f))
-                        TableHeader("Pares", modifier = Modifier.weight(0.2f))
-                        TableHeader("Importe", modifier = Modifier.weight(0.2f))
+                        TableHeader("Pares", modifier = Modifier.weight(0.25f))
+                        TableHeader("Importe", modifier = Modifier.weight(0.25f))
                     }
 
                     Spacer(Modifier.height(12.dp))
@@ -266,7 +283,7 @@ fun ArticlesCard(
                             TableCell(
                                 "${a.pairs}",
                                 modifier = Modifier.weight(0.2f),
-                                TextAlign.Center
+                                TextAlign.Start
                             )
                             TableCell("$${a.value}", modifier = Modifier.weight(0.2f))
                         }
@@ -279,7 +296,12 @@ fun ArticlesCard(
 
 
 @Composable
-fun PaymentConditionCard(billing: BillingModel) {
+fun PaymentConditionCard(
+    billing: BillingModel,
+    onToggle: () -> Unit = {},
+    textCondition: String = "Sin condición seleccionda",
+    paymentCondition: PaymentCondition = PaymentCondition()
+) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
@@ -287,8 +309,22 @@ fun PaymentConditionCard(billing: BillingModel) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text("Condición de pago", style = MaterialTheme.typography.titleMedium)
-            Text(billing.paymentCondition, style = MaterialTheme.typography.bodyMedium)
+
+            // HEADER: Título + Botón expandir
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            )
+            {
+                Text("Condición de pago", style = MaterialTheme.typography.titleMedium)
+                Text(billing.paymentCondition, style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = onToggle) { Text("Seleccionar condición") }
+            }
+            if (paymentCondition.isEmpty())
+                Text(textCondition, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

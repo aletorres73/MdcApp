@@ -21,7 +21,8 @@ data class BillingModel(
     val stateBilling: String = "",
     val clientId: String = "",
     val brand: String = "",
-    val comments: List<BillingComments> = emptyList()
+    val comments: List<BillingComments> = emptyList(),
+    val clientName: String = ""
 )
 
 data class BillingComments(
@@ -70,13 +71,17 @@ fun BillingModel.toRemote() = RemoteResultBillingModel(
     stateBilling,
     clientId,
     brand,
-    comments.map { RemoteBillingComments(it.comments, it.date) }
+    comments.map { RemoteBillingComments(it.comments, it.date) },
+    clientName
 )
 
 data class PaymentCondition(
-    val paymentName: String,
-    val discount: Double,
-    val month: Int,
-    val expiration: Int,
-    val date: Int,
+    val paymentName: String = "",
+    val discount: Double = 0.0,
+    val month: Int = 0,
+    val expiration: Int = 0,
+    val date: Int = 0,
 )
+
+fun PaymentCondition.isEmpty() =
+    discount == 0.0 && month == 0 && expiration == 0 && date == 0 && paymentName.isEmpty()
