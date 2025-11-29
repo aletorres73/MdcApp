@@ -134,6 +134,24 @@ class OrderService(
         }
     }
 
+    suspend fun fetchPaymentConditionByBrand(brand: String): Map<String, Map<String, Any>> {
+        return try {
+            val document = db.collection(FACTORIES)
+                .where { FieldPath("Marcas").containsAny(listOf(brand)) }
+                .get()
+                .documents
+                .map { it.data<RemoteResultFactoryModel>() }
+                .first()
+            val paymentsTypes = document.paymentsTypes
+            Log.i("Firestore", "on fetchPaymentsTypesFactory in firestore : $paymentsTypes")
+            paymentsTypes
+        } catch (e: Exception) {
+            Log.i("Firestore", "on fetchPaymentsTypesFactory $e")
+            emptyMap()
+        }
+
+    }
+
     suspend fun setPaymentsConditionsFactory(
         factoryName: String,
         data: List<PaymentCondition>

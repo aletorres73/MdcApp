@@ -81,7 +81,8 @@ fun AndroidNavigation(startRoute: String) {
             val state by vm.state.collectAsState()
 
             DetailInvoiceScreen(
-                state.billing, state.buyOrder,
+                vm = vm,
+//                onSelectCondition = { brand -> vm.getPaymentCondition(brand) },
                 onBack = { navController.popBackStack() })
         }
 

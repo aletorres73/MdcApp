@@ -5,16 +5,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
+import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class DetailInvoiceViewModel(
     invoiceNumber: String,
     private val getInvoiceUseCase: InvoiceUseCase.GetInvoiceByNumber,
-    private val getBuyOrderUseCase: BuyOrderUseCase.GetBuyOrderById
+    private val getBuyOrderUseCase: BuyOrderUseCase.GetBuyOrderById,
+    private val getPaymentConditionUseCase: InvoiceUseCase.GetPaymentCondition
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(invoiceNumber = invoiceNumber))
@@ -25,7 +28,8 @@ class DetailInvoiceViewModel(
         val isLoading: Boolean = false,
         val billing: BillingModel = BillingModel(),
         val buyOrder: BuyOrderModel = BuyOrderModel(),
-        val error: String? = null
+        val error: String? = null,
+        val paymentConditionList: List<PaymentCondition> = emptyList()
     )
 
     init {
@@ -50,6 +54,8 @@ class DetailInvoiceViewModel(
             _state.value = _state.value.copy(billing = billing)
             Log.i("DetailInvoiceViewModel", "Billing: $billing")
 
+            getPaymentCondition(billing.brand)
+
             // 2️⃣ Obtener orden de compra usando el orderId ya seguro
             val orderId = billing.orderId
             if (orderId.isNotEmpty()) {
@@ -60,5 +66,34 @@ class DetailInvoiceViewModel(
 
             _state.value = _state.value.copy(isLoading = false)
         }
+    }
+
+    private fun getPaymentCondition(brand: String) {
+        viewModelScope.launch {
+            try {
+                _state.update { it.copy(isLoading = true) }
+                val result = getPaymentConditionUseCase(brand)
+                if (result.isNotEmpty())
+                    _state.update { it.copy(paymentConditionList = result, isLoading = false) }
+                else {
+                    _state.update {
+                        it.copy(
+                            error = "No se encontraron condiciones de pago",
+                            isLoading = false
+                        )
+                    }
+                }
+                Log.i("DetailInvoiceViewModel", "Result: $result")
+
+            } catch (e: Exception) {
+                Log.e("DetailInvoiceViewModel", "on getPaymentCondition: $e")
+                _state.update { it.copy(error = e.message, isLoading = false) }
+            }
+        }
+    }
+
+    fun updateSelectedPaymentCondition(condition: PaymentCondition) {
+        Log.i("DetailInvoiceViewModel", "on updateSelectedPaymentCondition: $condition")
+        _state.update { it.copy(billing = it.billing.copy(paymentCondition = condition.paymentName)) }
     }
 }

@@ -30,6 +30,9 @@ class OrderRepository(private val service: OrderService) {
     suspend fun getPaymentsConditionFactory(factoryName: String) =
         service.fetchPaymentsTypesFactory(factoryName).toPaymentConditions()
 
+    suspend fun getPaymentConditionByBrand(brand: String) =
+        service.fetchPaymentConditionByBrand(brand).toPaymentConditions()
+
     suspend fun addPaymentConditionsToFactory(
         factoryName: String,
         data: List<PaymentCondition>

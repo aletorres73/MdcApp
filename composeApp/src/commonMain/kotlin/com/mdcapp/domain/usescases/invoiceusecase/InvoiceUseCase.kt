@@ -2,6 +2,7 @@ package com.mdcapp.domain.usescases.invoiceusecase
 
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.ClientModel
+import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.data.model.toDomain
 import com.mdcapp.data.service.ClientService
 import com.mdcapp.domain.repositories.OrderRepository
@@ -28,6 +29,12 @@ class InvoiceUseCase(private val repository: OrderRepository, private val servic
     inner class GetInvoiceByNumber {
         suspend operator fun invoke(invoiceNumber: String): BillingModel {
             return repository.getInvoiceByNumber(invoiceNumber)
+        }
+    }
+
+    inner class GetPaymentCondition {
+        suspend operator fun invoke(brand: String): List<PaymentCondition> {
+            return repository.getPaymentConditionByBrand(brand)
         }
     }
 }
