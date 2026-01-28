@@ -3,6 +3,7 @@ package com.mdcapp.di
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.mdcapp.data.service.BillingPaginationService
 import com.mdcapp.data.service.ClientService
 import com.mdcapp.data.service.HomeService
 import com.mdcapp.data.service.OrderService
@@ -64,6 +65,7 @@ val dataModule = module {
     factoryOf(::OrderService)
     factoryOf(::HomeService)
     factoryOf(::ClientService)
+    factoryOf(::BillingPaginationService)
 //repositories
     factoryOf(::OrderRepository)
     factoryOf(::HomeRepository)
