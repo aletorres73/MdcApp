@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mdcapp.domain.entities.AppRoute
+import com.mdcapp.ui.composables.invoicesPage.InvoicesPageScreen
 import com.mdcapp.ui.screens.clients.ClientsScreen
 import com.mdcapp.ui.screens.detailorder.OrderDetailScreen
 import com.mdcapp.ui.screens.home.HomeScreen
@@ -31,6 +32,9 @@ fun AndroidNavigation(startRoute: String) {
         navController = navController,
         startDestination = startRoute
     ) {
+        composable(route = AppRoute.InvoicesPaged.route) {
+            InvoicesPageScreen()
+        }
         composable(route = AppRoute.Home.route) {
             HomeScreen { factoryName ->
                 navController.navigateToOrders(factoryName)

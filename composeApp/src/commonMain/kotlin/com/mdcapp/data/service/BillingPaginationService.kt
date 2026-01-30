@@ -1,10 +1,10 @@
 package com.mdcapp.data.service
 
 import android.util.Log
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query.Direction.DESCENDING
 import com.mdcapp.data.remote.RemoteResultBillingModel
-import kotlinx.coroutines.tasks.await
+import com.mdcapp.domain.entities.InvoicePage
+import dev.gitlive.firebase.firestore.FirebaseFirestore
 
 class BillingPaginationService(
     private val db: FirebaseFirestore
@@ -16,44 +16,61 @@ class BillingPaginationService(
         val BILLING_OBJECT = RemoteResultBillingModel::class.java
     }
 
-    private var lastDocumentSnapshot: DocumentSnapshot? = null
-    private var hasMore = true
-
-    fun resetPagination() {
-        lastDocumentSnapshot = null
-        hasMore = true
-
-    }
-
     suspend fun fetchBillingsPaged(
         state: String,
-        limit: Long
-    ): Pair<List<RemoteResultBillingModel>, Boolean> {
+        limit: Long,
+        startAfterId: String?
+    ): InvoicePage {
+
         return try {
-            if (!hasMore) return emptyList<RemoteResultBillingModel>() to false
 
-            val query = db.collection(BILLINGS)
-                .orderBy("Fecha")
-                .whereEqualTo("Estado", state)
-                .let { if (lastDocumentSnapshot != null) it.startAfter(lastDocumentSnapshot!!) else it }
+            var query = db
+                .collection(BILLINGS)
+                .where { "Estado" equalTo state }
+                .orderBy("Fecha", direction = DESCENDING)
+                .limit(limit)
 
-            val snapshot = query.get().await()
+            if (startAfterId != null) {
+                val lastDoc = db
+                    .collection(BILLINGS)
+                    .document(startAfterId)
+                    .get()
 
-            if (snapshot.documents.isEmpty()) {
-                hasMore = false
-                Log.i("firestore", "on fetchClients: empty")
-                return emptyList<RemoteResultBillingModel>() to false
+                if (lastDoc.exists) {
+                    query = query.startAfter(lastDoc)
+                }
             }
-            lastDocumentSnapshot = snapshot.last()
 
-            val items =
-                snapshot.documents.mapNotNull { it.toObject(BILLING_OBJECT) }
-            Log.i("firestore", "on fetchClients: $items")
-            items to true
+            val snapshot = query.get()
+
+            val data = snapshot.documents.mapNotNull { doc ->
+                try {
+                    doc.data<RemoteResultBillingModel>()
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            val lastDocId = snapshot.documents.lastOrNull()?.id
+
+            Log.i("firestore", "on fetchBillingsPaged: $data")
+            Log.i("firestore", "on fetchBillingsPaged: $lastDocId")
+
+            InvoicePage(
+                items = data,
+                nextCursor = lastDocId,
+                quantity = snapshot.documents.size
+            )
 
         } catch (e: Exception) {
-            Log.e("firestore", "Error on fetchClients: $e")
-            emptyList<RemoteResultBillingModel>() to false
+
+            Log.e("firestore", "Error fetch invoices paged: $e")
+
+            InvoicePage(
+                emptyList(),
+                null,
+                0
+            )
         }
     }
 }

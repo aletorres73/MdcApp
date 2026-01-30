@@ -4,6 +4,8 @@ sealed class AppRoute(val route: String) {
 
     data object Home : AppRoute("Home")
     data object Clients : AppRoute("Clients")
+    data object InvoicesPaged : AppRoute("InvoicesPaged")
+
 
     data class Invoices(val clientId: String) : AppRoute("Invoices") {
         companion object {

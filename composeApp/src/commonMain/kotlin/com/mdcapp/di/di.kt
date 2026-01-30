@@ -20,6 +20,7 @@ import com.mdcapp.ui.viewmodels.ClientsViewModel
 import com.mdcapp.ui.viewmodels.HomeViewModel
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
+import com.mdcapp.ui.viewmodels.invoices.InvoicesPagedViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
 import dev.gitlive.firebase.firestore.firestore
@@ -58,6 +59,7 @@ val appModule = module {
     single<InvoiceUseCase.FilterByBrand> { get<InvoiceUseCase>().FilterByBrand() }
     single<InvoiceUseCase.GetInvoiceByNumber> { get<InvoiceUseCase>().GetInvoiceByNumber() }
     single<InvoiceUseCase.GetPaymentCondition> { get<InvoiceUseCase>().GetPaymentCondition() }
+    single<InvoiceUseCase.GetInvoicePaged> { get<InvoiceUseCase>().GetInvoicePaged() }
 }
 
 val dataModule = module {
@@ -94,6 +96,7 @@ val viewModelModule = module {
             get()
         )
     }
+    viewModelOf(::InvoicesPagedViewModel)
 }
 
 //expect val nativeModule: Module

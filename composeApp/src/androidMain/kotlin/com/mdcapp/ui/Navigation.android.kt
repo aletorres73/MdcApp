@@ -15,7 +15,7 @@ actual fun PlatformNavigation() {
                     .fillMaxSize()
             ) {
                 AndroidNavigation(
-                    startRoute = AppRoute.Clients.route
+                    startRoute = AppRoute.InvoicesPaged.route
                 )
             }
         }

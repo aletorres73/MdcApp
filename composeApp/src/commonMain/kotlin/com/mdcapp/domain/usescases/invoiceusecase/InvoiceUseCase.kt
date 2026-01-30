@@ -4,10 +4,16 @@ import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.ClientModel
 import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.data.model.toDomain
+import com.mdcapp.data.service.BillingPaginationService
 import com.mdcapp.data.service.ClientService
+import com.mdcapp.domain.entities.InvoicePage
 import com.mdcapp.domain.repositories.OrderRepository
 
-class InvoiceUseCase(private val repository: OrderRepository, private val service: ClientService) {
+class InvoiceUseCase(
+    private val repository: OrderRepository,
+    private val service: ClientService,
+    private val paginationService: BillingPaginationService
+) {
 
     inner class GetBillingsByClient {
         suspend operator fun invoke(clientId: String): List<BillingModel> {
@@ -37,4 +43,23 @@ class InvoiceUseCase(private val repository: OrderRepository, private val servic
             return repository.getPaymentConditionByBrand(brand)
         }
     }
+
+    inner class GetInvoicePaged {
+
+        suspend fun loadNextPage(
+            limit: Long,
+            state: String,
+            cursor: String? = null
+        ): Pair<InvoicePage, String?> {
+            val page = paginationService.fetchBillingsPaged(
+                state = state,
+                limit = limit,
+                startAfterId = cursor,
+            )
+            return page to page.nextCursor
+        }
+
+        fun reset() = null
+    }
 }
+
