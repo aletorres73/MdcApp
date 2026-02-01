@@ -22,7 +22,8 @@ data class BillingModel(
     val clientId: String = "",
     val brand: String = "",
     val comments: List<BillingComments> = emptyList(),
-    val clientName: String = ""
+    val clientName: String = "",
+    val timeStamp: Long = 0
 )
 
 data class BillingComments(
@@ -72,7 +73,8 @@ fun BillingModel.toRemote() = RemoteResultBillingModel(
     clientId,
     brand,
     comments.map { RemoteBillingComments(it.comments, it.date) },
-    clientName
+    clientName,
+    timeStamp
 )
 
 data class PaymentCondition(

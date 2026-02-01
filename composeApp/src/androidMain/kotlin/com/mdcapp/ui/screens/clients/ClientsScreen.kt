@@ -31,7 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.mdcapp.ui.composables.common.SearchbarTopBar
+import com.mdcapp.ui.composables.common.SearchBar
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -71,7 +71,7 @@ fun ClientsScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             val query = remember { mutableStateOf(TextFieldValue("")) }
-            SearchbarTopBar(
+            SearchBar(
                 query = query.value,
                 onQueryChange = { newQuery -> query.value = newQuery },
                 onCleanQuery = { query.value = TextFieldValue("") },

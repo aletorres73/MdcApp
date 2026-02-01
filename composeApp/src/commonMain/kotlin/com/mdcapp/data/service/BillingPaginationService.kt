@@ -1,6 +1,7 @@
 package com.mdcapp.data.service
 
 import android.util.Log
+import com.google.firebase.firestore.Query.Direction.ASCENDING
 import com.google.firebase.firestore.Query.Direction.DESCENDING
 import com.mdcapp.data.remote.RemoteResultBillingModel
 import com.mdcapp.domain.entities.InvoicePage
@@ -19,7 +20,8 @@ class BillingPaginationService(
     suspend fun fetchBillingsPaged(
         state: String,
         limit: Long,
-        startAfterId: String?
+        startAfterId: String?,
+        direction: String = "desc"
     ): InvoicePage {
 
         return try {
@@ -27,7 +29,10 @@ class BillingPaginationService(
             var query = db
                 .collection(BILLINGS)
                 .where { "Estado" equalTo state }
-                .orderBy("Fecha", direction = DESCENDING)
+                .orderBy(
+                    "Timestamp",
+                    direction = if (direction == "desc") DESCENDING else ASCENDING
+                )
                 .limit(limit)
 
             if (startAfterId != null) {

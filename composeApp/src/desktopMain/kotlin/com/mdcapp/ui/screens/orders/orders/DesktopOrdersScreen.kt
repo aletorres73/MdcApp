@@ -31,8 +31,8 @@ import com.mdcapp.data.model.OrderModel
 import com.mdcapp.ui.Screen
 import com.mdcapp.ui.composables.common.BottomBarOrderScreen
 import com.mdcapp.ui.composables.common.MainTopAppBar
+import com.mdcapp.ui.composables.common.SearchBar
 import com.mdcapp.ui.composables.common.SearchButton
-import com.mdcapp.ui.composables.common.SearchbarTopBar
 import com.mdcapp.ui.composables.orders.OrderItems
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -74,7 +74,7 @@ fun DesktopOrdersScreen(
                 }
                 AnimatedVisibility(visible = isSearchBar) {
                     val query = state.query
-                    SearchbarTopBar(
+                    SearchBar(
                         query = query,
                         onQueryChange = { newQuery -> vm.searchOrders(newQuery, true) },
                         onCleanQuery = {},

@@ -32,11 +32,11 @@ class InvoicesPagedViewModel(
         )
     )
 
-    init {
-        val state = _uiState.value.selectedState
-        _uiState.update { it.copy(cursor = getInvoicePaged.reset()) }
-        loadFirstPage(state)
-    }
+    /*    init {
+            val state = _uiState.value.selectedState
+            _uiState.update { it.copy(cursor = getInvoicePaged.reset()) }
+            loadFirstPage(state)
+        }*/
 
 
     fun loadFirstPage(state: String) {

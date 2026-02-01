@@ -27,8 +27,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.mdcapp.ui.composables.common.LoadingIndicator
 import com.mdcapp.ui.composables.common.MainTopAppBar
+import com.mdcapp.ui.composables.common.SearchBar
 import com.mdcapp.ui.composables.common.SearchButton
-import com.mdcapp.ui.composables.common.SearchbarTopBar
 import com.mdcapp.ui.composables.orders.OrderItems
 import com.mdcapp.ui.navigation.BottomBarNavigation
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
@@ -85,7 +85,7 @@ fun AndroidOrdersScreen(
             }
             AnimatedVisibility(visible = isSearchBar) {
                 val query = state.query
-                SearchbarTopBar(
+                SearchBar(
                     query = query,
                     onQueryChange = { newQuery -> vm.searchOrders(newQuery) },
                     onCleanQuery = {},
