@@ -122,4 +122,22 @@ class ClientService(
         }
     }
 
+    suspend fun fetchAllClientsName(): List<String> {
+        return try {
+            val snapshot = db.collection(CLIENTS).get().await()
+            snapshot.documents.mapNotNull { doc ->
+                try {
+                    doc.getString("Razon Social")
+
+                } catch (e: Exception) {
+                    Log.e("firestore", "Error mapping client")
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("firestore", "Error fetching clients: $e")
+            emptyList()
+        }
+    }
+
 }

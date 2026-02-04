@@ -1,5 +1,6 @@
 package com.mdcapp.ui.viewmodels.invoices
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
@@ -12,7 +13,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class InvoicesPagedViewModel(
-    private val getInvoicePaged: InvoiceUseCase.GetInvoicePaged
+    private val getInvoicePaged: InvoiceUseCase.GetInvoicePaged,
+    private val getClients: InvoiceUseCase.GetAllClients
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InvoiceUiState())
@@ -20,6 +22,7 @@ class InvoicesPagedViewModel(
 
     data class InvoiceUiState(
         val invoices: List<BillingModel> = emptyList(),
+        val clientNameList: List<String> = emptyList(),
         val isLoading: Boolean = false,
         val selectedState: String = "Vencido",
         val cursor: String? = null,
@@ -37,8 +40,17 @@ class InvoicesPagedViewModel(
     )
 
     init {
-            val state = _uiState.value.selectedState
-            loadFirstPage(state)
+        _uiState.update { it.copy(isLoading = true) }
+        val state = _uiState.value.selectedState
+        loadAllClients()
+        loadFirstPage(state)
+    }
+
+    private fun loadAllClients() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(clientNameList = getClients()) }
+            Log.i("InvoicesPagedViewModel", "Clients: ${_uiState.value.clientNameList}")
+        }
     }
 
     fun stateSelected(state: String) {
@@ -51,7 +63,7 @@ class InvoicesPagedViewModel(
         reload()
     }
 
-    fun loadFirstPage(state: String) {
+    private fun loadFirstPage(state: String) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(

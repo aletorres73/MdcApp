@@ -1,6 +1,7 @@
 package com.mdcapp.ui.composables.invoicesPage
 
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +50,26 @@ fun InvoicesPageScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val query = remember { mutableStateOf(TextFieldValue("")) }
+
+    val suggestions = remember(
+        query.value.text,
+        state.clientNameList,
+        state.typeSearch
+    ) {
+        if (
+            state.typeSearch != TypeSearch.Client ||
+            query.value.text.isBlank()
+        ) {
+            emptyList()
+        } else {
+            state.clientNameList
+                .filter {
+                    it.startsWith(query.value.text, ignoreCase = true)
+                }
+                .take(5) // límite razonable
+        }
+    }
+
 
     Scaffold(
         modifier = Modifier.fillMaxWidth(),
@@ -88,8 +111,11 @@ fun InvoicesPageScreen(
                     Log.i("Search", "Search: ${query.value.text}")
                     viewModel.onSearch(query.value.text)
                 },
-                searchText = "Selecionar documento / cliente..."
+                searchText = "Selecionar cliente o documento..."
             )
+
+            SuggestionNameCard(suggestions, query, viewModel)
+
             InvoiceList(
                 invoices = state.invoices,
                 isLoading = state.isLoading,
@@ -98,6 +124,39 @@ fun InvoicesPageScreen(
         }
     }
 
+}
+
+@Composable
+private fun SuggestionNameCard(
+    suggestions: List<String>,
+    query: MutableState<TextFieldValue>,
+    viewModel: InvoicesPagedViewModel
+) {
+    if (suggestions.isNotEmpty()) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            colors = CardDefaults.cardColors().copy(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Column {
+                suggestions.forEach { suggestion ->
+                    Text(
+                        text = suggestion,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                            .clickable {
+                                query.value = TextFieldValue(suggestion)
+                                viewModel.onSearch(suggestion)
+                            }
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable

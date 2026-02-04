@@ -60,6 +60,7 @@ val appModule = module {
     single<InvoiceUseCase.GetInvoiceByNumber> { get<InvoiceUseCase>().GetInvoiceByNumber() }
     single<InvoiceUseCase.GetPaymentCondition> { get<InvoiceUseCase>().GetPaymentCondition() }
     single<InvoiceUseCase.GetInvoicePaged> { get<InvoiceUseCase>().GetInvoicePaged() }
+    single<InvoiceUseCase.GetAllClients> { get<InvoiceUseCase>().GetAllClients() }
 }
 
 val dataModule = module {

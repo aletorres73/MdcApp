@@ -12,7 +12,8 @@ import com.mdcapp.domain.repositories.OrderRepository
 class InvoiceUseCase(
     private val repository: OrderRepository,
     private val service: ClientService,
-    private val paginationService: BillingPaginationService
+    private val paginationService: BillingPaginationService,
+    private val clientService: ClientService
 ) {
 
     inner class GetBillingsByClient {
@@ -66,6 +67,12 @@ class InvoiceUseCase(
         }
 
         fun reset() = null
+    }
+
+    inner class GetAllClients {
+        suspend operator fun invoke(): List<String> {
+            return clientService.fetchAllClientsName()
+        }
     }
 }
 
