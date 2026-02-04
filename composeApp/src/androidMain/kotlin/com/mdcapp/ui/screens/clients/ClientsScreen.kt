@@ -75,9 +75,6 @@ fun ClientsScreen(
                 query = query.value,
                 onQueryChange = { newQuery -> query.value = newQuery },
                 onCleanQuery = { query.value = TextFieldValue("") },
-                onClose = {
-                    isSearchEnable = false
-                },
                 onSearch = {
                     Log.i("Search", "Search: ${query.value.text}")
                     vm.searchClients(query.value.text)

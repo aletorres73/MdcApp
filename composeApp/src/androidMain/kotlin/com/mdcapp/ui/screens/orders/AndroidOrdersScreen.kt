@@ -89,12 +89,12 @@ fun AndroidOrdersScreen(
                     query = query,
                     onQueryChange = { newQuery -> vm.searchOrders(newQuery) },
                     onCleanQuery = {},
-                    onClose = {
-//                            isSearchBar = false
-                        vm.setSearchBar(false)
-                        resetFilters = true
-                        vm.cleanSearchQuery()
-                    },
+                    /*                    onClose = {
+                    //                            isSearchBar = false
+                                            vm.setSearchBar(false)
+                                            resetFilters = true
+                                            vm.cleanSearchQuery()
+                                        },*/
                 )
             }
         },

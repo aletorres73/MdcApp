@@ -1,5 +1,6 @@
 package com.mdcapp.ui.composables.invoicesPage
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,15 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
@@ -45,23 +42,16 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @OptIn(KoinExperimentalAPI::class, ExperimentalMaterial3Api::class)
 @Composable
 fun InvoicesPageScreen(
-    viewModel: InvoicesPagedViewModel = koinViewModel()
+    viewModel: InvoicesPagedViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val query = remember { mutableStateOf(TextFieldValue("")) }
 
     Scaffold(
         modifier = Modifier.fillMaxWidth(),
         topBar = {
             TopAppBar(
                 title = { Text("Facturas") },
-                navigationIcon = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "navigation back"
-                        )
-                    }
-                },
                 actions = {
                     StateFilter(
                         states = state.availableStates,
@@ -74,14 +64,18 @@ fun InvoicesPageScreen(
 
     ) { paddingValues ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues)
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             SearchBar(
-                query = TextFieldValue(""),
-                onQueryChange = {},
-                onSearch = {},
-                onClose = {},
-                onCleanQuery = {}
+                query = query.value,
+                onQueryChange = { newQuery -> query.value = newQuery },
+                onCleanQuery = { query.value = TextFieldValue("") },
+                onSearch = {
+                    Log.i("Search", "Search: ${query.value.text}")
+//                    vm.searchClients(query.value.text)
+                },
+                searchText = "Buscar factura / cliente..."
             )
             InvoiceList(
                 invoices = state.invoices,
@@ -149,6 +143,7 @@ fun InvoiceList(
     onLoadMore: () -> Unit
 ) {
     LazyColumn(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

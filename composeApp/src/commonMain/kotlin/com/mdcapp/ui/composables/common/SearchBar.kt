@@ -26,16 +26,9 @@ fun SearchBar(
     query: TextFieldValue,
     onQueryChange: (TextFieldValue) -> Unit,
     onCleanQuery: () -> Unit,
-    onClose: () -> Unit,
-    onSearch: (TextFieldValue) -> Unit = {}
+    onSearch: (TextFieldValue) -> Unit = {},
+    searchText: String = "Buscar cliente..."
 ) {
-    /*    val keyboardController = LocalSoftwareKeyboardController.current
-        val focusRequester = remember { FocusRequester() }
-
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-            keyboardController?.show()
-        }*/
 
     OutlinedTextField(
         value = query,
@@ -45,7 +38,7 @@ fun SearchBar(
             .wrapContentHeight()
             .fillMaxWidth()
             .padding(horizontal = 4.dp),
-        placeholder = { Text(text = "Buscar cliente...", fontSize = 18.sp) },
+        placeholder = { Text(text = searchText, fontSize = 18.sp) },
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
 
