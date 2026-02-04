@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -53,11 +54,6 @@ fun InvoicesPageScreen(
             TopAppBar(
                 title = { Text("Facturas") },
                 actions = {
-                    StateFilter(
-                        states = state.availableStates,
-                        selected = state.selectedState,
-                        onSelected = { viewModel.loadFirstPage(it) }
-                    )
                 }
             )
         }
@@ -67,15 +63,32 @@ fun InvoicesPageScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                InputSearchBar { onType -> viewModel.onSelectedTypeSearch(onType) }
+                StateFilter(
+                    states = state.availableStates,
+                    selected = state.selectedState,
+                    onSelected = {
+                        viewModel.stateSelected(it)
+                    }
+                )
+            }
             SearchBar(
                 query = query.value,
                 onQueryChange = { newQuery -> query.value = newQuery },
-                onCleanQuery = { query.value = TextFieldValue("") },
+                onCleanQuery = {
+                    query.value = TextFieldValue("")
+                    viewModel.clearQuery()
+                },
                 onSearch = {
                     Log.i("Search", "Search: ${query.value.text}")
-//                    vm.searchClients(query.value.text)
+                    viewModel.onSearch(query.value.text)
                 },
-                searchText = "Buscar factura / cliente..."
+                searchText = "Selecionar documento / cliente..."
             )
             InvoiceList(
                 invoices = state.invoices,
@@ -85,6 +98,36 @@ fun InvoicesPageScreen(
         }
     }
 
+}
+
+@Composable
+fun InputSearchBar(onTypeSelected: (TypeSearch) -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        var selectedInput by remember { mutableStateOf(false) }
+        InputChip(
+            selected = !selectedInput,
+            onClick = {
+                onTypeSelected(TypeSearch.Client)
+                selectedInput = !selectedInput
+            },
+            label = { Text("Cliente") }
+        )
+        InputChip(
+            selected = selectedInput,
+            onClick = {
+                onTypeSelected(TypeSearch.Number)
+                selectedInput = !selectedInput
+            },
+            label = { Text("Numero") }
+        )
+    }
+}
+
+sealed class TypeSearch {
+    data object Client : TypeSearch()
+    data object Number : TypeSearch()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

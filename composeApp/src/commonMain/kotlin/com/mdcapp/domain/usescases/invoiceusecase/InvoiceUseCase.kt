@@ -50,13 +50,17 @@ class InvoiceUseCase(
             limit: Long,
             state: String,
             cursor: String? = null,
-            direction: String = "desc"
+            direction: String = "desc",
+            client: String? = null,
+            number: String? = null
         ): Pair<InvoicePage, String?> {
             val page = paginationService.fetchBillingsPaged(
                 state = state,
                 limit = limit,
                 startAfterId = cursor,
-                direction = direction
+                direction = direction,
+                client = client,
+                number = number
             )
             return page to page.nextCursor
         }

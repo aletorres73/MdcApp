@@ -38,7 +38,7 @@ fun SearchBar(
             .wrapContentHeight()
             .fillMaxWidth()
             .padding(horizontal = 4.dp),
-        placeholder = { Text(text = searchText, fontSize = 18.sp) },
+        placeholder = { Text(text = searchText, fontSize = 14.sp) },
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
 

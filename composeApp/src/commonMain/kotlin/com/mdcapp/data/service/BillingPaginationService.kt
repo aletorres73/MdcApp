@@ -6,6 +6,7 @@ import com.google.firebase.firestore.Query.Direction.DESCENDING
 import com.mdcapp.data.remote.RemoteResultBillingModel
 import com.mdcapp.domain.entities.InvoicePage
 import dev.gitlive.firebase.firestore.FirebaseFirestore
+import dev.gitlive.firebase.firestore.Query
 
 class BillingPaginationService(
     private val db: FirebaseFirestore
@@ -18,7 +19,9 @@ class BillingPaginationService(
     }
 
     suspend fun fetchBillingsPaged(
-        state: String,
+        state: String?,
+        client: String?,
+        number: String?,
         limit: Long,
         startAfterId: String?,
         direction: String = "desc"
@@ -26,16 +29,37 @@ class BillingPaginationService(
 
         return try {
 
-            var query = db
-                .collection(BILLINGS)
-                .where { "Estado" equalTo state }
+            var query: Query = db.collection(BILLINGS)
+
+            // Filtros dinámicos
+            if (!state.isNullOrBlank()) {
+                query = query.where {
+                    "Estado" equalTo state
+                }
+            }
+
+            if (!client.isNullOrBlank()) {
+                query = query.where {
+                    "Razon Social" equalTo client
+                }
+            }
+
+            if (!number.isNullOrBlank()) {
+                query = query.where {
+                    "Numero" equalTo number
+                }
+            }
+
+            // Orden + límite
+            query = query
                 .orderBy(
                     "Timestamp",
                     direction = if (direction == "desc") DESCENDING else ASCENDING
                 )
                 .limit(limit)
 
-            if (startAfterId != null) {
+            // Cursor
+            if (!startAfterId.isNullOrBlank()) {
                 val lastDoc = db
                     .collection(BILLINGS)
                     .document(startAfterId)
@@ -48,28 +72,24 @@ class BillingPaginationService(
 
             val snapshot = query.get()
 
-            val data = snapshot.documents.mapNotNull { doc ->
+            val items = snapshot.documents.mapNotNull { doc ->
                 try {
                     doc.data<RemoteResultBillingModel>()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null
                 }
             }
-
-            val lastDocId = snapshot.documents.lastOrNull()?.id
-
-            Log.i("firestore", "on fetchBillingsPaged: $data")
-            Log.i("firestore", "on fetchBillingsPaged: $lastDocId")
+            Log.i("firestore", "on fetchBillingsPaged: $items")
 
             InvoicePage(
-                items = data,
-                nextCursor = lastDocId,
+                items = items,
+                nextCursor = snapshot.documents.lastOrNull()?.id,
                 quantity = snapshot.documents.size
             )
 
         } catch (e: Exception) {
 
-            Log.e("firestore", "Error fetch invoices paged: $e")
+            Log.e("firestore", "Error fetchBillingsPaged", e)
 
             InvoicePage(
                 emptyList(),

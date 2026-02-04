@@ -27,7 +27,7 @@ data class RemoteResultBillingModel(
     @SerialName("Marca") var brand: String = "",
     @SerialName("Comentarios") var comments: List<RemoteBillingComments> = emptyList(),
     @SerialName("Razon Social") var clientName: String = "",
-    @SerialName("TimeStamp") var timeStamp: Long = 0
+    @SerialName("Timestamp") var timeStamp: Long = 0
 )
 
 @Serializable

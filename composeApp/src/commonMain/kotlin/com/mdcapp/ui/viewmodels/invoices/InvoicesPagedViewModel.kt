@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.remote.toDomain
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
+import com.mdcapp.ui.composables.invoicesPage.TypeSearch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -29,15 +30,26 @@ class InvoicesPagedViewModel(
             "Por vencer",
             "Cobrado",
             "Sin información"
-        )
+        ),
+        val clientSearch: String? = null,
+        val numberSearch: String? = null,
+        val typeSearch: TypeSearch? = TypeSearch.Client
     )
 
-    /*    init {
+    init {
             val state = _uiState.value.selectedState
-            _uiState.update { it.copy(cursor = getInvoicePaged.reset()) }
             loadFirstPage(state)
-        }*/
+    }
 
+    fun stateSelected(state: String) {
+        _uiState.update {
+            it.copy(
+                selectedState = state,
+                endReached = false
+            )
+        }
+        reload()
+    }
 
     fun loadFirstPage(state: String) {
         viewModelScope.launch {
@@ -63,21 +75,90 @@ class InvoicesPagedViewModel(
     fun loadNextPage() {
         val current = _uiState.value
         if (current.isLoading || current.endReached) return
-        val state = _uiState.value.selectedState
-        val cursor = _uiState.value.cursor
 
         viewModelScope.launch {
-            if (_uiState.value.isLoading) return@launch
             _uiState.update { it.copy(isLoading = true) }
-            val (page, cursorResult) = getInvoicePaged.loadNextPage(20, state, cursor)
+
+            val (page, cursor) = getInvoicePaged.loadNextPage(
+                limit = 20,
+                state = current.selectedState,
+                cursor = current.cursor,
+                client = current.clientSearch,
+                number = current.numberSearch
+            )
+
             _uiState.update {
                 it.copy(
-                    invoices = it.invoices + page.items.map { billing -> billing.toDomain() },
-                    cursor = cursorResult,
+                    invoices = it.invoices + page.items.map { it.toDomain() },
+                    cursor = cursor,
                     isLoading = false,
                     endReached = page.items.isEmpty()
                 )
             }
         }
     }
+
+    private fun reload() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    invoices = emptyList(),
+                    cursor = getInvoicePaged.reset(),
+                    endReached = false
+                )
+            }
+
+            val state = _uiState.value.selectedState
+            val client = _uiState.value.clientSearch
+            val number = _uiState.value.numberSearch
+
+            val (page, cursor) = getInvoicePaged.loadNextPage(
+                limit = 20,
+                state = state,
+                cursor = null,
+                client = client,
+                number = number
+            )
+
+            _uiState.update {
+                it.copy(
+                    invoices = page.items.map { it.toDomain() },
+                    cursor = cursor,
+                    isLoading = false,
+                    endReached = page.items.isEmpty()
+                )
+            }
+        }
+    }
+
+
+    fun onSelectedTypeSearch(type: TypeSearch) {
+        _uiState.update { it.copy(typeSearch = type) }
+    }
+
+    fun onSearch(query: String) {
+        when (_uiState.value.typeSearch) {
+            TypeSearch.Client -> {
+                _uiState.update {
+                    it.copy(clientSearch = query, numberSearch = null)
+                }
+            }
+
+            TypeSearch.Number -> {
+                _uiState.update {
+                    it.copy(numberSearch = query, clientSearch = null)
+                }
+            }
+
+            null -> return
+        }
+        reload()
+    }
+
+    fun clearQuery() {
+        _uiState.update { it.copy(clientSearch = null, numberSearch = null) }
+        reload()
+    }
+
 }
