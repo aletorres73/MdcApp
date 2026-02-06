@@ -67,7 +67,7 @@ fun AndroidOrdersScreen(
 
     Scaffold(
         bottomBar = {
-            BottomBarNavigation { newRoute -> route = newRoute }
+            BottomBarNavigation { /*newRoute -> route = newRoute */ }
         },
         topBar = {
             AnimatedVisibility(visible = !isSearchBar) {

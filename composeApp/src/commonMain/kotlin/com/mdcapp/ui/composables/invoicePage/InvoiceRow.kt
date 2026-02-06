@@ -1,4 +1,4 @@
-package com.mdcapp.ui.composables.invoicesPage
+package com.mdcapp.ui.composables.invoicePage
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Arrangement

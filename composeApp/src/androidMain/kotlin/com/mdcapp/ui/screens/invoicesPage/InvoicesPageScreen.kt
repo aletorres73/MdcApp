@@ -1,4 +1,4 @@
-package com.mdcapp.ui.composables.invoicesPage
+package com.mdcapp.ui.screens.invoicesPage
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
@@ -19,8 +19,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.mdcapp.domain.entities.AppRoute
 import com.mdcapp.domain.entities.TypeSearch
 import com.mdcapp.ui.composables.common.SearchBar
+import com.mdcapp.ui.navigation.BottomBarNavigation
 import com.mdcapp.ui.viewmodels.invoices.InvoicesPagedViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -29,6 +31,7 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun InvoicesPageScreen(
     viewModel: InvoicesPagedViewModel = koinViewModel(),
+    onNavigation: (AppRoute) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     val query = remember { mutableStateOf(TextFieldValue("")) }
@@ -55,6 +58,11 @@ fun InvoicesPageScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxWidth(),
+        bottomBar = {
+            BottomBarNavigation(
+                onNavigationIcon = { route -> onNavigation(route) }
+            )
+        },
         topBar = {
             TopAppBar(
                 title = { Text("Facturas") },
@@ -65,12 +73,16 @@ fun InvoicesPageScreen(
 
     ) { paddingValues ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 InputSearchBar { onType -> viewModel.onSelectedTypeSearch(onType) }

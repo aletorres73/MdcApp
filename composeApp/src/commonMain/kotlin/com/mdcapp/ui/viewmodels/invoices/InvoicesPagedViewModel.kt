@@ -40,10 +40,7 @@ class InvoicesPagedViewModel(
     )
 
     init {
-        _uiState.update { it.copy(isLoading = true) }
-        val state = _uiState.value.selectedState
         loadAllClients()
-        loadFirstPage(state)
     }
 
     private fun loadAllClients() {
@@ -61,27 +58,6 @@ class InvoicesPagedViewModel(
             )
         }
         reload()
-    }
-
-    private fun loadFirstPage(state: String) {
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    invoices = emptyList(),
-                    selectedState = state
-                )
-            }
-            val (page, cursor) = getInvoicePaged.loadNextPage(20, state)
-            _uiState.update {
-                it.copy(
-                    invoices = page.items.map { billing -> billing.toDomain() },
-                    cursor = cursor,
-                    isLoading = false,
-                    endReached = page.items.isEmpty()
-                )
-            }
-        }
     }
 
     fun loadNextPage() {

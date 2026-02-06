@@ -31,7 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.mdcapp.domain.entities.AppRoute
 import com.mdcapp.ui.composables.common.SearchBar
+import com.mdcapp.ui.navigation.BottomBarNavigation
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -40,7 +42,8 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun ClientsScreen(
     vm: ClientsViewModel = koinViewModel(),
-    onItemClick: (id: String) -> Unit
+    onItemClick: (id: String) -> Unit,
+    onNavigation: (AppRoute) -> Unit
 ) {
     val state by vm.state.collectAsState()
     val statusScreenStatus by vm.statusScreen.collectAsState()
@@ -54,6 +57,11 @@ fun ClientsScreen(
     BackHandler(enabled = isSearchEnable) { isSearchEnable = false }
 
     Scaffold(
+        bottomBar = {
+            BottomBarNavigation(
+                onNavigationIcon = { route -> onNavigation(route) }
+            )
+        },
         topBar = {
             TopAppBar(
                 title = {

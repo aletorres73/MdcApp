@@ -10,13 +10,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mdcapp.domain.entities.AppRoute
-import com.mdcapp.ui.composables.invoicesPage.InvoicesPageScreen
 import com.mdcapp.ui.screens.clients.ClientsScreen
-import com.mdcapp.ui.screens.detailorder.OrderDetailScreen
-import com.mdcapp.ui.screens.home.HomeScreen
 import com.mdcapp.ui.screens.invoices.DetailInvoiceScreen
 import com.mdcapp.ui.screens.invoices.InvoicesScreen
-import com.mdcapp.ui.screens.orders.AndroidOrdersScreen
+import com.mdcapp.ui.screens.invoicesPage.InvoicesPageScreen
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -33,29 +30,34 @@ fun AndroidNavigation(startRoute: String) {
         startDestination = startRoute
     ) {
         composable(route = AppRoute.InvoicesPaged.route) {
-            InvoicesPageScreen()
-        }
-        composable(route = AppRoute.Home.route) {
-            HomeScreen { factoryName ->
-                navController.navigateToOrders(factoryName)
-            }
-        }
-        composable(route = AppRoute.Clients.route) {
-            ClientsScreen { clientId -> navController.navigateToInvoices(clientId) }
-        }
-        composable(
-            route = AppRoute.Orders.BASE_ROUTE,
-            arguments = listOf(navArgument("factoryName") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val factoryName = checkNotNull(backStackEntry.arguments?.getString("factoryName"))
-            AndroidOrdersScreen(
-                factoryName = factoryName,
-                onDetailClick = { orderId ->
-                    navController.navigateToOrderDetail(orderId, factoryName)
-                },
-                onBackPressed = { navController.navigate(AppRoute.Home.route) }
+            InvoicesPageScreen(
+                onNavigation = { navController.navigate(it.route) }
             )
         }
+        /*        composable(route = AppRoute.Home.route) {
+                    HomeScreen { factoryName ->
+                        navController.navigateToOrders(factoryName)
+                    }
+                }*/
+        composable(route = AppRoute.Clients.route) {
+            ClientsScreen(
+                onItemClick = { clientId -> navController.navigateToInvoices(clientId) },
+                onNavigation = { navController.navigate(it.route) }
+            )
+        }
+        /*        composable(
+                    route = AppRoute.Orders.BASE_ROUTE,
+                    arguments = listOf(navArgument("factoryName") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val factoryName = checkNotNull(backStackEntry.arguments?.getString("factoryName"))
+                    AndroidOrdersScreen(
+                        factoryName = factoryName,
+                        onDetailClick = { orderId ->
+                            navController.navigateToOrderDetail(orderId, factoryName)
+                        },
+                        onBackPressed = { navController.navigate(AppRoute.Home.route) }
+                    )
+                }*/
 
         composable(
             route = AppRoute.Invoices.BASE_ROUTE,
@@ -91,19 +93,19 @@ fun AndroidNavigation(startRoute: String) {
         }
 
 
-        composable(
-            route = AppRoute.OrderDetail.BASE_ROUTE,
-            arguments = listOf(
-                navArgument("orderId") { type = NavType.StringType },
-                navArgument("factoryName") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val orderId = checkNotNull(backStackEntry.arguments?.getString("orderId"))
-            val factoryName = checkNotNull(backStackEntry.arguments?.getString("factoryName"))
-            OrderDetailScreen(orderId, factoryName) {
-                navController.popBackStack()
-            }
-        }
+        /*        composable(
+                    route = AppRoute.OrderDetail.BASE_ROUTE,
+                    arguments = listOf(
+                        navArgument("orderId") { type = NavType.StringType },
+                        navArgument("factoryName") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val orderId = checkNotNull(backStackEntry.arguments?.getString("orderId"))
+                    val factoryName = checkNotNull(backStackEntry.arguments?.getString("factoryName"))
+                    OrderDetailScreen(orderId, factoryName) {
+                        navController.popBackStack()
+                    }
+                }*/
     }
 }
 

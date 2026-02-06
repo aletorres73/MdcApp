@@ -1,4 +1,4 @@
-package com.mdcapp.ui.composables.invoicesPage
+package com.mdcapp.ui.screens.invoicesPage
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
+import com.mdcapp.ui.composables.invoicePage.InvoiceRow
 
 @Composable
 fun InvoiceList(
@@ -20,7 +21,9 @@ fun InvoiceList(
     onLoadMore: () -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
