@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.remote.toDomain
+import com.mdcapp.domain.entities.TypeSearch
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
-import com.mdcapp.ui.composables.invoicesPage.TypeSearch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update

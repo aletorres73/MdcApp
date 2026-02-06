@@ -78,10 +78,6 @@ fun DesktopOrdersScreen(
                         query = query,
                         onQueryChange = { newQuery -> vm.searchOrders(newQuery, true) },
                         onCleanQuery = {},
-                        onClose = {
-                            vm.setSearchBar(false)
-                            vm.cleanSearchQuery()
-                        },
                     )
                 }
             },
