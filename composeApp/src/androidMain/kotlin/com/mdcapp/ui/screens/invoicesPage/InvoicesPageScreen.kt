@@ -1,6 +1,5 @@
 package com.mdcapp.ui.screens.invoicesPage
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,12 +13,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.mdcapp.domain.entities.AppRoute
 import com.mdcapp.domain.entities.TypeSearch
 import com.mdcapp.ui.composables.common.SearchBar
 import com.mdcapp.ui.viewmodels.invoices.InvoicesPagedViewModel
@@ -30,26 +26,26 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun InvoicesPageScreen(
     viewModel: InvoicesPagedViewModel = koinViewModel(),
-    onNavigation: (AppRoute) -> Unit = {},
+    onNavigationInvoice: (String) -> Unit = {},
     onNavigationClientDetail: (String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-    val query = remember { mutableStateOf(TextFieldValue("")) }
+    val query = state.searchQuery
 
     val suggestions = remember(
-        query.value.text,
+        query,
         state.clientNameList,
         state.typeSearch
     ) {
         if (
             state.typeSearch != TypeSearch.Client ||
-            query.value.text.isBlank()
+            query.text.isBlank()
         ) {
             emptyList()
         } else {
             state.clientNameList
                 .filter {
-                    it.clientName.startsWith(query.value.text, ignoreCase = true)
+                    it.clientName.startsWith(query.text, ignoreCase = true)
                 }
                 .take(10) // límite razonable
         }
@@ -90,17 +86,11 @@ fun InvoicesPageScreen(
                 )
             }
             SearchBar(
-                query = query.value,
-                onQueryChange = { newQuery -> query.value = newQuery },
-                onCleanQuery = {
-                    query.value = TextFieldValue("")
-                    viewModel.clearQuery()
-                },
-                onSearch = {
-                    Log.i("Search", "Search: ${query.value.text}")
-                    viewModel.onSearch(query.value.text)
-                },
-                searchText = "Selecionar cliente o documento..."
+                query = query.text,
+                onQueryChange = { viewModel.onQueryChange(it) },
+                onCleanQuery = { viewModel.clearQuery() },
+                onSearch = { viewModel.onSearch() },
+                searchText = "Seleccionar cliente o documento..."
             )
 
             SuggestionNameCard(
@@ -112,7 +102,8 @@ fun InvoicesPageScreen(
             InvoiceList(
                 invoices = state.invoices,
                 isLoading = state.isLoading,
-                onLoadMore = { viewModel.loadNextPage() }
+                onLoadMore = { viewModel.loadNextPage() },
+                onNavigationInvoice = onNavigationInvoice
             )
         }
     }

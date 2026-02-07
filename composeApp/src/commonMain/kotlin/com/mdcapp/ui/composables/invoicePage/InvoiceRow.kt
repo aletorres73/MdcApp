@@ -1,6 +1,6 @@
 package com.mdcapp.ui.composables.invoicePage
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,11 +16,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
+import com.mdcapp.data.model.toPrint
 
 @Composable
-fun InvoiceRow(invoice: BillingModel) {
+fun InvoiceRow(
+    invoice: BillingModel,
+    onNavigationInvoice: (String) -> Unit = {}
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onNavigationInvoice(invoice.billingNumber) },
         shape = MaterialTheme.shapes.medium
     ) {
         Column(
@@ -48,13 +52,13 @@ fun InvoiceRow(invoice: BillingModel) {
                 }
                 Column {
                     Text(
-                        text = "$ ${invoice.total}",
+                        text = "$ ${invoice.total.toPrint()}",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     if (invoice.discount > 0)
                         Text(
-                            text = "Dtos: $ ${invoice.discount}",
+                            text = "Dtos: $ ${invoice.discount.toPrint()}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -122,37 +126,9 @@ private fun AmountLabel(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = "$ $value",
+            text = "$ ${value.toPrint()}",
             style = MaterialTheme.typography.bodyMedium,
             color = color
         )
     }
-}
-
-@Preview
-@Composable
-fun invoiceRowPreview() {
-    val invoice = BillingModel(
-        billingNumber = "123456",
-        orderId = "123456",
-        type = "Factura",
-        total = 100.0,
-        loadDate = "2023-04-01",
-        deliveryDate = "2023-04-02",
-        payDate = "2023-04-03",
-        articles = emptyList(),
-        paymentCondition = "Contado",
-        discount = 0.0,
-        toPay = 100.0,
-        payed = 100.0,
-        rest = 0.0,
-        stateBilling = "Pendiente",
-        clientId = "123456",
-        brand = "Adidas",
-        comments = emptyList(),
-        clientName = "Adidas",
-        timeStamp = 123456
-    )
-    InvoiceRow(invoice)
-
 }

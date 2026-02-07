@@ -8,7 +8,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mdcapp.domain.entities.AppRoute
-import com.mdcapp.ui.screens.clients.ClientsScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.DetailInvoiceScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.InvoicesScreen
 import com.mdcapp.ui.screens.invoicesPage.InvoicesPageScreen
@@ -29,15 +28,12 @@ fun AndroidNavigation(startRoute: String) {
     ) {
         composable(route = AppRoute.InvoicesPaged.route) {
             InvoicesPageScreen(
-                onNavigation = { navController.navigate(it.route) },
+                onNavigationInvoice = { invoiceNumber ->
+                    navController.navigateToDetailInvoice(
+                        invoiceNumber
+                    )
+                },
                 onNavigationClientDetail = { clientId -> navController.navigateToInvoices(clientId) }
-            )
-        }
-
-        composable(route = AppRoute.Clients.route) {
-            ClientsScreen(
-                onItemClick = { clientId -> navController.navigateToInvoices(clientId) },
-                onNavigation = { navController.navigate(it.route) }
             )
         }
 

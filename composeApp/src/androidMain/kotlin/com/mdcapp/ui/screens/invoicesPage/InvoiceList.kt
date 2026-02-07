@@ -18,7 +18,8 @@ import com.mdcapp.ui.composables.invoicePage.InvoiceRow
 fun InvoiceList(
     invoices: List<BillingModel>,
     isLoading: Boolean,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
+    onNavigationInvoice: (String) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -29,7 +30,7 @@ fun InvoiceList(
     ) {
         itemsIndexed(invoices) { index, invoice ->
 
-            InvoiceRow(invoice)
+            InvoiceRow(invoice) { onNavigationInvoice(it) }
 
             if (index == invoices.lastIndex && !isLoading) {
                 LaunchedEffect(Unit) {

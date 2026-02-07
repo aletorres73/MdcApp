@@ -46,6 +46,10 @@ fun String.toMoneyDouble(): Double {
         .toDoubleOrNull() ?: 0.0
 }
 
+fun Double.toPrint(): String {
+    return "%,.2f".format(this)
+}
+
 
 fun ArticleModel.toRemote() = RemoteArticle(
     name = name,

@@ -17,16 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun SearchBar(
-    query: TextFieldValue,
-    onQueryChange: (TextFieldValue) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
     onCleanQuery: () -> Unit,
-    onSearch: (TextFieldValue) -> Unit = {},
+    onSearch: () -> Unit = {},
     searchText: String = "Buscar cliente..."
 ) {
 
@@ -43,7 +42,7 @@ fun SearchBar(
         shape = RoundedCornerShape(12.dp),
 
         trailingIcon = {
-            if (query.text.isNotEmpty()) {
+            if (query.isNotEmpty()) {
                 IconButton(onClick = onCleanQuery) {
                     Icon(
                         imageVector = Icons.Default.Clear,
@@ -57,9 +56,7 @@ fun SearchBar(
             imeAction = ImeAction.Search
         ),
         keyboardActions = KeyboardActions(
-            onSearch = {
-                onSearch(query)
-            }
+            onSearch = { onSearch() }
         )
     )
 }

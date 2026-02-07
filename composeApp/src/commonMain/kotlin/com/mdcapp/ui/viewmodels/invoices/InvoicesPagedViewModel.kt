@@ -1,6 +1,7 @@
 package com.mdcapp.ui.viewmodels.invoices
 
 import android.util.Log
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
@@ -37,6 +38,7 @@ class InvoicesPagedViewModel(
         ),
         val clientSearch: String? = null,
         val numberSearch: String? = null,
+        val searchQuery: TextFieldValue = TextFieldValue(""),
         val typeSearch: TypeSearch? = TypeSearch.Client,
         val selectedSuggestion: String? = null
     )
@@ -45,10 +47,15 @@ class InvoicesPagedViewModel(
         loadAllClients()
     }
 
+    fun onQueryChange(value: String) {
+        _uiState.update { it.copy(searchQuery = TextFieldValue(value)) }
+    }
+
     fun selectSuggestion(value: String) {
         _uiState.update {
             it.copy(
                 selectedSuggestion = value,
+                searchQuery = TextFieldValue(value),
                 clientSearch = if (it.typeSearch is TypeSearch.Client) value else it.clientSearch,
                 numberSearch = if (it.typeSearch is TypeSearch.Number) value else it.numberSearch,
                 cursor = getInvoicePaged.reset(),
@@ -143,27 +150,34 @@ class InvoicesPagedViewModel(
         _uiState.update { it.copy(typeSearch = type) }
     }
 
-    fun onSearch(query: String) {
+    fun onSearch() {
+        val query = _uiState.value.searchQuery
+
         when (_uiState.value.typeSearch) {
             TypeSearch.Client -> {
                 _uiState.update {
-                    it.copy(clientSearch = query, numberSearch = null)
+                    it.copy(clientSearch = query.text, numberSearch = null)
                 }
             }
-
             TypeSearch.Number -> {
                 _uiState.update {
-                    it.copy(numberSearch = query, clientSearch = null)
+                    it.copy(numberSearch = query.text, clientSearch = null)
                 }
             }
-
             null -> return
         }
+
         reload()
     }
 
     fun clearQuery() {
-        _uiState.update { it.copy(clientSearch = null, numberSearch = null) }
+        _uiState.update {
+            it.copy(
+                clientSearch = null,
+                numberSearch = null,
+                searchQuery = TextFieldValue("")
+            )
+        }
         reload()
     }
 

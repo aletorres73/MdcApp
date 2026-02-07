@@ -11,9 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.BillingModel
+import com.mdcapp.data.model.toPrint
 
 @Composable
 fun TotalsCard(billing: BillingModel) {
+
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
@@ -24,11 +26,11 @@ fun TotalsCard(billing: BillingModel) {
             Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            TotalRow("Total", billing.total.toString())
-            TotalRow("Descuento", billing.discount.toString())
-            TotalRow("A cobrar", (billing.total - billing.discount).toString())
-            TotalRow("Pagado", billing.payed.toString())
-            TotalRow("Saldo", billing.rest.toString())
+            TotalRow("Total", billing.total.toPrint())
+            TotalRow("Descuento", billing.discount.toPrint())
+            TotalRow("A cobrar", (billing.total - billing.discount).toPrint())
+            TotalRow("Pagado", billing.payed.toPrint())
+            TotalRow("Saldo", billing.rest.toPrint())
         }
     }
 }
