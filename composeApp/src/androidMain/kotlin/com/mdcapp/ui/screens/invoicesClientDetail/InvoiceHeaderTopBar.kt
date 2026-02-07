@@ -1,4 +1,4 @@
-package com.mdcapp.ui.screens.invoices
+package com.mdcapp.ui.screens.invoicesClientDetail
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack

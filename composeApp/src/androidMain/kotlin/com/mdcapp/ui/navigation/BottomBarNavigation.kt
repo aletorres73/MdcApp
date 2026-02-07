@@ -17,24 +17,6 @@ import com.mdcapp.domain.entities.AppRoute
 
 @Composable
 fun BottomBarNavigation(onNavigationIcon: (AppRoute) -> Unit) {
-    /*    var isHomePressed by remember { mutableStateOf(true) }
-        var isClientPressed by remember { mutableStateOf(false) }
-    //    var isHomePressed by remember { mutableStateOf(false) }
-        val modifierTextButton: @Composable (Boolean) -> Modifier = { isPressed ->
-            Modifier
-                .wrapContentSize(Alignment.Center)
-                .background(
-                    if (isPressed) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.onPrimary,
-                    shape = CircleShape
-                )
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = CircleShape
-                )
-                .height(30.dp)
-        }*/
-
     BottomAppBar(modifier = Modifier.height(50.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),

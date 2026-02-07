@@ -1,8 +1,6 @@
 package com.mdcapp.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -11,8 +9,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mdcapp.domain.entities.AppRoute
 import com.mdcapp.ui.screens.clients.ClientsScreen
-import com.mdcapp.ui.screens.invoices.DetailInvoiceScreen
-import com.mdcapp.ui.screens.invoices.InvoicesScreen
+import com.mdcapp.ui.screens.invoicesClientDetail.DetailInvoiceScreen
+import com.mdcapp.ui.screens.invoicesClientDetail.InvoicesScreen
 import com.mdcapp.ui.screens.invoicesPage.InvoicesPageScreen
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
@@ -31,33 +29,17 @@ fun AndroidNavigation(startRoute: String) {
     ) {
         composable(route = AppRoute.InvoicesPaged.route) {
             InvoicesPageScreen(
-                onNavigation = { navController.navigate(it.route) }
+                onNavigation = { navController.navigate(it.route) },
+                onNavigationClientDetail = { clientId -> navController.navigateToInvoices(clientId) }
             )
         }
-        /*        composable(route = AppRoute.Home.route) {
-                    HomeScreen { factoryName ->
-                        navController.navigateToOrders(factoryName)
-                    }
-                }*/
+
         composable(route = AppRoute.Clients.route) {
             ClientsScreen(
                 onItemClick = { clientId -> navController.navigateToInvoices(clientId) },
                 onNavigation = { navController.navigate(it.route) }
             )
         }
-        /*        composable(
-                    route = AppRoute.Orders.BASE_ROUTE,
-                    arguments = listOf(navArgument("factoryName") { type = NavType.StringType })
-                ) { backStackEntry ->
-                    val factoryName = checkNotNull(backStackEntry.arguments?.getString("factoryName"))
-                    AndroidOrdersScreen(
-                        factoryName = factoryName,
-                        onDetailClick = { orderId ->
-                            navController.navigateToOrderDetail(orderId, factoryName)
-                        },
-                        onBackPressed = { navController.navigate(AppRoute.Home.route) }
-                    )
-                }*/
 
         composable(
             route = AppRoute.Invoices.BASE_ROUTE,
@@ -84,38 +66,14 @@ fun AndroidNavigation(startRoute: String) {
             val invoiceNumber = it.arguments?.getString("invoiceNumber") ?: return@composable
             val vm: DetailInvoiceViewModel =
                 koinViewModel(parameters = { parametersOf(invoiceNumber) })
-            val state by vm.state.collectAsState()
+//            val state by vm.state.collectAsState()
 
             DetailInvoiceScreen(
                 vm = vm,
 //                onSelectCondition = { brand -> vm.getPaymentCondition(brand) },
                 onBack = { navController.popBackStack() })
         }
-
-
-        /*        composable(
-                    route = AppRoute.OrderDetail.BASE_ROUTE,
-                    arguments = listOf(
-                        navArgument("orderId") { type = NavType.StringType },
-                        navArgument("factoryName") { type = NavType.StringType }
-                    )
-                ) { backStackEntry ->
-                    val orderId = checkNotNull(backStackEntry.arguments?.getString("orderId"))
-                    val factoryName = checkNotNull(backStackEntry.arguments?.getString("factoryName"))
-                    OrderDetailScreen(orderId, factoryName) {
-                        navController.popBackStack()
-                    }
-                }*/
     }
-}
-
-
-fun NavHostController.navigateToOrders(factoryName: String) {
-    this.navigate(AppRoute.Orders.createRoute(factoryName))
-}
-
-fun NavHostController.navigateToOrderDetail(orderId: String, factoryName: String) {
-    this.navigate(AppRoute.OrderDetail.createRoute(orderId, factoryName))
 }
 
 fun NavHostController.navigateToInvoices(clientId: String) {

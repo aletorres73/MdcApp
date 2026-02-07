@@ -36,7 +36,6 @@ class ClientsViewModel(
 
     init {
         getClientsUseCase.resetPagination()
-//        loadNextPage()
         getNumberOfClients()
     }
 
@@ -50,32 +49,6 @@ class ClientsViewModel(
             }
         }
     }
-
-//    fun loadNextPage() {
-//        if (!_state.value.hasMore || _state.value.updatingData) return
-//
-//        viewModelScope.launch {
-//            _state.update { it.copy(updatingData = true) }
-//            try {
-//                val (newData, hasMore) = getClientsUseCase()
-//                val data = _state.value.data.toMutableList()
-//                data.addAll(newData)
-//                val updateData = data.toList()
-//
-//                _state.update {
-//                    it.copy(
-//                        data = updateData,
-//                        hasMore = hasMore,
-//                        updatingData = false
-//                    )
-//                }
-//                _statusScreen.value = ClientScreenStatus.Idle()
-//            } catch (e: Exception) {
-//                _state.update { it.copy(updatingData = false, error = e.message) }
-//                _statusScreen.value = ClientScreenStatus.Idle("Error al cargar")
-//            }
-//        }
-//    }
 
     fun searchClients(query: String) {
         viewModelScope.launch {
@@ -98,7 +71,6 @@ class ClientsViewModel(
 
     fun resetView() {
         getClientsUseCase.resetPagination()
-//        loadNextPage()
     }
 
 }

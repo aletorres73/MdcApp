@@ -1,4 +1,4 @@
-package com.mdcapp.ui.screens.invoices
+package com.mdcapp.ui.screens.invoicesClientDetail
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement

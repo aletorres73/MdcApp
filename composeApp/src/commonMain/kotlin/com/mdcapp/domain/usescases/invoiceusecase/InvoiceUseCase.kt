@@ -70,8 +70,8 @@ class InvoiceUseCase(
     }
 
     inner class GetAllClients {
-        suspend operator fun invoke(): List<String> {
-            return clientService.fetchAllClientsName()
+        suspend operator fun invoke(): List<ClientModel> {
+            return clientService.fetchAllClientsName().map { it.toDomain() }
         }
     }
 }

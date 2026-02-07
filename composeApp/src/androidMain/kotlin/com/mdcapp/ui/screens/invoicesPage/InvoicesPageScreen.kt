@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.AppRoute
 import com.mdcapp.domain.entities.TypeSearch
 import com.mdcapp.ui.composables.common.SearchBar
-import com.mdcapp.ui.navigation.BottomBarNavigation
 import com.mdcapp.ui.viewmodels.invoices.InvoicesPagedViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -31,7 +30,8 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun InvoicesPageScreen(
     viewModel: InvoicesPagedViewModel = koinViewModel(),
-    onNavigation: (AppRoute) -> Unit = {}
+    onNavigation: (AppRoute) -> Unit = {},
+    onNavigationClientDetail: (String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     val query = remember { mutableStateOf(TextFieldValue("")) }
@@ -49,20 +49,15 @@ fun InvoicesPageScreen(
         } else {
             state.clientNameList
                 .filter {
-                    it.startsWith(query.value.text, ignoreCase = true)
+                    it.clientName.startsWith(query.value.text, ignoreCase = true)
                 }
-                .take(5) // límite razonable
+                .take(10) // límite razonable
         }
     }
 
 
     Scaffold(
         modifier = Modifier.fillMaxWidth(),
-        bottomBar = {
-            BottomBarNavigation(
-                onNavigationIcon = { route -> onNavigation(route) }
-            )
-        },
         topBar = {
             TopAppBar(
                 title = { Text("Facturas") },
@@ -108,7 +103,11 @@ fun InvoicesPageScreen(
                 searchText = "Selecionar cliente o documento..."
             )
 
-            SuggestionNameCard(suggestions, query, viewModel)
+            SuggestionNameCard(
+                suggestions = suggestions,
+                onNavigationClientDetail = { onNavigationClientDetail(it) },
+                onSelect = { viewModel.selectSuggestion(it) }
+            )
 
             InvoiceList(
                 invoices = state.invoices,

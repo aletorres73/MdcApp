@@ -1,4 +1,4 @@
-package com.mdcapp.ui.screens.invoices
+package com.mdcapp.ui.screens.invoicesClientDetail
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background

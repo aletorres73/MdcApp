@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
+import com.mdcapp.data.model.ClientModel
 import com.mdcapp.data.remote.toDomain
 import com.mdcapp.domain.entities.TypeSearch
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
@@ -22,7 +23,7 @@ class InvoicesPagedViewModel(
 
     data class InvoiceUiState(
         val invoices: List<BillingModel> = emptyList(),
-        val clientNameList: List<String> = emptyList(),
+        val clientNameList: List<ClientModel> = emptyList(),
         val isLoading: Boolean = false,
         val selectedState: String = "Vencido",
         val cursor: String? = null,
@@ -36,12 +37,29 @@ class InvoicesPagedViewModel(
         ),
         val clientSearch: String? = null,
         val numberSearch: String? = null,
-        val typeSearch: TypeSearch? = TypeSearch.Client
+        val typeSearch: TypeSearch? = TypeSearch.Client,
+        val selectedSuggestion: String? = null
     )
 
     init {
         loadAllClients()
     }
+
+    fun selectSuggestion(value: String) {
+        _uiState.update {
+            it.copy(
+                selectedSuggestion = value,
+                clientSearch = if (it.typeSearch is TypeSearch.Client) value else it.clientSearch,
+                numberSearch = if (it.typeSearch is TypeSearch.Number) value else it.numberSearch,
+                cursor = getInvoicePaged.reset(),
+                invoices = emptyList(),
+                endReached = false
+            )
+        }
+
+        loadNextPage()
+    }
+
 
     private fun loadAllClients() {
         viewModelScope.launch {
@@ -111,7 +129,7 @@ class InvoicesPagedViewModel(
 
             _uiState.update {
                 it.copy(
-                    invoices = page.items.map { it.toDomain() },
+                    invoices = page.items.map { invoice -> invoice.toDomain() },
                     cursor = cursor,
                     isLoading = false,
                     endReached = page.items.isEmpty()
