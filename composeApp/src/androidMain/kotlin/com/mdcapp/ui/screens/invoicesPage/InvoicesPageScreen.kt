@@ -8,15 +8,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.TypeSearch
+import com.mdcapp.domain.entities.UpdateState
 import com.mdcapp.ui.composables.common.SearchBar
 import com.mdcapp.ui.viewmodels.invoices.InvoicesPagedViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -51,8 +56,17 @@ fun InvoicesPageScreen(
         }
     }
 
+    val snackBarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.message) {
+        state.message?.let {
+            snackBarHostState.showSnackbar(it)
+            viewModel.clearMessage()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         modifier = Modifier.fillMaxWidth(),
         topBar = {
             TopAppBar(
@@ -105,6 +119,36 @@ fun InvoicesPageScreen(
                 onLoadMore = { viewModel.loadNextPage() },
                 onNavigationInvoice = onNavigationInvoice
             )
+
+            // ----- overlays -----
+
+            when (val overlay = state.overlay) {
+                InvoicesPagedViewModel.Overlay.None -> {}
+                is InvoicesPagedViewModel.Overlay.UpdateApp -> {
+                    when (val updateState = overlay.state) {
+                        UpdateState.OK -> {}
+                        UpdateState.OPTIONAL_UPDATE -> {
+                            val context = LocalContext.current
+                            UpdateDialog(
+                                type = updateState,
+                                releaseNotes = overlay.releasesNotes,
+                                onUpdate = { viewModel.updateApk(context) },
+                                onDismiss = { viewModel.closeOverlay() }
+                            )
+                        }
+
+                        UpdateState.FORCE_UPDATE -> {
+                            val context = LocalContext.current
+                            UpdateDialog(type = updateState,
+                                releaseNotes = overlay.releasesNotes,
+                                onUpdate = { viewModel.updateApk(context) },
+                                onDismiss = { viewModel.closeOverlay() }
+                            )
+                        }
+                    }
+
+                }
+            }
         }
     }
 

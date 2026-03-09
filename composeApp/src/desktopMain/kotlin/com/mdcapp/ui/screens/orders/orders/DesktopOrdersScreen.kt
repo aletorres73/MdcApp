@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.ui.Screen
@@ -75,8 +76,13 @@ fun DesktopOrdersScreen(
                 AnimatedVisibility(visible = isSearchBar) {
                     val query = state.query
                     SearchBar(
-                        query = query,
-                        onQueryChange = { newQuery -> vm.searchOrders(newQuery, true) },
+                        query = query.text,
+                        onQueryChange = { newQuery ->
+                            vm.searchOrders(
+                                TextFieldValue(newQuery),
+                                true
+                            )
+                        },
                         onCleanQuery = {},
                     )
                 }

@@ -1,5 +1,6 @@
 package com.mdcapp.ui.viewmodels.invoices
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
@@ -8,6 +9,8 @@ import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.ClientModel
 import com.mdcapp.data.remote.toDomain
 import com.mdcapp.domain.entities.TypeSearch
+import com.mdcapp.domain.entities.UpdateState
+import com.mdcapp.domain.usescases.InitConfigUseCase
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,13 +19,15 @@ import kotlinx.coroutines.launch
 
 class InvoicesPagedViewModel(
     private val getInvoicePaged: InvoiceUseCase.GetInvoicePaged,
-    private val getClients: InvoiceUseCase.GetAllClients
+    private val getClients: InvoiceUseCase.GetAllClients,
+    private val initConfigUseCase: InitConfigUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InvoiceUiState())
     val uiState: StateFlow<InvoiceUiState> = _uiState
 
     data class InvoiceUiState(
+        val overlay: Overlay = Overlay.None,
         val invoices: List<BillingModel> = emptyList(),
         val clientNameList: List<ClientModel> = emptyList(),
         val isLoading: Boolean = false,
@@ -40,12 +45,33 @@ class InvoicesPagedViewModel(
         val numberSearch: String? = null,
         val searchQuery: TextFieldValue = TextFieldValue(""),
         val typeSearch: TypeSearch? = TypeSearch.Client,
-        val selectedSuggestion: String? = null
+        val selectedSuggestion: String? = null,
+        val updateState: UpdateState = UpdateState.OK,
+        val message: String? = null
     )
 
+    sealed interface Overlay {
+        data object None : Overlay
+        data class UpdateApp(val state: UpdateState, val releasesNotes: String) : Overlay
+    }
+
     init {
+        initConfig()
         loadAllClients()
     }
+
+    private fun initConfig() {
+        viewModelScope.launch {
+            val (result, releaseNotes) = initConfigUseCase()
+            _uiState.value =
+                _uiState.value.copy(
+                    updateState = result,
+                    overlay = Overlay.UpdateApp(result, releaseNotes)
+                )
+            Log.i("MdcAppOnly", "InvoicesPagedViewModel--- initConfig: $result")
+        }
+    }
+
 
     fun onQueryChange(value: String) {
         _uiState.update { it.copy(searchQuery = TextFieldValue(value)) }
@@ -159,11 +185,13 @@ class InvoicesPagedViewModel(
                     it.copy(clientSearch = query.text, numberSearch = null)
                 }
             }
+
             TypeSearch.Number -> {
                 _uiState.update {
                     it.copy(numberSearch = query.text, clientSearch = null)
                 }
             }
+
             null -> return
         }
 
@@ -179,6 +207,30 @@ class InvoicesPagedViewModel(
             )
         }
         reload()
+    }
+
+    fun closeOverlay() {
+        _uiState.value = _uiState.value.copy(overlay = Overlay.None)
+    }
+
+    fun updateApk(context: Context) {
+        viewModelScope.launch {
+            Log.i("MdcAppOnly", "updating apk")
+            val result = initConfigUseCase.download(context)
+            if (!result)
+                _uiState.value = _uiState.value.copy(
+                    message = "Error en el servidor"
+                )
+            else
+                _uiState.value = _uiState.value.copy(
+                    message = "Actualización iniciada",
+                    overlay = Overlay.None
+                )
+        }
+    }
+
+    fun clearMessage() {
+        _uiState.value = _uiState.value.copy(message = null)
     }
 
 }

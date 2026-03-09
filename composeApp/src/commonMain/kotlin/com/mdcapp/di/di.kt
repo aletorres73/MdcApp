@@ -6,9 +6,11 @@ import com.google.firebase.firestore.firestore
 import com.mdcapp.data.service.BillingPaginationService
 import com.mdcapp.data.service.ClientService
 import com.mdcapp.data.service.HomeService
+import com.mdcapp.data.service.InitService
 import com.mdcapp.data.service.OrderService
 import com.mdcapp.domain.repositories.HomeRepository
 import com.mdcapp.domain.repositories.OrderRepository
+import com.mdcapp.domain.usescases.InitConfigUseCase
 import com.mdcapp.domain.usescases.clientsusecase.GetClientsUseCase
 import com.mdcapp.domain.usescases.homeusescases.HomeUseCase
 import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
@@ -61,10 +63,12 @@ val appModule = module {
     single<InvoiceUseCase.GetPaymentCondition> { get<InvoiceUseCase>().GetPaymentCondition() }
     single<InvoiceUseCase.GetInvoicePaged> { get<InvoiceUseCase>().GetInvoicePaged() }
     single<InvoiceUseCase.GetAllClients> { get<InvoiceUseCase>().GetAllClients() }
+    single<InitConfigUseCase> { get<InitConfigUseCase>() }
 }
 
 val dataModule = module {
 //services
+    factoryOf(::InitService)
     factoryOf(::OrderService)
     factoryOf(::HomeService)
     factoryOf(::ClientService)
@@ -73,6 +77,7 @@ val dataModule = module {
     factoryOf(::OrderRepository)
     factoryOf(::HomeRepository)
 // use cases
+    factoryOf(::InitConfigUseCase)
     factoryOf(::OrdersUseCase)
     factoryOf(::BuyOrderUseCase)
     factoryOf(::HomeUseCase)
