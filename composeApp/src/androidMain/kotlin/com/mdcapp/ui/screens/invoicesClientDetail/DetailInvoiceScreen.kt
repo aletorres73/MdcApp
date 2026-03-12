@@ -78,7 +78,9 @@ fun DetailInvoiceScreen(
         ) {
 
             DatesCard(billing = billing)
+
             TotalsCard(billing = billing)
+
             PaymentConditionCard(billing = billing) { showSheet = true }
 
             OrderCard(
