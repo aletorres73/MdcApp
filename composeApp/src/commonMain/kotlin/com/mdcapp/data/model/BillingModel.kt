@@ -47,7 +47,7 @@ fun String.toMoneyDouble(): Double {
 }
 
 fun Double.toPrint(): String {
-    return "%,.2f".format(this)
+    return "$%,.2f".format(this)
 }
 
 

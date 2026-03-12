@@ -1,4 +1,4 @@
-package com.mdcapp.ui.screens.invoicesClientDetail
+package com.mdcapp.ui.screens.invoicesClientDetail.common
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -7,15 +7,29 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 
 @Composable
-fun TotalRow(label: String, value: String) {
+fun ValueRow(
+    label: String,
+    value: String,
+    highlight: Boolean = false
+) {
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-        Text("$$value", style = MaterialTheme.typography.bodyMedium)
+
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Text(
+            value,
+            style = if (highlight)
+                MaterialTheme.typography.titleMedium
+            else
+                MaterialTheme.typography.bodyMedium
+        )
     }
 }

@@ -58,6 +58,7 @@ class InvoicesPagedViewModel(
     init {
         initConfig()
         loadAllClients()
+        loadNextPage()
     }
 
     private fun initConfig() {

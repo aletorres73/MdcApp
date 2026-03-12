@@ -81,18 +81,18 @@ fun DetailInvoiceScreen(
 
             TotalsCard(billing = billing)
 
+            ArticlesCard(
+                articles = billing.articles,
+                expanded = showArticles,
+                onToggle = { showArticles = !showArticles }
+            )
+
             PaymentConditionCard(billing = billing) { showSheet = true }
 
             OrderCard(
                 order = buyOrder,
                 expanded = showOrder,
                 onToggle = { showOrder = !showOrder }
-            )
-
-            ArticlesCard(
-                articles = billing.articles,
-                expanded = showArticles,
-                onToggle = { showArticles = !showArticles }
             )
         }
     }

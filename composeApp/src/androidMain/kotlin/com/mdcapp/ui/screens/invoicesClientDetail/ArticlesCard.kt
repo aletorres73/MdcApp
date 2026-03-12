@@ -1,12 +1,12 @@
 package com.mdcapp.ui.screens.invoicesClientDetail
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -54,19 +54,22 @@ fun ArticlesCard(
                     Text(if (expanded) "Ocultar detalle" else "Ver detalle")
                 }
             }
-            AnimatedVisibility(visible = expanded) {
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     // Encabezado tabla
                     Row(Modifier.fillMaxWidth()) {
                         TableHeader("Artículo", modifier = Modifier.weight(0.25f))
-                        TableHeader("Color", modifier = Modifier.weight(0.25f))
-                        TableHeader("Pares", modifier = Modifier.weight(0.25f))
-                        TableHeader("Importe", modifier = Modifier.weight(0.25f))
+                        TableHeader("Color", modifier = Modifier.weight(0.35f))
+                        TableHeader("Pares", modifier = Modifier.weight(0.2f))
+                        TableHeader("Importe", modifier = Modifier.weight(0.2f))
                     }
 
-                    Spacer(Modifier.height(12.dp))
                     HorizontalDivider()
                     // Filas artículos
                     articles.forEach { a ->
@@ -75,13 +78,10 @@ fun ArticlesCard(
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
                         ) {
-                            TableCell(a.name, modifier = Modifier.weight(0.25f), TextAlign.Start)
-                            TableCell(a.color, modifier = Modifier.weight(0.35f), TextAlign.Start)
-                            TableCell(
-                                "${a.pairs}",
-                                modifier = Modifier.weight(0.2f),
-                                TextAlign.Start
-                            )
+                            val align = TextAlign.Start
+                            TableCell(a.name, modifier = Modifier.weight(0.25f), align)
+                            TableCell(a.color, modifier = Modifier.weight(0.35f), align)
+                            TableCell("${a.pairs}", modifier = Modifier.weight(0.2f), align)
                             TableCell("$${a.value}", modifier = Modifier.weight(0.2f))
                         }
                     }
