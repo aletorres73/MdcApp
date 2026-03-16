@@ -52,7 +52,7 @@ class DetailInvoiceViewModel(
             }
 
             _state.value = _state.value.copy(billing = billing)
-            Log.i("DetailInvoiceViewModel", "Billing: $billing")
+            Log.i("MdcAppOnly", "DetailInvoiceViewModel --- Billing: $billing")
 
             getPaymentCondition(billing.brand)
 
@@ -63,8 +63,16 @@ class DetailInvoiceViewModel(
                 _state.value = _state.value.copy(buyOrder = buyOrder)
                 Log.i("DetailInvoiceViewModel", "BuyOrder: $buyOrder")
             }
+            val toPay = billing.total - billing.discount * billing.total
+            val rest = toPay - billing.payed
 
-            _state.value = _state.value.copy(isLoading = false)
+            _state.value = _state.value.copy(
+                isLoading = false,
+                billing = billing.copy(
+                    toPay = toPay,
+                    rest = rest
+                )
+            )
         }
     }
 
@@ -83,17 +91,36 @@ class DetailInvoiceViewModel(
                         )
                     }
                 }
-                Log.i("DetailInvoiceViewModel", "Result: $result")
+                Log.i("MdcAppOnly", "DetailInvoiceViewModel --- Result: $result")
 
             } catch (e: Exception) {
-                Log.e("DetailInvoiceViewModel", "on getPaymentCondition: $e")
+                Log.e("MdcAppOnly", "DetailInvoiceViewModel --- on getPaymentCondition: $e")
                 _state.update { it.copy(error = e.message, isLoading = false) }
             }
         }
     }
 
-    fun updateSelectedPaymentCondition(condition: PaymentCondition) {
-        Log.i("DetailInvoiceViewModel", "on updateSelectedPaymentCondition: $condition")
-        _state.update { it.copy(billing = it.billing.copy(paymentCondition = condition.paymentName)) }
+    fun updateSelectedPaymentCondition(condition: PaymentCondition = PaymentCondition()) {
+        val billing = _state.value.billing
+        val discount = condition.discount
+        val toPay = billing.total - discount * billing.total
+        val rest = toPay - billing.payed
+
+        Log.i(
+            "MdcAppOnly",
+            "DetailInvoiceViewModel --- on updateSelectedPaymentCondition: $condition"
+        )
+
+        _state.update {
+            it.copy(
+                billing = billing.copy(
+                    discount = discount,
+                    toPay = toPay,
+                    rest = rest,
+                    paymentCondition = condition.paymentName
+                )
+            )
+        }
+//        _state.update { it.copy(billing = it.billing.copy(paymentCondition = condition.paymentName)) }
     }
 }

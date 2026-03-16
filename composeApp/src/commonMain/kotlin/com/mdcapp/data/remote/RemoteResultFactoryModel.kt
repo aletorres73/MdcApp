@@ -25,7 +25,9 @@ fun Map<String, Map<String, Any>>.toPaymentConditions(): List<PaymentCondition> 
             discount = paymentInfo["dto"]?.toString()?.toDoubleOrNull() ?: 0.0,
             month = paymentInfo["meses"]?.toString()?.toIntOrNull() ?: 0,
             expiration = paymentInfo["vencimiento"]?.toString()?.toIntOrNull() ?: 0,
-            date = paymentInfo["plazo"]?.toString()?.toIntOrNull() ?: 0
+            date = paymentInfo["plazo"]?.toString()?.toIntOrNull() ?: 0,
+            quantity = paymentInfo["pagos"]?.toString()?.toIntOrNull() ?: 0
+
         )
     }
 }
@@ -38,7 +40,8 @@ fun List<PaymentCondition>.toRemote(): Map<String, Map<String, Any>> {
             "dto" to paymentCondition.discount,
             "meses" to paymentCondition.month,
             "vencimiento" to paymentCondition.expiration,
-            "plazo" to paymentCondition.date
+            "plazo" to paymentCondition.date,
+            "pagos" to paymentCondition.quantity
         )
     }.toMap()
 }

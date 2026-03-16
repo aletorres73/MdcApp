@@ -46,7 +46,7 @@ fun ArticlesCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Detalle articulos facturados",
+                    "Detalle facturación",
                     style = MaterialTheme.typography.titleMedium
                 )
 

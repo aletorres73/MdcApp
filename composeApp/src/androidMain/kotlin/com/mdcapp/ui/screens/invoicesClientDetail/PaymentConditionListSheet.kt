@@ -106,7 +106,7 @@ private fun PaymentConditionCard(
             ) {
 
                 Metric("Descuento", "${(item.discount * 100).toInt()}%")
-                Metric("Plazo", "${item.month} m")
+                Metric("Pagos", "${item.quantity} ")
                 Metric("Venc.", "${item.expiration} d")
 
             }

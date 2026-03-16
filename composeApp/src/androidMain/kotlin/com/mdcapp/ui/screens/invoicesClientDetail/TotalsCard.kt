@@ -12,17 +12,18 @@ import com.mdcapp.ui.screens.invoicesClientDetail.common.ValueRow
 fun TotalsCard(billing: BillingModel) {
 
     SectionCard {
+        val subtotal = billing.discount * billing.total
 
         CardHeader("Totales")
 
         ValueRow("Total", billing.total.toPrint())
-        ValueRow("Descuento", billing.discount.toPrint())
+        ValueRow("Descuento", subtotal.toPrint())
 
         HorizontalDivider()
 
         ValueRow(
             "A cobrar",
-            (billing.total - billing.discount).toPrint(),
+            billing.toPay.toPrint(),
             highlight = true
         )
 

@@ -50,6 +50,10 @@ fun Double.toPrint(): String {
     return "$%,.2f".format(this)
 }
 
+fun Double.discountToPrint(): String {
+    return "%,.0f".format(this * 100)
+}
+
 
 fun ArticleModel.toRemote() = RemoteArticle(
     name = name,
@@ -87,6 +91,7 @@ data class PaymentCondition(
     val month: Int = 0,
     val expiration: Int = 0,
     val date: Int = 0,
+    val quantity: Int = 0
 )
 
 fun PaymentCondition.isEmpty() =

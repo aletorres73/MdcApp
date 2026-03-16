@@ -31,7 +31,6 @@ fun DetailInvoiceScreen(
     onBack: () -> Unit = {}
 ) {
     val state by vm.state.collectAsState()
-    val billing = state.billing
     val buyOrder = state.buyOrder
 
     var showSheet by remember { mutableStateOf(false) }
@@ -63,7 +62,7 @@ fun DetailInvoiceScreen(
     Scaffold(
         topBar = {
             InvoiceHeaderTopBar(
-                billing = billing,
+                billing = state.billing,
                 onBack = onBack
             )
         }
@@ -77,17 +76,17 @@ fun DetailInvoiceScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            DatesCard(billing = billing)
+            DatesCard(billing = state.billing)
 
-            TotalsCard(billing = billing)
+            TotalsCard(billing = state.billing)
 
             ArticlesCard(
-                articles = billing.articles,
+                articles = state.billing.articles,
                 expanded = showArticles,
                 onToggle = { showArticles = !showArticles }
             )
 
-            PaymentConditionCard(billing = billing) { showSheet = true }
+            PaymentConditionCard(billing = state.billing) { showSheet = true }
 
             OrderCard(
                 order = buyOrder,
