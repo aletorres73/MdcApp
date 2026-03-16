@@ -52,7 +52,7 @@ fun InvoiceRow(
                 }
                 Column {
                     Text(
-                        text = "$ ${invoice.total.toPrint()}",
+                        text = invoice.total.toPrint(),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
