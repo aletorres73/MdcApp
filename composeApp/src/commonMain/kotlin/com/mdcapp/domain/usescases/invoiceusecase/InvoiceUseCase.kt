@@ -39,6 +39,12 @@ class InvoiceUseCase(
         }
     }
 
+    inner class UpdateInvoice {
+        suspend operator fun invoke(invoiceNumber: String, data: BillingModel): Boolean {
+            return repository.updateBillingOnService(invoiceNumber, data)
+        }
+    }
+
     inner class GetPaymentCondition {
         suspend operator fun invoke(brand: String): List<PaymentCondition> {
             return repository.getPaymentConditionByBrand(brand)

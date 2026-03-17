@@ -17,7 +17,8 @@ class DetailInvoiceViewModel(
     invoiceNumber: String,
     private val getInvoiceUseCase: InvoiceUseCase.GetInvoiceByNumber,
     private val getBuyOrderUseCase: BuyOrderUseCase.GetBuyOrderById,
-    private val getPaymentConditionUseCase: InvoiceUseCase.GetPaymentCondition
+    private val getPaymentConditionUseCase: InvoiceUseCase.GetPaymentCondition,
+    private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(invoiceNumber = invoiceNumber))
@@ -29,7 +30,8 @@ class DetailInvoiceViewModel(
         val billing: BillingModel = BillingModel(),
         val buyOrder: BuyOrderModel = BuyOrderModel(),
         val error: String? = null,
-        val paymentConditionList: List<PaymentCondition> = emptyList()
+        val paymentConditionList: List<PaymentCondition> = emptyList(),
+        val message: String? = null
     )
 
     init {
@@ -101,26 +103,41 @@ class DetailInvoiceViewModel(
     }
 
     fun updateSelectedPaymentCondition(condition: PaymentCondition = PaymentCondition()) {
-        val billing = _state.value.billing
-        val discount = condition.discount
-        val toPay = billing.total - discount * billing.total
-        val rest = toPay - billing.payed
+        viewModelScope.launch {
+            var billing = _state.value.billing
+            val discount = condition.discount
+            val toPay = billing.total - discount * billing.total
+            val rest = toPay - billing.payed
 
-        Log.i(
-            "MdcAppOnly",
-            "DetailInvoiceViewModel --- on updateSelectedPaymentCondition: $condition"
-        )
-
-        _state.update {
-            it.copy(
-                billing = billing.copy(
-                    discount = discount,
-                    toPay = toPay,
-                    rest = rest,
-                    paymentCondition = condition.paymentName
-                )
+            Log.i(
+                "MdcAppOnly",
+                "DetailInvoiceViewModel --- on updateSelectedPaymentCondition: $condition"
             )
+            billing = billing.copy(
+                discount = discount,
+                toPay = toPay,
+                rest = rest,
+                paymentCondition = condition.paymentName
+            )
+            val result = updateInvoiceUseCase(billing.billingNumber, billing)
+            if (result)
+                _state.update {
+                    it.copy(
+                        billing = billing.copy(
+                            discount = discount,
+                            toPay = toPay,
+                            rest = rest,
+                            paymentCondition = condition.paymentName
+                        ),
+                        message = "Documento actualizado"
+                    )
+                }
+            else
+                _state.update { it.copy(message = "Error en el servidor, intente de nuevo") }
         }
-//        _state.update { it.copy(billing = it.billing.copy(paymentCondition = condition.paymentName)) }
+    }
+
+    fun clearMessage() {
+        _state.update { it.copy(message = null) }
     }
 }

@@ -30,12 +30,12 @@ class OrderService(
                 .get()
                 .documents
                 .map { it.data<RemoteResultOrder>() }
-            println("on fetchAllOrders in firestore: $documents")
-            println("on fetchAllOrders in firestore data size: ${documents.size}")
+            Log.i("MdcAppOnly", "on fetchAllOrders in firestore: $documents")
+            Log.i("MdcAppOnly", "on fetchAllOrders in firestore data size: ${documents.size}")
 
             documents
         } catch (e: Exception) {
-            println("Firestore : on firestore getCollections: $e")
+            Log.i("MdcAppOnly", "Firestore : on firestore getCollections: $e")
             emptyList()
         }
     }
@@ -49,7 +49,7 @@ class OrderService(
                 .map { it.data<RemoteBranchOrder>() }
             data.first().branch
         } catch (e: Exception) {
-            Log.e("firestore", "on fetchOrderBranchList: $e")
+            Log.e("MdcAppOnly", "firestore --- on fetchOrderBranchList: $e")
             ""
         }
 
@@ -66,7 +66,7 @@ class OrderService(
             document
 
         } catch (e: Exception) {
-            println("Firestore: on firesotore get orders by factories $e")
+            Log.i("MdcAppOnly", "Firestore: on firesotore get orders by factories $e")
             emptyList()
         }
     }
@@ -79,10 +79,10 @@ class OrderService(
                 .documents
                 .map { it.data<RemoteResultBuyOrder>() }
                 .first()
-            println("on fetchBuyOrder in firestore: $document")
+            Log.i("MdcAppOnly", "firestore --- on fetchBuyOrder in firestore: $document")
             document
         } catch (e: Exception) {
-            println("Firestore : on firestore fetchBuyOrder: $e")
+            Log.i("MdcAppOnly", "Firestore : on firestore fetchBuyOrder: $e")
             RemoteResultBuyOrder()
         }
     }
@@ -94,10 +94,10 @@ class OrderService(
                 .get()
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }
-            println("on fetchBillings in firestore : $document")
+            Log.i("MdcAppOnly", "firestore --- on fetchBillings in firestore : $document")
             document
         } catch (e: Exception) {
-            println("Firestore: on fetchBillings $e")
+            Log.i("MdcAppOnly", "Firestore: on fetchBillings $e")
             emptyList()
         }
     }
@@ -109,10 +109,13 @@ class OrderService(
                 .get()
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }
-            Log.i("OrderService", "on fetchBillingsByClient in firestore : $document")
+            Log.i(
+                "MdcAppOnly",
+                "OrderService --- on fetchBillingsByClient in firestore : $document"
+            )
             document
         } catch (e: Exception) {
-            println("OrderService: on fetchBillingsByClient $e")
+            Log.i("MdcAppOnly", "OrderService: on fetchBillingsByClient $e")
             emptyList()
         }
     }
@@ -126,10 +129,13 @@ class OrderService(
                 .map { it.data<RemoteResultFactoryModel>() }
                 .first()
             val paymentsTypes = document.paymentsTypes
-            println("on fetchPaymentsTypesFactory in firestore : $paymentsTypes")
+            Log.i(
+                "MdcAppOnly",
+                "Firestore --- on fetchPaymentsTypesFactory in firestore : $paymentsTypes"
+            )
             paymentsTypes
         } catch (e: Exception) {
-            println("Firestore: on fetchPaymentsTypesFactory $e")
+            Log.i("MdcAppOnly", "Firestore: on fetchPaymentsTypesFactory $e")
             emptyMap()
         }
     }
@@ -143,10 +149,13 @@ class OrderService(
                 .map { it.data<RemoteResultFactoryModel>() }
                 .first()
             val paymentsTypes = document.paymentsTypes
-            Log.i("Firestore", "on fetchPaymentsTypesFactory in firestore : $paymentsTypes")
+            Log.i(
+                "MdcAppOnly",
+                "Firestore --- on fetchPaymentsTypesFactory in firestore : $paymentsTypes"
+            )
             paymentsTypes
         } catch (e: Exception) {
-            Log.i("Firestore", "on fetchPaymentsTypesFactory $e")
+            Log.i("MdcAppOnly", "Firestore ---- on fetchPaymentsTypesFactory $e")
             emptyMap()
         }
 
@@ -161,7 +170,7 @@ class OrderService(
                 .update(mapOf("Condiciones" to data))
             true
         } catch (e: Exception) {
-            println("Firestore: on setPaymentsConditionsFactory $e")
+            Log.e("MdcAppOnly", "Firestore: on setPaymentsConditionsFactory $e")
             false
         }
     }
@@ -171,10 +180,10 @@ class OrderService(
             db.collection(PAYMENTS_REGISTER)
                 .document(data.id.toString())
                 .set(data)
-            Log.i("firestore", "On addPaymentToRegister $data successful")
+            Log.i("MdcAppOnly", "Firestore --- On addPaymentToRegister $data successful")
             true
         } catch (e: Exception) {
-            Log.e("firestore", "onAddPaymentToRegister $e")
+            Log.e("MdcAppOnly", "Firestore--- onAddPaymentToRegister $e")
             false
         }
     }
@@ -188,7 +197,7 @@ class OrderService(
             val list = documents.maxByOrNull { it.id }!!
             if (documents.isEmpty()) 0 else list.id
         } catch (e: Exception) {
-            Log.e("firestore", "on fetchLastIdFromPayments $e")
+            Log.e("MdcAppOnly", "firestore --- on fetchLastIdFromPayments $e")
             -1
         }
     }
@@ -198,10 +207,10 @@ class OrderService(
             db.collection(BILLINGS)
                 .document(document)
                 .update(data)
-            Log.i("firestore", "on updateBilling success $data")
+            Log.i("MdcAppOnly", "firestore --- on updateBilling success $data")
             true
         } catch (e: Exception) {
-            Log.e("firestore", "on updateBilling $e")
+            Log.e("MdcAppOnly", "firestore --- on updateBilling $e")
             false
         }
 

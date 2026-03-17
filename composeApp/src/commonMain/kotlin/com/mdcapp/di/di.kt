@@ -64,6 +64,7 @@ val appModule = module {
     single<InvoiceUseCase.GetInvoicePaged> { get<InvoiceUseCase>().GetInvoicePaged() }
     single<InvoiceUseCase.GetAllClients> { get<InvoiceUseCase>().GetAllClients() }
     single<InitConfigUseCase> { get<InitConfigUseCase>() }
+    single<InvoiceUseCase.UpdateInvoice> { get<InvoiceUseCase>().UpdateInvoice() }
 }
 
 val dataModule = module {
@@ -97,6 +98,7 @@ val viewModelModule = module {
     viewModel { (invoiceNumber: String) ->
         DetailInvoiceViewModel(
             invoiceNumber,
+            get(),
             get(),
             get(),
             get()
