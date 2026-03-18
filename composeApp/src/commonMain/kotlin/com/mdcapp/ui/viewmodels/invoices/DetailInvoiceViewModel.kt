@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
 import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.data.model.recalculate
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,99 +42,77 @@ class DetailInvoiceViewModel(
     /** SECUENCIA: Billing → BuyOrder */
     private fun loadData(invoiceNumber: String) {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-
-            // 1️⃣ Obtener factura
-            val billing = getInvoiceUseCase(invoiceNumber)
-            if (billing.orderId.isEmpty()) {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = "No se encontró la factura"
-                )
-                return@launch
-            }
-
-            _state.value = _state.value.copy(billing = billing)
-            Log.i("MdcAppOnly", "DetailInvoiceViewModel --- Billing: $billing")
-
-            getPaymentCondition(billing.brand)
-
-            // 2️⃣ Obtener orden de compra usando el orderId ya seguro
-            val orderId = billing.orderId
-            if (orderId.isNotEmpty()) {
-                val buyOrder = getBuyOrderUseCase(orderId)
-                _state.value = _state.value.copy(buyOrder = buyOrder)
-                Log.i("DetailInvoiceViewModel", "BuyOrder: $buyOrder")
-            }
-            val toPay = billing.total - billing.discount * billing.total
-            val rest = toPay - billing.payed
-
-            _state.value = _state.value.copy(
-                isLoading = false,
-                billing = billing.copy(
-                    toPay = toPay,
-                    rest = rest
-                )
-            )
-        }
-    }
-
-    private fun getPaymentCondition(brand: String) {
-        viewModelScope.launch {
             try {
                 _state.update { it.copy(isLoading = true) }
-                val result = getPaymentConditionUseCase(brand)
-                if (result.isNotEmpty())
-                    _state.update { it.copy(paymentConditionList = result, isLoading = false) }
-                else {
+
+                val billing = getInvoiceUseCase(invoiceNumber)
+                if (billing.orderId.isEmpty()) {
                     _state.update {
                         it.copy(
-                            error = "No se encontraron condiciones de pago",
-                            isLoading = false
+                            isLoading = false,
+                            error = "No se encontró la factura"
                         )
                     }
+                    return@launch
                 }
-                Log.i("MdcAppOnly", "DetailInvoiceViewModel --- Result: $result")
+
+                val buyOrder = if (billing.orderId.isNotEmpty()) {
+                    getBuyOrderUseCase(billing.orderId)
+                } else BuyOrderModel()
+
+                val paymentConditions = getPaymentConditionUseCase(billing.brand)
+
+                _state.update {
+                    it.copy(
+                        billing = billing.recalculate(),
+                        buyOrder = buyOrder,
+                        paymentConditionList = paymentConditions,
+                        isLoading = false
+                    )
+                }
+                Log.i("MdcAppOnly", "DetailInvoiceViewModel --- on loadData: $billing")
 
             } catch (e: Exception) {
-                Log.e("MdcAppOnly", "DetailInvoiceViewModel --- on getPaymentCondition: $e")
-                _state.update { it.copy(error = e.message, isLoading = false) }
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "Error desconocido"
+                    )
+                }
+                Log.e("MdcAppOnly", "DetailInvoiceViewModel --- on loadData: $e")
             }
         }
     }
 
-    fun updateSelectedPaymentCondition(condition: PaymentCondition = PaymentCondition()) {
+    fun updateSelectedPaymentCondition(condition: PaymentCondition) {
         viewModelScope.launch {
-            var billing = _state.value.billing
-            val discount = condition.discount
-            val toPay = billing.total - discount * billing.total
-            val rest = toPay - billing.payed
+            val current = _state.value.billing
 
-            Log.i(
-                "MdcAppOnly",
-                "DetailInvoiceViewModel --- on updateSelectedPaymentCondition: $condition"
-            )
-            billing = billing.copy(
-                discount = discount,
-                toPay = toPay,
-                rest = rest,
+            val updated = current.copy(
+                discount = condition.discount,
                 paymentCondition = condition.paymentName
-            )
-            val result = updateInvoiceUseCase(billing.billingNumber, billing)
-            if (result)
-                _state.update {
+            ).recalculate()
+
+            val result = updateInvoiceUseCase(updated.billingNumber, updated)
+
+            _state.update {
+                if (result) {
                     it.copy(
-                        billing = billing.copy(
-                            discount = discount,
-                            toPay = toPay,
-                            rest = rest,
-                            paymentCondition = condition.paymentName
-                        ),
+                        billing = updated,
                         message = "Documento actualizado"
                     )
+                } else {
+                    it.copy(message = "Error en el servidor, intente de nuevo")
                 }
-            else
-                _state.update { it.copy(message = "Error en el servidor, intente de nuevo") }
+            }
+            Log.i(
+                "MdcAppOnly",
+                "DetailInvoiceViewModel --- on updateSelectedPaymentCondition: $result"
+            )
+            Log.i(
+                "MdcAppOnly",
+                "DetailInvoiceViewModel --- on updateSelectedPaymentCondition: $updated"
+            )
         }
     }
 

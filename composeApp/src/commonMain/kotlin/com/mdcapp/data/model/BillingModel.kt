@@ -96,3 +96,13 @@ data class PaymentCondition(
 
 fun PaymentCondition.isEmpty() =
     discount == 0.0 && month == 0 && expiration == 0 && date == 0 && paymentName.isEmpty()
+
+fun BillingModel.recalculate(): BillingModel {
+    val toPay = total - discount * total
+    val rest = toPay - payed
+
+    return copy(
+        toPay = toPay,
+        rest = rest
+    )
+}

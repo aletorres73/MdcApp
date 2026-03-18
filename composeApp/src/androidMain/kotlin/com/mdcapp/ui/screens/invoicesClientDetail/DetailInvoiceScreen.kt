@@ -24,7 +24,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.ui.screens.orders.OrderCard
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import kotlinx.coroutines.launch
@@ -40,14 +39,14 @@ fun DetailInvoiceScreen(
     val buyOrder = state.buyOrder
 
     var showSheet by remember { mutableStateOf(false) }
-    var selectedCondition by remember { mutableStateOf<PaymentCondition?>(null) }
+//    var selectedCondition by remember { mutableStateOf<PaymentCondition?>(null) }
 
     var showArticles by remember { mutableStateOf(false) }
     var showOrder by remember { mutableStateOf(false) }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val scope = rememberCoroutineScope()
-    val snackBarHostState by remember { mutableStateOf(SnackbarHostState()) }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     BackHandler { onBack() }
 
@@ -59,8 +58,7 @@ fun DetailInvoiceScreen(
             PaymentConditionListSheet(
                 list = state.paymentConditionList,
                 onSelect = { condition ->
-                    selectedCondition = condition
-                    vm.updateSelectedPaymentCondition(condition) // la implementás vos
+                    vm.updateSelectedPaymentCondition(condition)
                     showSheet = false
                 }
             )
