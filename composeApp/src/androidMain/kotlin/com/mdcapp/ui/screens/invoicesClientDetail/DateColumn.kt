@@ -1,5 +1,6 @@
 package com.mdcapp.ui.screens.invoicesClientDetail
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme
@@ -12,10 +13,11 @@ import androidx.compose.ui.unit.dp
 fun DateColumn(
     title: String,
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.clickable { onClick() },
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
 

@@ -3,6 +3,8 @@ package com.mdcapp.data.model
 import com.mdcapp.data.remote.RemoteArticle
 import com.mdcapp.data.remote.RemoteBillingComments
 import com.mdcapp.data.remote.RemoteResultBillingModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class BillingModel(
     val billingNumber: String = "",
@@ -97,12 +99,33 @@ data class PaymentCondition(
 fun PaymentCondition.isEmpty() =
     discount == 0.0 && month == 0 && expiration == 0 && date == 0 && paymentName.isEmpty()
 
-fun BillingModel.recalculate(): BillingModel {
+val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+fun BillingModel.recalculate(
+    condition: PaymentCondition? = null
+): BillingModel {
+
     val toPay = total - discount * total
     val rest = toPay - payed
 
+    val reception = if (deliveryDate.isNotEmpty())
+        LocalDate.parse(deliveryDate, formatter)
+    else null
+
+    val dueDate = reception?.plusDays(condition?.expiration?.toLong() ?: 0)
+
     return copy(
         toPay = toPay,
-        rest = rest
+        rest = rest,
+        payDate = dueDate?.format(formatter) ?: payDate
     )
+}
+
+fun LocalDate.formatter(): String {
+
+    val parsed = LocalDate.parse(this.toString()) // ISO por defecto
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+    return parsed.format(formatter)
+
 }

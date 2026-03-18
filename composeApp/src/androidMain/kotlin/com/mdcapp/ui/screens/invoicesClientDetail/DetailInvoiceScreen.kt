@@ -1,6 +1,8 @@
 package com.mdcapp.ui.screens.invoicesClientDetail
 
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,10 +26,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mdcapp.data.model.formatter
+import com.mdcapp.ui.composables.common.DatePicker
 import com.mdcapp.ui.screens.orders.OrderCard
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailInvoiceScreen(
@@ -39,7 +44,6 @@ fun DetailInvoiceScreen(
     val buyOrder = state.buyOrder
 
     var showSheet by remember { mutableStateOf(false) }
-//    var selectedCondition by remember { mutableStateOf<PaymentCondition?>(null) }
 
     var showArticles by remember { mutableStateOf(false) }
     var showOrder by remember { mutableStateOf(false) }
@@ -47,6 +51,8 @@ fun DetailInvoiceScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val scope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
+    var showDatePicker by remember { mutableStateOf(false) }
+//    val datePickerState = rememberDatePickerState()
 
     BackHandler { onBack() }
 
@@ -63,6 +69,38 @@ fun DetailInvoiceScreen(
                 }
             )
         }
+    }
+
+    if (showDatePicker) {
+        /*DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDatePicker = updatedReceptionDate(datePickerState, vm)
+                }) {
+                    Text("Aceptar")
+                }
+            }
+        ) {
+            DatePicker(
+                onDismissRequest = { showDatePicker = false },
+                onConfirmButton = {
+                    showDatePicker = updatedReceptionDate(datePickerState, vm)
+                },
+                onDismissButton = {showDatePicker = false},
+                enable = true,
+            )
+        }*/
+        DatePicker(
+            onDismissRequest = { showDatePicker = false },
+            onDateSelected = { onDateSelected ->
+                vm.updateDeliveryDate(onDateSelected.formatter())
+                showDatePicker = false
+//                showDatePicker = updatedReceptionDate(datePickerState, vm)
+            },
+            onDismissButton = { showDatePicker = false },
+            enable = true
+        )
     }
 
     LaunchedEffect(state.message) {
@@ -94,7 +132,7 @@ fun DetailInvoiceScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            DatesCard(billing = state.billing)
+            DatesCard(billing = state.billing) { showDatePicker = true }
 
             TotalsCard(billing = state.billing)
 

@@ -91,28 +91,47 @@ class DetailInvoiceViewModel(
             val updated = current.copy(
                 discount = condition.discount,
                 paymentCondition = condition.paymentName
-            ).recalculate()
-
-            val result = updateInvoiceUseCase(updated.billingNumber, updated)
+            ).recalculate(condition)
 
             _state.update {
-                if (result) {
-                    it.copy(
-                        billing = updated,
-                        message = "Documento actualizado"
-                    )
-                } else {
-                    it.copy(message = "Error en el servidor, intente de nuevo")
-                }
+                it.copy(billing = updated)
             }
-            Log.i(
-                "MdcAppOnly",
-                "DetailInvoiceViewModel --- on updateSelectedPaymentCondition: $result"
-            )
-            Log.i(
-                "MdcAppOnly",
-                "DetailInvoiceViewModel --- on updateSelectedPaymentCondition: $updated"
-            )
+
+            saveBilling()
+        }
+    }
+
+
+    fun updateDeliveryDate(newDate: String) {
+        val current = _state.value
+
+        val condition = current.paymentConditionList
+            .find { it.paymentName == current.billing.paymentCondition }
+            ?: return
+
+        val updated = current.billing
+            .copy(deliveryDate = newDate)
+            .recalculate(condition)
+
+        _state.update {
+            it.copy(billing = updated)
+        }
+
+        saveBilling()
+
+        Log.i("MdcAppOnly", "DetailInvoiceViewModel --- on updateDeliveryDate: $updated")
+    }
+
+    private fun saveBilling() {
+        viewModelScope.launch {
+            val billing = _state.value.billing
+            val result = updateInvoiceUseCase(billing.billingNumber, billing)
+
+            _state.update {
+                it.copy(
+                    message = if (result) "Actualizado" else "Error al guardar"
+                )
+            }
         }
     }
 

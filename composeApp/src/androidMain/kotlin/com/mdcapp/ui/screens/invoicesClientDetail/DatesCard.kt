@@ -11,7 +11,10 @@ import com.mdcapp.data.model.BillingModel
 import com.mdcapp.ui.screens.invoicesClientDetail.common.SectionCard
 
 @Composable
-fun DatesCard(billing: BillingModel) {
+fun DatesCard(
+    billing: BillingModel,
+    onReceptionDateClick: () -> Unit
+) {
 
     SectionCard {
 
@@ -22,8 +25,12 @@ fun DatesCard(billing: BillingModel) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-        DateColumn("Fecha", billing.loadDate, Modifier.weight(1f))
-            DateColumn("Recepción", billing.deliveryDate, Modifier.weight(1f))
+            DateColumn("Fecha", billing.loadDate, Modifier.weight(1f))
+            DateColumn(
+                "Recepción",
+                billing.deliveryDate,
+                Modifier.weight(1f)
+            ) { onReceptionDateClick() }
             DateColumn("Pago", billing.payDate, Modifier.weight(1f))
 
         }
