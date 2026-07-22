@@ -44,15 +44,13 @@ fun DetailInvoiceScreen(
     val buyOrder = state.buyOrder
 
     var showSheet by remember { mutableStateOf(false) }
-
     var showArticles by remember { mutableStateOf(false) }
     var showOrder by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val scope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
-    var showDatePicker by remember { mutableStateOf(false) }
-//    val datePickerState = rememberDatePickerState()
 
     BackHandler { onBack() }
 
@@ -72,31 +70,11 @@ fun DetailInvoiceScreen(
     }
 
     if (showDatePicker) {
-        /*DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDatePicker = updatedReceptionDate(datePickerState, vm)
-                }) {
-                    Text("Aceptar")
-                }
-            }
-        ) {
-            DatePicker(
-                onDismissRequest = { showDatePicker = false },
-                onConfirmButton = {
-                    showDatePicker = updatedReceptionDate(datePickerState, vm)
-                },
-                onDismissButton = {showDatePicker = false},
-                enable = true,
-            )
-        }*/
         DatePicker(
             onDismissRequest = { showDatePicker = false },
             onDateSelected = { onDateSelected ->
                 vm.updateDeliveryDate(onDateSelected.formatter())
                 showDatePicker = false
-//                showDatePicker = updatedReceptionDate(datePickerState, vm)
             },
             onDismissButton = { showDatePicker = false },
             enable = true
@@ -104,12 +82,10 @@ fun DetailInvoiceScreen(
     }
 
     LaunchedEffect(state.message) {
-        state.message.let {
+        state.message?.let { msg ->
             scope.launch {
-                if (it != null) {
-                    snackBarHostState.showSnackbar(it, duration = SnackbarDuration.Short)
-                    vm.clearMessage()
-                }
+                snackBarHostState.showSnackbar(msg, duration = SnackbarDuration.Short)
+                vm.clearMessage()
             }
         }
     }
@@ -131,7 +107,6 @@ fun DetailInvoiceScreen(
                 .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
             DatesCard(billing = state.billing) { showDatePicker = true }
 
             TotalsCard(billing = state.billing)
@@ -152,7 +127,3 @@ fun DetailInvoiceScreen(
         }
     }
 }
-
-
-
-
