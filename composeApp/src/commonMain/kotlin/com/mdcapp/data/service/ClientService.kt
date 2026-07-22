@@ -1,12 +1,7 @@
 package com.mdcapp.data.service
 
-import android.util.Log
-import com.google.firebase.firestore.AggregateSource
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.mdcapp.data.model.RemoteResultClientModel
-import kotlinx.coroutines.tasks.await
+import dev.gitlive.firebase.firestore.FirebaseFirestore
 
 class ClientService(
     private val db: FirebaseFirestore
@@ -15,68 +10,60 @@ class ClientService(
         const val CLIENTS = "clients"
     }
 
-    private var lastDocumentSnapshot: DocumentSnapshot? = null
+    private var lastDocumentId: String? = null
     private var hasMore = true
 
     fun resetPagination() {
-        lastDocumentSnapshot = null
+        lastDocumentId = null
         hasMore = true
-
     }
 
     suspend fun fetchClientsPaged(limit: Long): Pair<List<RemoteResultClientModel>, Boolean> {
         return try {
             if (!hasMore) return emptyList<RemoteResultClientModel>() to false
 
-            val query: Query = db.collection(CLIENTS)
+            var query = db.collection(CLIENTS)
                 .orderBy("Razon Social")
                 .limit(limit)
-                .let { if (lastDocumentSnapshot != null) it.startAfter(lastDocumentSnapshot!!) else it }
 
-            val snapshot = query.get().await()
+            lastDocumentId?.let { docId ->
+                val lastDoc = db.collection(CLIENTS).document(docId).get()
+                if (lastDoc.exists) {
+                    query = query.startAfter(lastDoc)
+                }
+            }
+
+            val snapshot = query.get()
 
             if (snapshot.documents.isEmpty()) {
                 hasMore = false
-                Log.i("firestore", "on fetchClients: empty")
                 return emptyList<RemoteResultClientModel>() to false
-
             }
-            lastDocumentSnapshot = snapshot.last()
 
+            lastDocumentId = snapshot.documents.lastOrNull()?.id
 
             val items = snapshot.documents.mapNotNull { doc ->
                 try {
-                    RemoteResultClientModel(
-                        clientId = doc.getString("Cliente Id") ?: "",
-                        clientName = doc.getString("Razon Social") ?: ""
-                    )
+                    doc.data<RemoteResultClientModel>()
                 } catch (e: Exception) {
-                    Log.e("firestore", "Error on fetchClients: $e")
                     null
                 }
             }
 
-            Log.i("firestore", "on fetchClients: $items")
             items to true
-
-
         } catch (e: Exception) {
-            Log.e("firestore", "Error on fetchClients: $e")
+            println("Error en fetchClientsPaged: ${e.message}")
             emptyList<RemoteResultClientModel>() to false
         }
     }
 
     suspend fun fetchAmountClients(): Long {
         return try {
-            val snapshot = db.collection(CLIENTS)
-                .count()
-                .get(AggregateSource.SERVER)
-                .await()
-
-            snapshot.count
+            val snapshot = db.collection(CLIENTS).get()
+            snapshot.documents.size.toLong()
         } catch (e: Exception) {
-            Log.e("firestore", "Error on fetchClients: $e")
-            0
+            println("Error en fetchAmountClients: ${e.message}")
+            0L
         }
     }
 
@@ -85,61 +72,61 @@ class ClientService(
         if (searchTerm.isEmpty()) return emptyList()
 
         return try {
-            val snapshot = db.collection(CLIENTS).get().await()
+            val snapshot = db.collection(CLIENTS).get()
 
             snapshot.documents.mapNotNull { doc ->
                 try {
                     RemoteResultClientModel(
-                        clientId = doc.getString("Cliente Id") ?: "",
-                        clientName = doc.getString("Razon Social") ?: ""
+                        clientId = doc.get("Cliente Id") ?: "",
+                        clientName = doc.get("Razon Social") ?: ""
                     )
                 } catch (e: Exception) {
-                    Log.e("firestore", "Error mapping client: $e")
+                    println("firestore -> Error mapping client: $e")
                     null
                 }
             }.filter { client ->
                 client.clientName.lowercase().contains(searchTerm)
             }
         } catch (e: Exception) {
-            Log.e("firestore", "Error fetching clients: $e")
+            println("firestore -> Error fetching clients: $e")
             emptyList()
         }
     }
 
     suspend fun fetchClientName(clientId: String): RemoteResultClientModel {
         return try {
-            val snapshot = db.collection(CLIENTS).document(clientId).get().await()
+            val snapshot = db.collection(CLIENTS).document(clientId).get()
             val client = RemoteResultClientModel(
-                clientId = snapshot.getString("Cliente Id") ?: "",
-                clientName = snapshot.getString("Razon Social") ?: ""
+                clientId = snapshot.get("Cliente Id") ?: "",
+                clientName = snapshot.get("Razon Social") ?: ""
             )
 
-            Log.i("ClientService", "fetClientName: $client")
+            println("ClientService -> fetClientName: $client")
             client
         } catch (e: Exception) {
-            Log.e("firestore", "Error fetching client name: $e")
+            println("firestore -> Error fetching client name: $e")
             RemoteResultClientModel("", "")
         }
     }
 
     suspend fun fetchAllClientsName(): List<RemoteResultClientModel> {
         return try {
-            val snapshot = db.collection(CLIENTS).get().await()
+            val snapshot = db.collection(CLIENTS).get()
             val clientList = snapshot.documents.mapNotNull { doc ->
                 try {
                     RemoteResultClientModel(
-                        clientId = doc.getString("Cliente Id") ?: "",
-                        clientName = doc.getString("Razon Social") ?: ""
+                        clientId = doc.get("Cliente Id") ?: "",
+                        clientName = doc.get("Razon Social") ?: ""
                     )
                 } catch (e: Exception) {
-                    Log.e("firestore", "Error mapping client")
+                    println("firestore -> Error mapping client")
                     null
                 }
             }
-            Log.i("ClientService", "fetchAllClientsName: $clientList")
+            println("ClientService -> fetchAllClientsName: $clientList")
             clientList
         } catch (e: Exception) {
-            Log.e("firestore", "Error fetching clients: $e")
+            println("firestore -> Error fetching clients: $e")
             emptyList()
         }
     }
