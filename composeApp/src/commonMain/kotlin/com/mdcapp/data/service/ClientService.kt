@@ -4,11 +4,18 @@ import com.mdcapp.data.model.RemoteResultClientModel
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 
 class ClientService(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
+    private val authService: AuthService
 ) {
     companion object {
         const val CLIENTS = "clients"
     }
+
+    private val userId: String
+        get() = authService.currentUser?.uid ?: "unknown"
+
+    private val clientsCollection
+        get() = db.collection("users").document(userId).collection(CLIENTS)
 
     private var lastDocumentId: String? = null
     private var hasMore = true
@@ -22,16 +29,17 @@ class ClientService(
         return try {
             if (!hasMore) return emptyList<RemoteResultClientModel>() to false
 
-            var query = db.collection(CLIENTS)
+            var query = clientsCollection
                 .orderBy("Razon Social")
                 .limit(limit)
 
             lastDocumentId?.let { docId ->
-                val lastDoc = db.collection(CLIENTS).document(docId).get()
+                val lastDoc = clientsCollection.document(docId).get()
                 if (lastDoc.exists) {
                     query = query.startAfter(lastDoc)
                 }
             }
+// ...
 
             val snapshot = query.get()
 
@@ -59,7 +67,7 @@ class ClientService(
 
     suspend fun fetchAmountClients(): Long {
         return try {
-            val snapshot = db.collection(CLIENTS).get()
+            val snapshot = clientsCollection.get()
             snapshot.documents.size.toLong()
         } catch (e: Exception) {
             println("Error en fetchAmountClients: ${e.message}")
@@ -69,10 +77,9 @@ class ClientService(
 
     suspend fun searchClientsByName(query: String): List<RemoteResultClientModel> {
         val searchTerm = query.trim().lowercase()
-        if (searchTerm.isEmpty()) return emptyList()
 
         return try {
-            val snapshot = db.collection(CLIENTS).get()
+            val snapshot = clientsCollection.get()
 
             snapshot.documents.mapNotNull { doc ->
                 try {
@@ -85,7 +92,8 @@ class ClientService(
                     null
                 }
             }.filter { client ->
-                client.clientName.lowercase().contains(searchTerm)
+                if (searchTerm.isEmpty()) true
+                else client.clientName.lowercase().contains(searchTerm)
             }
         } catch (e: Exception) {
             println("firestore -> Error fetching clients: $e")
@@ -95,7 +103,7 @@ class ClientService(
 
     suspend fun fetchClientName(clientId: String): RemoteResultClientModel {
         return try {
-            val snapshot = db.collection(CLIENTS).document(clientId).get()
+            val snapshot = clientsCollection.document(clientId).get()
             val client = RemoteResultClientModel(
                 clientId = snapshot.get("Cliente Id") ?: "",
                 clientName = snapshot.get("Razon Social") ?: ""
@@ -111,7 +119,7 @@ class ClientService(
 
     suspend fun fetchAllClientsName(): List<RemoteResultClientModel> {
         return try {
-            val snapshot = db.collection(CLIENTS).get()
+            val snapshot = clientsCollection.get()
             val clientList = snapshot.documents.mapNotNull { doc ->
                 try {
                     RemoteResultClientModel(
@@ -134,10 +142,10 @@ class ClientService(
     suspend fun saveClient(client: RemoteResultClientModel): Boolean {
         return try {
             if (client.clientId.isEmpty()) {
-                val docRef = db.collection(CLIENTS).add(client)
+                val docRef = clientsCollection.add(client)
                 docRef.update(mapOf("Cliente Id" to docRef.id))
             } else {
-                db.collection(CLIENTS).document(client.clientId).set(client)
+                clientsCollection.document(client.clientId).set(client)
             }
             true
         } catch (e: Exception) {
@@ -146,4 +154,13 @@ class ClientService(
         }
     }
 
+    suspend fun deleteClient(clientId: String): Boolean {
+        return try {
+            clientsCollection.document(clientId).delete()
+            true
+        } catch (e: Exception) {
+            println("Error deleting client: ${e.message}")
+            false
+        }
+    }
 }

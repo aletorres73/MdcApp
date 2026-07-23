@@ -33,4 +33,12 @@ class GetClientsUseCase(private val service: ClientService) {
     suspend fun save(client: ClientModel): Boolean {
         return service.saveClient(client.toRemote())
     }
+
+    suspend fun delete(clientId: String): Boolean {
+        return service.deleteClient(clientId)
+    }
+
+    suspend fun getAll(): List<ClientModel> {
+        return service.fetchAllClientsName().map { it.toDomain() }
+    }
 }

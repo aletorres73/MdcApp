@@ -30,23 +30,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.mdcapp.ui.viewmodels.LoginViewModel
+import com.mdcapp.ui.viewmodels.SignUpViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun LoginScreen(
-    onLoginSuccess: () -> Unit,
-    onRegisterClick: () -> Unit,
-    viewModel: LoginViewModel = koinViewModel()
+fun SignUpScreen(
+    onBack: () -> Unit,
+    onSignUpSuccess: () -> Unit,
+    viewModel: SignUpViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
-            onLoginSuccess()
+            onSignUpSuccess()
         }
     }
 
@@ -55,7 +56,7 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("MDC App - Vendedores", style = MaterialTheme.typography.headlineMedium)
+        Text("Registro de Vendedor", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
@@ -71,16 +72,25 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Contraseña") },
+            label = { Text("Contraseña (min 6 caracteres)") },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
+                val image = Icons.Filled.Lock
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(
-                        imageVector = Icons.Filled.Lock,
-                        contentDescription = "Toggle password visibility"
-                    )
+                    Icon(imageVector = image, contentDescription = "Toggle password visibility")
                 }
             },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = confirmPassword,
+            onValueChange = { confirmPassword = it },
+            label = { Text("Confirmar Contraseña") },
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -93,7 +103,7 @@ fun LoginScreen(
         }
 
         Button(
-            onClick = { viewModel.login(email, password) },
+            onClick = { viewModel.register(email, password, confirmPassword) },
             enabled = !state.isLoading,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -104,12 +114,12 @@ fun LoginScreen(
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Ingresar")
+                Text("Registrarse")
             }
         }
 
-        TextButton(onClick = onRegisterClick) {
-            Text("¿No tienes cuenta? Regístrate aquí")
+        TextButton(onClick = onBack) {
+            Text("¿Ya tienes cuenta? Ingresa aquí")
         }
     }
 }

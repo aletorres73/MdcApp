@@ -16,6 +16,14 @@ class AuthService(private val auth: FirebaseAuth) {
         }
     }
 
+    suspend fun signUp(email: String, password: String): FirebaseUser? {
+        return try {
+            auth.createUserWithEmailAndPassword(email, password).user
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     suspend fun signOut() {
         auth.signOut()
     }

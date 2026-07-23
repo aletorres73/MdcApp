@@ -2,6 +2,7 @@ package com.mdcapp.domain.repositories
 
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
+import com.mdcapp.data.model.FactoryModel
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.data.model.PaymentRegisterModel
@@ -64,5 +65,17 @@ class OrderRepository(private val service: OrderService) {
 
     suspend fun saveOrder(order: BuyOrderModel): Boolean {
         return service.saveOrder(order.toRemote())
+    }
+
+    suspend fun saveFactory(factory: FactoryModel): Boolean {
+        return service.saveFactory(factory.toRemote())
+    }
+
+    suspend fun deleteFactory(factoryName: String): Boolean {
+        return service.deleteFactory(factoryName)
+    }
+
+    suspend fun getFactories(): List<FactoryModel> {
+        return service.fetchAllFactories().map { it.toDomain() }
     }
 }

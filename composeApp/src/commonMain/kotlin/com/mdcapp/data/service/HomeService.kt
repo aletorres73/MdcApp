@@ -5,14 +5,23 @@ package com.mdcapp.data.service
 import com.mdcapp.data.remote.RemoteResultFactoryModel
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 
-class HomeService(private val db: FirebaseFirestore) {
+class HomeService(
+    private val db: FirebaseFirestore,
+    private val authService: AuthService
+) {
     companion object {
         const val FACTORIES = "factories"
     }
 
+    private val userId: String
+        get() = authService.currentUser?.uid ?: "unknown"
+
+    private val factoriesCollection
+        get() = db.collection("users").document(userId).collection(FACTORIES)
+
     suspend fun fetchAllFactories(): List<RemoteResultFactoryModel> {
         return try {
-            val documents = db.collection(FACTORIES)
+            val documents = factoriesCollection
                 .get()
                 .documents
                 .map { it.data<RemoteResultFactoryModel>() }

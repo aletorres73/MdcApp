@@ -43,7 +43,7 @@ class CreateOrderViewModel(
             _state.update { it.copy(isLoading = true) }
             try {
                 val factories = getFactoriesUseCase()
-                val clients = getClientsUseCase.search("") // Fetch all or initial list
+                val clients = getClientsUseCase.getAll()
                 _state.update {
                     it.copy(
                         isLoading = false,

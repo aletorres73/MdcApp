@@ -17,60 +17,55 @@ class ClientsViewModel(
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
-    private val _statusScreen = MutableStateFlow<ClientScreenStatus>(ClientScreenStatus.Idle())
-    val statusScreen: StateFlow<ClientScreenStatus> = _statusScreen.asStateFlow()
-
-    sealed class ClientScreenStatus {
-        data class Idle(val message: String = "") : ClientScreenStatus()
-        data object Search : ClientScreenStatus()
-    }
-
-
     data class UiState(
+        val isLoading: Boolean = false,
+        val clients: List<ClientModel> = emptyList(),
         val amountClients: Long = 0,
-        val dataSearch: List<ClientModel> = emptyList(),
-        val updatingData: Boolean = false,
-        val hasMore: Boolean = true,
         val error: String? = null,
+        val message: String? = null
     )
 
     init {
-        getClientsUseCase.resetPagination()
-        getNumberOfClients()
+        loadClients()
     }
 
-    private fun getNumberOfClients() {
+    fun loadClients() {
         viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
             try {
-                val amountClients = getClientsUseCase.getAmountClients()
-                _state.update { it.copy(amountClients = amountClients) }
-            } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
-            }
-        }
-    }
-
-    fun searchClients(query: String) {
-        viewModelScope.launch {
-            try {
-                if (query.isNotEmpty()) {
-                    val data = getClientsUseCase.search(query)
-                    if (data.isEmpty())
-                        _statusScreen.value =
-                            ClientScreenStatus.Idle("No se encontraron resultados")
-                    else {
-                        _state.update { it.copy(dataSearch = data) }
-                        _statusScreen.value = ClientScreenStatus.Search
-                    }
+                val clients = getClientsUseCase.getAll()
+                val amount = getClientsUseCase.getAmountClients()
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        clients = clients,
+                        amountClients = amount
+                    )
                 }
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }
 
-    fun resetView() {
-        getClientsUseCase.resetPagination()
+    fun deleteClient(clientId: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            try {
+                val success = getClientsUseCase.delete(clientId)
+                if (success) {
+                    _state.update { it.copy(message = "Cliente eliminado") }
+                    loadClients()
+                } else {
+                    _state.update { it.copy(isLoading = false, error = "Error al eliminar") }
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
     }
 
+    fun clearMessage() {
+        _state.update { it.copy(message = null) }
+    }
 }

@@ -22,8 +22,10 @@ import com.mdcapp.domain.usescases.ordersusescases.GetFactoriesListUseCase
 import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
 import com.mdcapp.ui.viewmodels.AddClientViewModel
 import com.mdcapp.ui.viewmodels.ClientsViewModel
+import com.mdcapp.ui.viewmodels.FactoryViewModel
 import com.mdcapp.ui.viewmodels.HomeViewModel
 import com.mdcapp.ui.viewmodels.LoginViewModel
+import com.mdcapp.ui.viewmodels.SignUpViewModel
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import com.mdcapp.ui.viewmodels.invoices.AddInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
@@ -82,10 +84,10 @@ val appModule = module {
 val dataModule = module {
 //services
     factoryOf(::InitService)
-    factoryOf(::OrderService)
-    factoryOf(::HomeService)
-    factoryOf(::ClientService)
-    factoryOf(::BillingPaginationService)
+    factory { OrderService(get(), get()) }
+    factory { HomeService(get(), get()) }
+    factory { ClientService(get(), get()) }
+    factory { BillingPaginationService(get(), get()) }
     factoryOf(::AuthService)
 //repositories
     factoryOf(::OrderRepository)
@@ -108,7 +110,9 @@ val viewModelModule = module {
     viewModelOf(::BuyOrdersViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::ClientsViewModel)
+    viewModelOf(::FactoryViewModel)
     viewModelOf(::LoginViewModel)
+    viewModelOf(::SignUpViewModel)
     viewModelOf(::AddClientViewModel)
 //    viewModelOf(::InvoicesViewModel)
     viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get(), get()) }

@@ -1,22 +1,24 @@
 # Tareas de Refactorización MDCapp - MVP Vendedor
 
 - [x] **Fase 1: Infraestructura y Autenticación**
-    - [x] Agregar dependencias de Firebase Auth en `libs.versions.toml` y `build.gradle.kts`.
-    - [x] Crear `AuthService` y `AuthRepository`.
-    - [x] Implementar `LoginViewModel` and `LoginScreen`.
-    - [x] Configurar el estado de autenticación en el arranque de la app.
 - [x] **Fase 2: Gestión de Clientes**
-    - [x] Actualizar `ClientService` para permitir creación de clientes.
-    - [x] Crear `AddClientViewModel` y `AddClientScreen`.
 - [x] **Fase 3: Gestión de Pedidos (Orders)**
-    - [x] Definir modelos para ítems manuales y pedidos nuevos.
-    - [x] Actualizar `OrderService` para persistir nuevos pedidos.
-    - [x] Crear `CreateOrderViewModel` y `CreateOrderScreen` (Formulario de artículos manuales).
 - [x] **Fase 4: Facturación y Pagos**
-    - [x] Implementar lógica de cálculo automático de vencimientos y descuentos en el dominio.
-    - [x] Crear `AddInvoiceScreen` para vincular comprobantes a pedidos.
-    - [x] Implementar registro de pagos y actualización de saldos (`rest`).
-- [/] **Fase 5: Dashboard y Navegación**
-    - [x] Crear Dashboard con el listado de facturas y el "Semáforo" de colores.
-    - [x] Refactorizar `AndroidNavigation.kt` para orquestar el nuevo flujo.
-    - [ ] Limpiar código y rutas antiguas no utilizadas.
+- [x] **Fase 5: Dashboard y Navegación**
+
+## Fase 2: Multi-usuario y Gestión Avanzada
+
+- [x] **Fase 6: Multi-usuario y Registro**
+    - [x] Implementar `signUp` en `AuthService` y `AuthRepository`.
+    - [x] Crear `SignUpViewModel` y `SignUpScreen`.
+    - [x] Refactorizar servicios para usar rutas `users/{userId}/...`
+- [x] **Fase 7: Navegación Principal (BottomBar)**
+    - [x] Crear `MainScreen` con `Scaffold` y `NavigationBar`.
+    - [x] Integrar `Facturas` y `Clientes` como destinos principales.
+- [x] **Fase 8: CRUD de Clientes y Fábricas**
+    - [x] Implementar listado y edición/borrado de clientes.
+    - [x] Crear gestión de Fábricas (Nombre, Segmentos, Condiciones de Pago).
+- [x] **Fase 9: Refinamiento UI/UX**
+    - [x] Password visibility (ojo) en Login y Registro.
+    - [x] Configurar `singleLine = true` en todos los inputs.
+    - [x] Configurar `KeyboardType.Number` donde corresponda.

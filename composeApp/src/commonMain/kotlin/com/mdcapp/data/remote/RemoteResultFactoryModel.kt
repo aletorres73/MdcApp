@@ -18,6 +18,12 @@ fun RemoteResultFactoryModel.toDomain() = FactoryModel(
     paymentType = paymentsTypes.toPaymentConditions()
 )
 
+fun FactoryModel.toRemote() = RemoteResultFactoryModel(
+    name = name,
+    branchList = branchList,
+    paymentsTypes = paymentType.toRemote()
+)
+
 fun Map<String, Map<String, Any>>.toPaymentConditions(): List<PaymentCondition> {
     return this.values.map { paymentInfo ->
         PaymentCondition(
@@ -33,15 +39,15 @@ fun Map<String, Map<String, Any>>.toPaymentConditions(): List<PaymentCondition> 
 }
 
 
-fun List<PaymentCondition>.toRemote(): Map<String, Map<String, Any>> {
+fun List<PaymentCondition>.toRemote(): Map<String, Map<String, String>> {
     return this.mapIndexed { index, paymentCondition ->
         "condicion${index + 1}" to mapOf(
             "condicion" to paymentCondition.paymentName,
-            "dto" to paymentCondition.discount,
-            "meses" to paymentCondition.month,
-            "vencimiento" to paymentCondition.expiration,
-            "plazo" to paymentCondition.date,
-            "pagos" to paymentCondition.quantity
+            "dto" to paymentCondition.discount.toString(),
+            "meses" to paymentCondition.month.toString(),
+            "vencimiento" to paymentCondition.expiration.toString(),
+            "plazo" to paymentCondition.date.toString(),
+            "pagos" to paymentCondition.quantity.toString()
         )
     }.toMap()
 }

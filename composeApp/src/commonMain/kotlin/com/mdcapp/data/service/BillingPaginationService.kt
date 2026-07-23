@@ -7,11 +7,18 @@ import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.Query
 
 class BillingPaginationService(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
+    private val authService: AuthService
 ) {
     companion object {
         const val BILLINGS = "billings"
     }
+
+    private val userId: String
+        get() = authService.currentUser?.uid ?: "unknown"
+
+    private val billingsCollection
+        get() = db.collection("users").document(userId).collection(BILLINGS)
 
     suspend fun fetchBillingsPaged(
         state: String?,
@@ -22,7 +29,7 @@ class BillingPaginationService(
         direction: String = "desc"
     ): InvoicePage {
         return try {
-            var query: Query = db.collection(BILLINGS)
+            var query: Query = billingsCollection
 
             if (!state.isNullOrBlank()) {
                 query = query.where { "Estado" equalTo state }
@@ -44,11 +51,12 @@ class BillingPaginationService(
                 .limit(limit)
 
             if (!startAfterId.isNullOrBlank()) {
-                val lastDoc = db.collection(BILLINGS).document(startAfterId).get()
+                val lastDoc = billingsCollection.document(startAfterId).get()
                 if (lastDoc.exists) {
                     query = query.startAfter(lastDoc)
                 }
             }
+// ...
 
             val snapshot = query.get()
 

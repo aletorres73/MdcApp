@@ -4,8 +4,17 @@ sealed class AppRoute(val route: String) {
 
     data object Home : AppRoute("Home")
     data object Login : AppRoute("Login")
-    data object AddClient : AppRoute("AddClient")
+    data object SignUp : AppRoute("SignUp")
+    data class AddClient(val id: String? = null, val name: String? = null) : AppRoute("AddClient") {
+        companion object {
+            const val BASE_ROUTE = "AddClient?id={id}&name={name}"
+            fun createRoute(id: String? = null, name: String? = null): String {
+                return if (id != null && name != null) "AddClient?id=$id&name=$name" else "AddClient"
+            }
+        }
+    }
     data object CreateOrder : AppRoute("CreateOrder")
+    data object Factories : AppRoute("Factories")
 
     data class AddInvoice(val orderId: String) : AppRoute("AddInvoice") {
         companion object {

@@ -14,7 +14,8 @@ import dev.gitlive.firebase.firestore.FieldPath
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 
 class OrderService(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
+    private val authService: AuthService
 ) {
     companion object {
         const val ORDERS = "Orders"
@@ -24,9 +25,21 @@ class OrderService(
         const val PAYMENTS_REGISTER = "paymentRegister"
     }
 
+    private val userId: String
+        get() = authService.currentUser?.uid ?: "unknown"
+
+    private val userDoc
+        get() = db.collection("users").document(userId)
+
+    private val ordersCollection get() = userDoc.collection(ORDERS)
+    private val buyOrdersCollection get() = userDoc.collection(BUY_ORDERS)
+    private val billingsCollection get() = userDoc.collection(BILLINGS)
+    private val factoriesCollection get() = userDoc.collection(FACTORIES)
+    private val paymentsRegisterCollection get() = userDoc.collection(PAYMENTS_REGISTER)
+
     suspend fun fetchAllOrders(): List<RemoteResultOrder> {
         return try {
-            val documents = db.collection(ORDERS)
+            val documents = ordersCollection
                 .get()
                 .documents
                 .map { it.data<RemoteResultOrder>() }
@@ -42,7 +55,7 @@ class OrderService(
 
     suspend fun fetchOrderBranch(orderId: String): String {
         return try {
-            val data = db.collection(BUY_ORDERS)
+            val data = buyOrdersCollection
                 .where { FieldPath("Orden Id").equalTo(orderId) }
                 .get()
                 .documents
@@ -58,7 +71,7 @@ class OrderService(
     suspend fun fetchOrdersByFactory(name: String): List<RemoteResultOrder> {
         return try {
             if (name == "all") return fetchAllOrders()
-            val document = db.collection(ORDERS)
+            val document = ordersCollection
                 .where { FieldPath("Marca").equalTo(name) }
                 .get()
                 .documents
@@ -73,7 +86,7 @@ class OrderService(
 
     suspend fun fetchBuyOrder(orderId: String): RemoteResultBuyOrder {
         return try {
-            val document = db.collection(BUY_ORDERS)
+            val document = buyOrdersCollection
                 .where { FieldPath("Orden Id").equalTo(orderId) }
                 .get()
                 .documents
@@ -89,7 +102,7 @@ class OrderService(
 
     suspend fun fetchBillings(orderId: String): List<RemoteResultBillingModel> {
         return try {
-            val document = db.collection(BILLINGS)
+            val document = billingsCollection
                 .where { FieldPath("Orden").equalTo(orderId) }
                 .get()
                 .documents
@@ -104,7 +117,7 @@ class OrderService(
 
     suspend fun fetchBillingsByClient(clientId: String): List<RemoteResultBillingModel> {
         return try {
-            val document = db.collection(BILLINGS)
+            val document = billingsCollection
                 .where { FieldPath("Cliente id").equalTo(clientId) }
                 .get()
                 .documents
@@ -122,7 +135,7 @@ class OrderService(
 
     suspend fun fetchPaymentsTypesFactory(factoryName: String): Map<String, Map<String, Any>> {
         return try {
-            val document = db.collection(FACTORIES)
+            val document = factoriesCollection
                 .where { FieldPath("Fabrica").equalTo(factoryName) }
                 .get()
                 .documents
@@ -142,7 +155,7 @@ class OrderService(
 
     suspend fun fetchPaymentConditionByBrand(brand: String): Map<String, Map<String, Any>> {
         return try {
-            val document = db.collection(FACTORIES)
+            val document = factoriesCollection
                 .where { FieldPath("Marcas").containsAny(listOf(brand)) }
                 .get()
                 .documents
@@ -166,7 +179,7 @@ class OrderService(
         data: List<PaymentCondition>
     ): Boolean {
         return try {
-            db.collection(FACTORIES).document(factoryName)
+            factoriesCollection.document(factoryName)
                 .update(mapOf("Condiciones" to data))
             true
         } catch (e: Exception) {
@@ -177,7 +190,7 @@ class OrderService(
 
     suspend fun addPaymentToRegister(data: RemotePaymentRegisterResult): Boolean {
         return try {
-            db.collection(PAYMENTS_REGISTER)
+            paymentsRegisterCollection
                 .document(data.id.toString())
                 .set(data)
             Log.i("MdcAppOnly", "Firestore --- On addPaymentToRegister $data successful")
@@ -190,7 +203,7 @@ class OrderService(
 
     suspend fun fetchLastIdFromPayments(): Int {
         return try {
-            val documents = db.collection(PAYMENTS_REGISTER)
+            val documents = paymentsRegisterCollection
                 .get()
                 .documents
                 .map { it.data<RemotePaymentRegisterResult>() }
@@ -204,7 +217,7 @@ class OrderService(
 
     suspend fun updateBilling(document: String, data: RemoteResultBillingModel): Boolean {
         return try {
-            db.collection(BILLINGS)
+            billingsCollection
                 .document(document)
                 .update(data)
             Log.i("MdcAppOnly", "firestore --- on updateBilling success $data")
@@ -218,7 +231,7 @@ class OrderService(
 
     suspend fun saveBilling(data: RemoteResultBillingModel): Boolean {
         return try {
-            db.collection(BILLINGS)
+            billingsCollection
                 .document(data.billingNumber)
                 .set(data)
             Log.i("MdcAppOnly", "firestore --- on saveBilling success $data")
@@ -233,7 +246,7 @@ class OrderService(
         val paymentRegisterResult: MutableList<RemotePaymentRegisterResult> = mutableListOf()
         return try {
             documentList.forEach { numberDocument ->
-                val data = db.collection(PAYMENTS_REGISTER)
+                val data = paymentsRegisterCollection
                     .where { FieldPath("Remito").equalTo(numberDocument) }
                     .get()
                     .documents
@@ -252,7 +265,7 @@ class OrderService(
 
     suspend fun fetchFactoriesLisName(): List<String> {
         return try {
-            val documents = db.collection(FACTORIES)
+            val documents = factoriesCollection
                 .get()
                 .documents
                 .map { it.data<RemoteResultFactoryModel>() }
@@ -265,12 +278,24 @@ class OrderService(
         }
     }
 
+    suspend fun fetchAllFactories(): List<RemoteResultFactoryModel> {
+        return try {
+            factoriesCollection
+                .get()
+                .documents
+                .map { it.data<RemoteResultFactoryModel>() }
+        } catch (e: Exception) {
+            Log.e("firestore", "on fetchAllFactories: $e ")
+            emptyList()
+        }
+    }
+
     suspend fun fetchBillingsByBrand(
         brand: String,
         clientId: String
     ): List<RemoteResultBillingModel> {
         return try {
-            val documents = db.collection(BILLINGS)
+            val documents = billingsCollection
                 .where { FieldPath("Cliente id").equalTo(clientId) }
                 .where { FieldPath("Marca").equalTo(brand) }
                 .get()
@@ -286,7 +311,7 @@ class OrderService(
 
     suspend fun fetchInvoiceByNumber(invoiceNumber: String): RemoteResultBillingModel {
         return try {
-            val document = db.collection(BILLINGS)
+            val document = billingsCollection
                 .where { FieldPath("Numero").equalTo(invoiceNumber) }
                 .get()
                 .documents
@@ -305,14 +330,34 @@ class OrderService(
     suspend fun saveOrder(order: RemoteResultBuyOrder): Boolean {
         return try {
             if (order.id.isEmpty()) {
-                val docRef = db.collection(BUY_ORDERS).add(order)
+                val docRef = buyOrdersCollection.add(order)
                 docRef.update(mapOf("Pedido Id" to docRef.id))
             } else {
-                db.collection(BUY_ORDERS).document(order.id).set(order)
+                buyOrdersCollection.document(order.id).set(order)
             }
             true
         } catch (e: Exception) {
             Log.e("OrderService", "Error saving order", e)
+            false
+        }
+    }
+
+    suspend fun saveFactory(factory: RemoteResultFactoryModel): Boolean {
+        return try {
+            factoriesCollection.document(factory.name).set(factory)
+            true
+        } catch (e: Exception) {
+            Log.e("OrderService", "Error saving factory", e)
+            false
+        }
+    }
+
+    suspend fun deleteFactory(factoryName: String): Boolean {
+        return try {
+            factoriesCollection.document(factoryName).delete()
+            true
+        } catch (e: Exception) {
+            Log.e("OrderService", "Error deleting factory", e)
             false
         }
     }

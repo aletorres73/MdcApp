@@ -13,12 +13,15 @@ import com.mdcapp.domain.entities.AppRoute
 import com.mdcapp.ui.screens.AddClientScreen
 import com.mdcapp.ui.screens.AddInvoiceScreen
 import com.mdcapp.ui.screens.CreateOrderScreen
+import com.mdcapp.ui.screens.FactoryManagementScreen
 import com.mdcapp.ui.screens.LoginScreen
+import com.mdcapp.ui.screens.MainScreen
+import com.mdcapp.ui.screens.SignUpScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.DetailInvoiceScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.InvoicesScreen
-import com.mdcapp.ui.screens.invoicesPage.InvoicesPageScreen
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.parameter.parametersOf
@@ -28,6 +31,8 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun AndroidNavigation(startRoute: String) {
     val navController = rememberNavController()
+    val authRepo: com.mdcapp.domain.repositories.AuthRepository = org.koin.compose.koinInject()
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     NavHost(
         navController = navController,
@@ -39,18 +44,49 @@ fun AndroidNavigation(startRoute: String) {
                     navController.navigate(AppRoute.InvoicesPaged.route) {
                         popUpTo(AppRoute.Login.route) { inclusive = true }
                     }
+                },
+                onRegisterClick = {
+                    navController.navigate(AppRoute.SignUp.route)
                 }
             )
         }
 
-        composable(route = AppRoute.AddClient.route) {
+        composable(route = AppRoute.SignUp.route) {
+            SignUpScreen(
+                onBack = { navController.popBackStack() },
+                onSignUpSuccess = {
+                    navController.navigate(AppRoute.InvoicesPaged.route) {
+                        popUpTo(AppRoute.SignUp.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = AppRoute.AddClient.BASE_ROUTE,
+            arguments = listOf(
+                navArgument("id") { nullable = true; defaultValue = null },
+                navArgument("name") { nullable = true; defaultValue = null }
+            )
+        ) {
+            val id = it.arguments?.getString("id")
+            val name = it.arguments?.getString("name")
             AddClientScreen(
+                initialId = id,
+                initialName = name,
                 onBack = { navController.popBackStack() }
             )
         }
 
         composable(route = AppRoute.CreateOrder.route) {
             CreateOrderScreen(
+                onBack = { navController.popBackStack() },
+                onManageFactories = { navController.navigate(AppRoute.Factories.route) }
+            )
+        }
+
+        composable(route = AppRoute.Factories.route) {
+            FactoryManagementScreen(
                 onBack = { navController.popBackStack() }
             )
         }
@@ -67,15 +103,30 @@ fun AndroidNavigation(startRoute: String) {
         }
 
         composable(route = AppRoute.InvoicesPaged.route) {
-            InvoicesPageScreen(
-                onNavigationInvoice = { invoiceNumber ->
-                    navController.navigateToDetailInvoice(
-                        invoiceNumber
-                    )
+            MainScreen(
+                onNavigateToInvoice = { invoiceNumber ->
+                    navController.navigateToDetailInvoice(invoiceNumber)
                 },
-                onNavigationClientDetail = { clientId -> navController.navigateToInvoices(clientId) },
-                onAddClientClick = { navController.navigate(AppRoute.AddClient.route) },
-                onCreateOrderClick = { navController.navigate(AppRoute.CreateOrder.route) }
+                onNavigateToClientInvoices = { clientId ->
+                    navController.navigateToInvoices(clientId)
+                },
+                onNavigateToAddClient = {
+                    navController.navigate(AppRoute.AddClient.createRoute())
+                },
+                onNavigateToEditClient = { id, name ->
+                    navController.navigate(AppRoute.AddClient.createRoute(id, name))
+                },
+                onNavigateToCreateOrder = {
+                    navController.navigate(AppRoute.CreateOrder.route)
+                },
+                onLogout = {
+                    scope.launch {
+                        authRepo.logout()
+                        navController.navigate(AppRoute.Login.route) {
+                            popUpTo(AppRoute.InvoicesPaged.route) { inclusive = true }
+                        }
+                    }
+                }
             )
         }
 

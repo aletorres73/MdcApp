@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,17 +30,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.ui.viewmodels.AddClientViewModel
 import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.annotation.KoinExperimentalAPI
 
-@OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddClientScreen(
+    initialId: String? = null,
+    initialName: String? = null,
     onBack: () -> Unit,
     viewModel: AddClientViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    var name by remember { mutableStateOf("") }
-    var clientId by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(initialName ?: "") }
+    var clientId by remember { mutableStateOf(initialId ?: "") }
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
@@ -51,10 +52,10 @@ fun AddClientScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Agregar Cliente") },
+                title = { Text(if (initialId == null) "Agregar Cliente" else "Editar Cliente") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
                     }
                 }
             )
@@ -70,7 +71,8 @@ fun AddClientScreen(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text("Razón Social / Nombre") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -78,8 +80,10 @@ fun AddClientScreen(
             OutlinedTextField(
                 value = clientId,
                 onValueChange = { clientId = it },
-                label = { Text("ID Cliente (opcional)") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text("ID Cliente") },
+                enabled = initialId == null,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -101,7 +105,7 @@ fun AddClientScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Guardar Cliente")
+                    Text(if (initialId == null) "Guardar Cliente" else "Actualizar Cliente")
                 }
             }
         }

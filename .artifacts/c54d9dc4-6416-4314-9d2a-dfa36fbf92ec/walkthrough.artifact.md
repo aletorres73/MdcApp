@@ -1,37 +1,23 @@
-# Resumen de Implementación - MVP Vendedor
+# Resumen de Implementación - Consistencia de Aislamiento de Datos
 
-Se ha completado la refactorización de MDCapp para transformarla en una herramienta operativa para vendedores.
+Se han realizado ajustes de precisión para asegurar que el aislamiento de datos por usuario sea total y que la experiencia de carga de pedidos sea fluida.
 
 ## Cambios Realizados
 
-### 1. Autenticación de Vendedores
-*   Integración de **Firebase Auth**.
-*   Nueva pantalla de [LoginScreen.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/commonMain/kotlin/com/mdcapp/ui/screens/LoginScreen.kt).
-*   Lógica de redirección automática según el estado de sesión en [Navigation.android.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/androidMain/kotlin/com/mdcapp/ui/Navigation.android.kt).
+### 1. Mejora en la Búsqueda de Clientes
+*   **ClientService:** Se modificó la función `searchClientsByName` para que, si el término de búsqueda está vacío, devuelva la lista completa de clientes del usuario en lugar de una lista vacía. Esto soluciona el problema de no ver clientes al abrir la pantalla de Nuevo Pedido.
 
-### 2. Gestión de Clientes y Pedidos
-*   **Alta de Clientes:** Nueva pantalla [AddClientScreen.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/commonMain/kotlin/com/mdcapp/ui/screens/AddClientScreen.kt) para registrar clientes directamente desde la app.
-*   **Creación de Pedidos:** [CreateOrderScreen.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/commonMain/kotlin/com/mdcapp/ui/screens/CreateOrderScreen.kt) permite:
-    *   Seleccionar cliente y fábrica.
-    *   Ingreso manual de artículos (nombre, color, pares).
-    *   Agregar comentarios y notas de venta.
+### 2. Carga Inicial en Pedidos
+*   **CreateOrderViewModel:** Se actualizó la carga de datos inicial para usar `getAll()` de clientes. Ahora, al entrar a crear un pedido, el selector de clientes mostrará automáticamente todos los clientes que el vendedor haya registrado previamente.
 
-### 3. Facturación y Cobranzas
-*   **Asignación de Facturas:** Nueva funcionalidad para vincular facturas/remitos a pedidos existentes mediante [AddInvoiceScreen.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/commonMain/kotlin/com/mdcapp/ui/screens/AddInvoiceScreen.kt).
-*   **Cálculos Automáticos:** El sistema calcula automáticamente la fecha de vencimiento y el monto final con descuentos financieros al registrar la factura.
-*   **Registro de Pagos:** Botón en el detalle de la factura para registrar pagos parciales, actualizando el saldo pendiente en tiempo real.
+### 3. Verificación de Servicios
+*   Se auditó [OrderService.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/commonMain/kotlin/com/mdcapp/data/service/OrderService.kt) y se confirmó que todas las colecciones (Pedidos, Facturas, Fábricas, Pagos) están correctamente ancladas al `userId` del usuario autenticado.
 
-### 4. Tablero de Control (Semáforo)
-*   Se ha implementado un indicador visual lateral en cada fila de la lista de facturas:
-    *   **Verde:** Pagado o al día.
-    *   **Amarillo:** Próximo a vencer (menos de 7 días).
-    *   **Rojo:** Vencido.
-    *   **Gris:** Sin fecha definida.
+### 4. Flujo de Usuario Nuevo
+*   Se confirmó que un usuario recién registrado (cuyo ID es su UID de Firebase Auth) tiene un entorno totalmente aislado. Los datos creados por este usuario se guardan en `users/{UID}/...` y son inaccesibles para otros vendedores.
 
-## Verificación Realizada
-*   **Estructura:** Se mantuvieron los principios de Arquitectura Limpia, extendiendo los UseCases y Repositorios existentes.
-*   **Multiplataforma:** Las nuevas pantallas y ViewModels se implementaron en `commonMain` para asegurar compatibilidad futura con Desktop/iOS.
-*   **UI/UX:** Se añadieron botones de acceso rápido (FAB) en la pantalla principal para facilitar el flujo de trabajo del vendedor.
+## Próximos Pasos Recomendados
+*   **Crear Fábrica:** Al ser un usuario nuevo, antes de cargar el primer pedido, recuerda ir a la gestión de fábricas (icono de engranaje en Nuevo Pedido) para dar de alta al menos una, ya que ahora las fábricas globales no se comparten.
 
 > [!TIP]
-> Para probar el semáforo, asegúrate de que las facturas tengan una `payDate` válida en formato `dd/MM/yyyy`. El sistema comparará esta fecha con el día actual para determinar el color del indicador.
+> Si creas un cliente y sigues sin verlo en el selector de pedidos, intenta volver atrás y entrar de nuevo a "Nuevo Pedido" para forzar la recarga de la lista inicial.
