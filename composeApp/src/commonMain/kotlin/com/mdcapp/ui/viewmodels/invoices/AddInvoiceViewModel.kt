@@ -68,6 +68,7 @@ class AddInvoiceViewModel(
         amount: Double,
         condition: PaymentCondition?,
         deliveryDate: String,
+        payDate: String,
         type: String,
         notes: String
     ) {
@@ -93,6 +94,7 @@ class AddInvoiceViewModel(
                     brand = _state.value.buyOrder.branch,
                     clientId = _state.value.buyOrder.clientId,
                     clientName = _state.value.buyOrder.client,
+                    payDate = payDate,
                     deliveryDate = deliveryDate,
                     paymentCondition = condition?.paymentName ?: "",
                     discount = condition?.discount ?: 0.0,
