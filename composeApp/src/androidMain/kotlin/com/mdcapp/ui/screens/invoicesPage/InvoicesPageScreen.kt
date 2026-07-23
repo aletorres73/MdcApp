@@ -6,17 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,12 +27,15 @@ import org.koin.core.annotation.KoinExperimentalAPI
 fun InvoicesPageScreen(
     viewModel: InvoicesPagedViewModel = koinViewModel(),
     onNavigationInvoice: (String) -> Unit = {},
-    onNavigationClientDetail: (String) -> Unit,
-    onAddClientClick: () -> Unit = {},
-    onCreateOrderClick: () -> Unit = {}
+    onNavigationClientDetail: (String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     val query = state.searchQuery
+
+    // Forzar recarga al entrar
+    LaunchedEffect(Unit) {
+        viewModel.loadNextPage()
+    }
 
     val suggestions = remember(
         query,
@@ -63,110 +56,77 @@ fun InvoicesPageScreen(
         }
     }
 
-    val snackBarHostState = remember { SnackbarHostState() }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
 
-    LaunchedEffect(state.message) {
-        state.message?.let {
-            snackBarHostState.showSnackbar(it)
-            viewModel.clearMessage()
-        }
-    }
-
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackBarHostState) },
-        modifier = Modifier.fillMaxWidth(),
-        topBar = {
-            TopAppBar(
-                title = { Text("Facturas") },
-                actions = {
-                    IconButton(onClick = onCreateOrderClick) {
-                        Icon(Icons.Default.Add, contentDescription = "Nuevo Pedido")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onAddClientClick) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar Cliente")
-            }
-        }
-
-    ) { paddingValues ->
-        Column(
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                InputSearchBar { onType -> viewModel.onSelectedTypeSearch(onType) }
-                StateFilter(
-                    states = state.availableStates,
-                    selected = state.selectedState,
-                    onSelected = {
-                        viewModel.stateSelected(it)
-                    }
-                )
-            }
-            SearchBar(
-                query = query.text,
-                onQueryChange = { viewModel.onQueryChange(it) },
-                onCleanQuery = { viewModel.clearQuery() },
-                onSearch = { viewModel.onSearch() },
-                searchText = "Seleccionar cliente o documento..."
+            InputSearchBar { onType -> viewModel.onSelectedTypeSearch(onType) }
+            StateFilter(
+                states = state.availableStates,
+                selected = state.selectedState,
+                onSelected = {
+                    viewModel.stateSelected(it)
+                }
             )
+        }
+        SearchBar(
+            query = query.text,
+            onQueryChange = { viewModel.onQueryChange(it) },
+            onCleanQuery = { viewModel.clearQuery() },
+            onSearch = { viewModel.onSearch() },
+            searchText = "Seleccionar cliente o documento..."
+        )
 
-            SuggestionNameCard(
-                suggestions = suggestions,
-                onNavigationClientDetail = { onNavigationClientDetail(it) },
-                onSelect = { viewModel.selectSuggestion(it) }
-            )
+        SuggestionNameCard(
+            suggestions = suggestions,
+            onNavigationClientDetail = { onNavigationClientDetail(it) },
+            onSelect = { viewModel.selectSuggestion(it) }
+        )
 
-            InvoiceList(
-                invoices = state.invoices,
-                isLoading = state.isLoading,
-                onLoadMore = { viewModel.loadNextPage() },
-                onNavigationInvoice = onNavigationInvoice
-            )
+        InvoiceList(
+            invoices = state.invoices,
+            isLoading = state.isLoading,
+            onLoadMore = { viewModel.loadNextPage() },
+            onNavigationInvoice = onNavigationInvoice
+        )
 
-            // ----- overlays -----
+        // ----- overlays -----
 
-            when (val overlay = state.overlay) {
-                InvoicesPagedViewModel.Overlay.None -> {}
-                is InvoicesPagedViewModel.Overlay.UpdateApp -> {
-                    when (val updateState = overlay.state) {
-                        UpdateState.OK -> {}
-                        UpdateState.OPTIONAL_UPDATE -> {
-                            val context = LocalContext.current
-                            UpdateDialog(
-                                type = updateState,
-                                releaseNotes = overlay.releasesNotes,
-                                onUpdate = { viewModel.updateApk(context) },
-                                onDismiss = { viewModel.closeOverlay() }
-                            )
-                        }
-
-                        UpdateState.FORCE_UPDATE -> {
-                            val context = LocalContext.current
-                            UpdateDialog(type = updateState,
-                                releaseNotes = overlay.releasesNotes,
-                                onUpdate = { viewModel.updateApk(context) },
-                                onDismiss = { viewModel.closeOverlay() }
-                            )
-                        }
+        when (val overlay = state.overlay) {
+            InvoicesPagedViewModel.Overlay.None -> {}
+            is InvoicesPagedViewModel.Overlay.UpdateApp -> {
+                when (val updateState = overlay.state) {
+                    UpdateState.OK -> {}
+                    UpdateState.OPTIONAL_UPDATE -> {
+                        val context = LocalContext.current
+                        UpdateDialog(
+                            type = updateState,
+                            releaseNotes = overlay.releasesNotes,
+                            onUpdate = { viewModel.updateApk(context) },
+                            onDismiss = { viewModel.closeOverlay() }
+                        )
                     }
 
+                    UpdateState.FORCE_UPDATE -> {
+                        val context = LocalContext.current
+                        UpdateDialog(
+                            type = updateState,
+                            releaseNotes = overlay.releasesNotes,
+                            onUpdate = { viewModel.updateApk(context) },
+                            onDismiss = { viewModel.closeOverlay() }
+                        )
+                    }
                 }
             }
         }
     }
-
 }
-
-

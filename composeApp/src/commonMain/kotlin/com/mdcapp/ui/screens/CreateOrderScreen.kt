@@ -1,11 +1,14 @@
 package com.mdcapp.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,7 +23,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -41,18 +43,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mdcapp.data.model.ClientModel
+import com.mdcapp.data.model.FactoryModel
+import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.ui.viewmodels.orders.CreateOrderViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateOrderScreen(
+    clientId: String? = null,
     onBack: () -> Unit,
     onManageFactories: () -> Unit = {},
     viewModel: CreateOrderViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     var showAddArticleDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(clientId) {
+        viewModel.initData(clientId)
+    }
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
@@ -75,11 +84,6 @@ fun CreateOrderScreen(
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddArticleDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar Artículo")
-            }
         }
     ) { padding ->
         Column(
@@ -104,9 +108,38 @@ fun CreateOrderScreen(
                 onFactorySelected = { viewModel.onFactorySelected(it) }
             )
 
+            if (state.selectedFactory != null && state.selectedFactory!!.branchList.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                SegmentSelector(
+                    segments = state.selectedFactory!!.branchList,
+                    selectedSegment = state.selectedSegment,
+                    onSegmentSelected = { viewModel.onSegmentSelected(it) }
+                )
+            }
+
+            if (state.selectedFactory != null && state.selectedFactory!!.paymentType.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                ConditionSelector(
+                    conditions = state.selectedFactory!!.paymentType,
+                    selected = state.selectedCondition,
+                    onSelected = { viewModel.onConditionSelected(it) }
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text("Artículos", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Text("Artículos", style = MaterialTheme.typography.titleMedium)
+                TextButton(onClick = { showAddArticleDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Agregar")
+                }
+            }
 
             LazyColumn(modifier = Modifier.weight(1f)) {
                 itemsIndexed(state.articles) { index, article ->
@@ -141,7 +174,7 @@ fun CreateOrderScreen(
 
             Button(
                 onClick = { viewModel.saveOrder() },
-                enabled = !state.isLoading,
+                enabled = !state.isLoading && state.articles.isNotEmpty(),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Guardar Pedido")
@@ -201,9 +234,9 @@ fun ClientSelector(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FactorySelector(
-    factories: List<String>,
-    selectedFactory: String,
-    onFactorySelected: (String) -> Unit
+    factories: List<FactoryModel>,
+    selectedFactory: FactoryModel?,
+    onFactorySelected: (FactoryModel) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -212,10 +245,10 @@ fun FactorySelector(
         onExpandedChange = { expanded = it }
     ) {
         OutlinedTextField(
-            value = if (selectedFactory.isEmpty()) "Seleccionar Fábrica" else selectedFactory,
+            value = selectedFactory?.name ?: "Seleccionar Fábrica",
             onValueChange = {},
             readOnly = true,
-            label = { Text("Fábrica / Segmento") },
+            label = { Text("Fábrica") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier.menuAnchor().fillMaxWidth()
         )
@@ -225,9 +258,92 @@ fun FactorySelector(
         ) {
             factories.forEach { factory ->
                 DropdownMenuItem(
-                    text = { Text(factory) },
+                    text = { Text(factory.name) },
                     onClick = {
                         onFactorySelected(factory)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SegmentSelector(
+    segments: List<String>,
+    selectedSegment: String,
+    onSegmentSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            value = if (selectedSegment.isEmpty()) "Seleccionar Segmento" else selectedSegment,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Segmento / Marca") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor().fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            segments.forEach { segment ->
+                DropdownMenuItem(
+                    text = { Text(segment) },
+                    onClick = {
+                        onSegmentSelected(segment)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ConditionSelector(
+    conditions: List<PaymentCondition>,
+    selected: PaymentCondition?,
+    onSelected: (PaymentCondition?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            value = selected?.paymentName ?: "Opcional: Condición de Pago",
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Condición de Pago") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor().fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Ninguna (Opcional)") },
+                onClick = {
+                    onSelected(null)
+                    expanded = false
+                }
+            )
+            conditions.forEach { condition ->
+                DropdownMenuItem(
+                    text = { Text("${condition.paymentName} (-${(condition.discount * 100).toInt()}%)") },
+                    onClick = {
+                        onSelected(condition)
                         expanded = false
                     }
                 )

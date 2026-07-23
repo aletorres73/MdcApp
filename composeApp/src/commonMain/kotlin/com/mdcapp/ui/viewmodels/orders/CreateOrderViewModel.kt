@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.ArticleOrderModel
 import com.mdcapp.data.model.BuyOrderModel
 import com.mdcapp.data.model.ClientModel
+import com.mdcapp.data.model.FactoryModel
+import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.usescases.clientsusecase.GetClientsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
-import com.mdcapp.domain.usescases.ordersusescases.GetFactoriesListUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -15,7 +17,7 @@ import kotlinx.coroutines.launch
 
 class CreateOrderViewModel(
     private val saveOrderUseCase: BuyOrderUseCase.SaveOrder,
-    private val getFactoriesUseCase: GetFactoriesListUseCase,
+    private val repository: OrderRepository,
     private val getClientsUseCase: GetClientsUseCase
 ) : ViewModel() {
 
@@ -24,31 +26,37 @@ class CreateOrderViewModel(
 
     data class UiState(
         val isLoading: Boolean = false,
-        val factories: List<String> = emptyList(),
+        val factories: List<FactoryModel> = emptyList(),
+        val selectedFactory: FactoryModel? = null,
+        val selectedSegment: String = "",
+        val selectedCondition: PaymentCondition? = null,
         val clients: List<ClientModel> = emptyList(),
         val selectedClient: ClientModel? = null,
-        val selectedFactory: String = "",
         val articles: List<ArticleOrderModel> = emptyList(),
         val comments: String = "",
         val isSuccess: Boolean = false,
         val error: String? = null
     )
 
-    init {
-        loadInitialData()
+    fun initData(clientId: String? = null) {
+        loadInitialData(clientId)
     }
 
-    private fun loadInitialData() {
+    private fun loadInitialData(clientId: String? = null) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
-                val factories = getFactoriesUseCase()
+                val factories = repository.getFactories()
                 val clients = getClientsUseCase.getAll()
+                val selectedClient =
+                    if (clientId != null) clients.find { it.clientId == clientId } else null
+                
                 _state.update {
                     it.copy(
                         isLoading = false,
                         factories = factories,
-                        clients = clients
+                        clients = clients,
+                        selectedClient = selectedClient
                     )
                 }
             } catch (e: Exception) {
@@ -61,8 +69,22 @@ class CreateOrderViewModel(
         _state.update { it.copy(selectedClient = client) }
     }
 
-    fun onFactorySelected(factory: String) {
-        _state.update { it.copy(selectedFactory = factory) }
+    fun onFactorySelected(factory: FactoryModel) {
+        _state.update {
+            it.copy(
+                selectedFactory = factory,
+                selectedSegment = "",
+                selectedCondition = null
+            )
+        }
+    }
+
+    fun onSegmentSelected(segment: String) {
+        _state.update { it.copy(selectedSegment = segment) }
+    }
+
+    fun onConditionSelected(condition: PaymentCondition?) {
+        _state.update { it.copy(selectedCondition = condition) }
     }
 
     fun addArticle(name: String, color: String, pairs: Int) {
@@ -84,8 +106,8 @@ class CreateOrderViewModel(
 
     fun saveOrder() {
         val currentState = _state.value
-        if (currentState.selectedClient == null || currentState.selectedFactory.isEmpty() || currentState.articles.isEmpty()) {
-            _state.update { it.copy(error = "Complete todos los campos obligatorios y agregue al menos un artículo") }
+        if (currentState.selectedClient == null || currentState.selectedFactory == null || currentState.articles.isEmpty()) {
+            _state.update { it.copy(error = "Complete todos los campos obligatorios") }
             return
         }
 
@@ -94,12 +116,19 @@ class CreateOrderViewModel(
             val order = BuyOrderModel(
                 clientId = currentState.selectedClient.clientId,
                 client = currentState.selectedClient.clientName,
-                branch = currentState.selectedFactory,
+                factory = currentState.selectedFactory.name,
+                branch = currentState.selectedSegment,
                 articles = currentState.articles,
                 comments = currentState.comments,
-                loadedDate = "" // Se puede setear en el repository o usar un helper
+                loadedDate = "",
+                order = "",
+                paymentCondition = currentState.selectedCondition?.paymentName ?: "",
+                discount = currentState.selectedCondition?.discount ?: 0.0,
+                expirationDays = currentState.selectedCondition?.expiration ?: 0
             )
-            val success = saveOrderUseCase(order)
+            // Note: We need to store paymentCondition in BuyOrderModel too for inheritance
+            // Let's assume BuyOrderModel has it or we add it.
+            val success = saveOrderUseCase(currentState.selectedClient.clientId, order)
             if (success) {
                 _state.update { it.copy(isLoading = false, isSuccess = true) }
             } else {
@@ -110,6 +139,5 @@ class CreateOrderViewModel(
 
     fun resetState() {
         _state.update { UiState() }
-        loadInitialData()
     }
 }

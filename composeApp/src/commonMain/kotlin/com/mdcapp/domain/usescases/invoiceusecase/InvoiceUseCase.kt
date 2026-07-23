@@ -40,14 +40,23 @@ class InvoiceUseCase(
     }
 
     inner class UpdateInvoice {
-        suspend operator fun invoke(invoiceNumber: String, data: BillingModel): Boolean {
-            return repository.updateBillingOnService(invoiceNumber, data)
+        suspend operator fun invoke(
+            clientId: String,
+            orderId: String,
+            invoiceNumber: String,
+            data: BillingModel
+        ): Boolean {
+            return repository.updateBillingOnService(clientId, orderId, invoiceNumber, data)
         }
     }
 
     inner class CreateInvoice {
-        suspend operator fun invoke(data: BillingModel): Boolean {
-            return repository.saveBilling(data)
+        suspend operator fun invoke(
+            clientId: String,
+            orderId: String,
+            data: BillingModel
+        ): Boolean {
+            return repository.saveBilling(clientId, orderId, data)
         }
     }
 

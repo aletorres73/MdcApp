@@ -31,6 +31,7 @@ import com.mdcapp.ui.viewmodels.invoices.AddInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesPagedViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
+import com.mdcapp.ui.viewmodels.orders.ClientOrdersViewModel
 import com.mdcapp.ui.viewmodels.orders.CreateOrderViewModel
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
 import dev.gitlive.firebase.auth.FirebaseAuth
@@ -55,6 +56,7 @@ val appModule = module {
     single<OrdersUseCase.GetOrderBranch> { get<OrdersUseCase>().GetOrderBranch() }
 
     single<BuyOrderUseCase.GetBuyOrderById> { get<BuyOrderUseCase>().GetBuyOrderById() }
+    single<BuyOrderUseCase.GetBuyOrdersByClient> { get<BuyOrderUseCase>().GetBuyOrdersByClient() }
     single<BuyOrderUseCase.GetBillings> { get<BuyOrderUseCase>().GetBillings() }
     single<BuyOrderUseCase.AddPaymentToRegister> { get<BuyOrderUseCase>().AddPaymentToRegister() }
     single<BuyOrderUseCase.GetLastIdPaymentFromRegister> { get<BuyOrderUseCase>().GetLastIdPaymentFromRegister() }
@@ -107,6 +109,7 @@ val dataModule = module {
 val viewModelModule = module {
     viewModelOf(::OrdersViewModel)
     viewModelOf(::CreateOrderViewModel)
+    viewModel { (clientId: String) -> ClientOrdersViewModel(clientId, get()) }
     viewModelOf(::BuyOrdersViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::ClientsViewModel)

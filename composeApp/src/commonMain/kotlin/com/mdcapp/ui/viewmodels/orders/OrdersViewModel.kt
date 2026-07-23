@@ -59,9 +59,9 @@ class OrdersViewModel(
         }
     }
 
-    fun getBranchOrder(orderId: String) {
+    fun getBranchOrder(clientId: String, orderId: String) {
         viewModelScope.launch {
-            val branch = getBranchUseCase(orderId)
+            val branch = getBranchUseCase(clientId, orderId)
             _branches[orderId] = branch
         }
     }

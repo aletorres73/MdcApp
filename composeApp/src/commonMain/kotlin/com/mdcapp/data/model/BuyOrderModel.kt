@@ -5,6 +5,7 @@ data class BuyOrderModel(
     var clientId: String = "",
     var order: String = "",
     var client: String = "",
+    var factory: String = "",
     var branch: String = "",
     var deliveryDate: String = "",
     var type: String = "",
@@ -12,6 +13,9 @@ data class BuyOrderModel(
     var comments: String = "",
     var articles: List<ArticleOrderModel> = emptyList(),
     var loadedDate: String = "",
+    var paymentCondition: String = "",
+    var discount: Double = 0.0,
+    var expirationDays: Int = 0
 )
 
 data class ArticleOrderModel(

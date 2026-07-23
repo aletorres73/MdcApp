@@ -1,12 +1,14 @@
 package com.mdcapp.ui.viewmodels.buyorders
 
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
 import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.data.model.PaymentRegisterModel
+import com.mdcapp.data.model.recalculate
 import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.async
@@ -16,7 +18,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 class BuyOrdersViewModel(
     private val getBuyOrder: BuyOrderUseCase.GetBuyOrderById,
@@ -42,9 +43,11 @@ class BuyOrdersViewModel(
         val loadingBillings: Boolean = false,
         val loadingPayments: Boolean = false,
         val loadingPaymentsRegister: Boolean = false,
+        val clientId: String = "",
         val orderId: String = "",
         val factoryName: String = "",
         val buyOrder: BuyOrderModel = BuyOrderModel(),
+// ...
         val billings: List<BillingModel> = emptyList(),
         val totalAmount: Double = 0.0,
         val totalToPay: Double = 0.0,
@@ -59,14 +62,15 @@ class BuyOrdersViewModel(
     )
 
     // Inicialización del ViewModel
-    fun init(orderId: String, factoryName: String) {
+    fun init(clientId: String, orderId: String, factoryName: String) {
         viewModelScope.launch {
-            _state.value = _state.value.copy(orderId = orderId, factoryName = factoryName)
+            _state.value =
+                _state.value.copy(clientId = clientId, orderId = orderId, factoryName = factoryName)
 
             // Cargar datos en paralelo
             val paymentConditionsDeferred = async { loadPaymentConditions() }
-            val buyOrderDeferred = async { loadBuyOrder() }
-            val billingsDeferred = async { loadBillings() }
+            val buyOrderDeferred = async { loadBuyOrder(clientId) }
+            val billingsDeferred = async { loadBillings(clientId) }
 //            val paymentsRegisterDeferred = async {  loadPaymentsRegister() }
 
             paymentConditionsDeferred.await()
@@ -95,11 +99,11 @@ class BuyOrdersViewModel(
     }
 
     // Cargar la orden de compra
-    private suspend fun loadBuyOrder() {
+    private suspend fun loadBuyOrder(clientId: String) {
         _state.value = _state.value.copy(loadingOrder = true)
         try {
             if (_state.value.orderId.isNotEmpty()) {
-                val buyOrder = getBuyOrder(_state.value.orderId)
+                val buyOrder = getBuyOrder(clientId, _state.value.orderId)
                 _state.value = _state.value.copy(
                     loadingOrder = false,
                     buyOrder = buyOrder
@@ -111,11 +115,11 @@ class BuyOrdersViewModel(
     }
 
     // Cargar facturas
-    private suspend fun loadBillings() {
+    private suspend fun loadBillings(clientId: String) {
         _state.value = _state.value.copy(loadingBillings = true)
         try {
             if (_state.value.orderId.isNotEmpty()) {
-                val billings = getBillings(_state.value.orderId)
+                val billings = getBillings(clientId, _state.value.orderId)
                 val totalAmount = calculateTotalBillingAmount(billings)
                 _state.value = _state.value.copy(
                     loadingBillings = false,
@@ -195,8 +199,10 @@ class BuyOrdersViewModel(
     fun saveData(): Boolean {
         var result = false
         viewModelScope.launch {
+            val clientId = _state.value.clientId
+            val orderId = _state.value.orderId
             result = _tempState.value.billings.all { billing ->
-                updateBilling(billing.billingNumber, billing)
+                updateBilling(clientId, orderId, billing.billingNumber, billing)
             }
             if (result) {
                 _state.value = _tempState.value
@@ -212,19 +218,10 @@ class BuyOrdersViewModel(
         _tempState.value = _tempState.value.copy(
             billings = _tempState.value.billings.map { billing ->
                 if (billing.billingNumber == billingNumber) {
-                    val total =
-                        billing.total.toString().replace("$", "").replace(",", "").toDoubleOrNull()
-                            ?: 0.0
-                    val discount = paymentCondition.discount * total
-                    val toPay = total * (1.0 - paymentCondition.discount)
-                    val payDate = getPayDate(billingNumber, paymentCondition.expiration)
                     billing.copy(
                         paymentCondition = paymentCondition.paymentName,
-                        total = total,
-                        discount = "%.2f".format(Locale.US, discount).toDouble(),
-                        toPay = "%.2f".format(Locale.US, toPay).toDouble(),
-                        payDate = payDate
-                    )
+                        discount = paymentCondition.discount
+                    ).recalculate(paymentCondition)
                 } else {
                     billing
                 }
@@ -238,21 +235,7 @@ class BuyOrdersViewModel(
         expiration: Int,
         newDeliveryDate: String = ""
     ): String {
-        val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        val billing = _tempState.value.billings.find { it.billingNumber == billingNumber }
-        return billing?.let {
-            try {
-                val deliveryDateStr = formatDateString(
-                    newDeliveryDate.ifEmpty { it.deliveryDate.ifEmpty { newDeliveryDate } }
-                )
-                val deliveryDate = LocalDate.parse(deliveryDateStr, dateFormatter)
-                val newDate = deliveryDate.plusDays(expiration.toLong())
-                newDate.format(dateFormatter)
-            } catch (e: Exception) {
-                Log.e("BuyOrdersViewModel", "getPayDate: $e")
-                ""
-            }
-        } ?: ""
+        return "" // Simplified or unused now
     }
 
     // Formatear fecha
@@ -268,6 +251,7 @@ class BuyOrdersViewModel(
     }
 
     // Obtener fecha actual
+    @RequiresApi(26)
     private fun getCurrentDate(): String {
         val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         return LocalDate.now().format(dateFormatter)
@@ -276,19 +260,12 @@ class BuyOrdersViewModel(
     fun saveDateSelected(newDate: String, billingNumber: String) {
         try {
             val formatDate = formatDateString(newDate)
-            val billing = _tempState.value.billings.find { it.billingNumber == billingNumber }
-            val paymentConditionName = billing?.paymentCondition
-            val expiration = paymentConditionName
-                ?.let { name -> _tempState.value.paymentsConditions.find { it.paymentName == name }?.expiration }
-
             _tempState.value = _tempState.value.copy(
                 billings = _tempState.value.billings.map { billing ->
                     if (billing.billingNumber == billingNumber) {
-                        billing.copy(
-                            deliveryDate = formatDate,
-                            payDate = expiration?.let { getPayDate(billingNumber, it, formatDate) }
-                                ?: ""
-                        )
+                        val condition =
+                            _tempState.value.paymentsConditions.find { it.paymentName == billing.paymentCondition }
+                        billing.copy(deliveryDate = formatDate).recalculate(condition)
                     } else {
                         billing
                     }
@@ -301,6 +278,7 @@ class BuyOrdersViewModel(
         }
     }
 
+    @RequiresApi(26)
     fun addPayment(billingNumber: String, payed: Double) {
         viewModelScope.launch {
             try {

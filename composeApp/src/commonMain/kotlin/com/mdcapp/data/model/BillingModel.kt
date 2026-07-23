@@ -105,19 +105,31 @@ fun BillingModel.recalculate(
     condition: PaymentCondition? = null
 ): BillingModel {
 
-    val toPay = total - discount * total
-    val rest = toPay - payed
+    val toPayValue = total - discount * total
+    val restValue = toPayValue - payed
 
-    val reception = if (deliveryDate.isNotEmpty())
-        LocalDate.parse(deliveryDate, formatter)
-    else null
+    val reception = try {
+        if (deliveryDate.isNotEmpty())
+            LocalDate.parse(deliveryDate, formatter)
+        else null
+    } catch (e: Exception) {
+        null
+    }
 
     val dueDate = reception?.plusDays(condition?.expiration?.toLong() ?: 0)
 
+    val newState = when {
+        restValue <= 0 && toPayValue > 0 -> "Cobrado"
+        payed > 0 && restValue > 0 -> "En proceso"
+        stateBilling.isEmpty() -> "Pendiente"
+        else -> stateBilling
+    }
+
     return copy(
-        toPay = toPay,
-        rest = rest,
-        payDate = dueDate?.format(formatter) ?: payDate
+        toPay = toPayValue,
+        rest = restValue,
+        payDate = dueDate?.format(formatter) ?: payDate,
+        stateBilling = newState
     )
 }
 

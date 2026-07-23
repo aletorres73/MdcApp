@@ -31,15 +31,17 @@ class InvoicesPagedViewModel(
         val invoices: List<BillingModel> = emptyList(),
         val clientNameList: List<ClientModel> = emptyList(),
         val isLoading: Boolean = false,
-        val selectedState: String = "Vencido",
+        val selectedState: String = "Pendiente",
         val cursor: String? = null,
         val endReached: Boolean = false,
         val availableStates: List<String> = listOf(
-            "Vencido",
-            "A cobrar",
-            "Por vencer",
+            "Pendiente",
+            "En proceso",
             "Cobrado",
-            "Sin información"
+            "Vencido",
+            "Por vencer",
+            "Devuelta",
+            "Cerrada"
         ),
         val clientSearch: String? = null,
         val numberSearch: String? = null,
@@ -129,13 +131,25 @@ class InvoicesPagedViewModel(
 
             _uiState.update {
                 it.copy(
-                    invoices = it.invoices + page.items.map { it.toDomain() },
+                    invoices = it.invoices + page.items.map { item -> item.toDomain() },
                     cursor = cursor,
                     isLoading = false,
                     endReached = page.items.isEmpty()
                 )
             }
         }
+    }
+
+    fun refresh() {
+        _uiState.update {
+            it.copy(
+                isLoading = true,
+                invoices = emptyList(),
+                cursor = null,
+                endReached = false
+            )
+        }
+        loadNextPage()
     }
 
     private fun reload() {

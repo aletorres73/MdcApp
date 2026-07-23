@@ -18,7 +18,7 @@ class BillingPaginationService(
         get() = authService.currentUser?.uid ?: "unknown"
 
     private val billingsCollection
-        get() = db.collection("users").document(userId).collection(BILLINGS)
+        get() = db.collection("users").document(userId).collection("allBillings")
 
     suspend fun fetchBillingsPaged(
         state: String?,
@@ -36,7 +36,7 @@ class BillingPaginationService(
             }
 
             if (!client.isNullOrBlank()) {
-                query = query.where { "Razon Social" equalTo client }
+                query = query.where { "Razón Social" equalTo client }
             }
 
             if (!number.isNullOrBlank()) {
@@ -56,7 +56,6 @@ class BillingPaginationService(
                     query = query.startAfter(lastDoc)
                 }
             }
-// ...
 
             val snapshot = query.get()
 

@@ -30,7 +30,7 @@ class ClientService(
             if (!hasMore) return emptyList<RemoteResultClientModel>() to false
 
             var query = clientsCollection
-                .orderBy("Razon Social")
+                .orderBy("Razón Social")
                 .limit(limit)
 
             lastDocumentId?.let { docId ->
@@ -83,10 +83,7 @@ class ClientService(
 
             snapshot.documents.mapNotNull { doc ->
                 try {
-                    RemoteResultClientModel(
-                        clientId = doc.get("Cliente Id") ?: "",
-                        clientName = doc.get("Razon Social") ?: ""
-                    )
+                    doc.data<RemoteResultClientModel>()
                 } catch (e: Exception) {
                     println("firestore -> Error mapping client: $e")
                     null
@@ -106,7 +103,7 @@ class ClientService(
             val snapshot = clientsCollection.document(clientId).get()
             val client = RemoteResultClientModel(
                 clientId = snapshot.get("Cliente Id") ?: "",
-                clientName = snapshot.get("Razon Social") ?: ""
+                clientName = snapshot.get("Razón Social") ?: ""
             )
 
             println("ClientService -> fetClientName: $client")
@@ -124,7 +121,7 @@ class ClientService(
                 try {
                     RemoteResultClientModel(
                         clientId = doc.get("Cliente Id") ?: "",
-                        clientName = doc.get("Razon Social") ?: ""
+                        clientName = doc.get("Razón Social") ?: ""
                     )
                 } catch (e: Exception) {
                     println("firestore -> Error mapping client")

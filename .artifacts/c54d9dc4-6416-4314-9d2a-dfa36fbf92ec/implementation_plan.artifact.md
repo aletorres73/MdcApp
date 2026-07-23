@@ -1,70 +1,45 @@
-# Plan de Refactorización y Nuevas Funcionalidades - Fase 2
+# Plan de Mejora de Estados y Comentarios de Facturación - Fase 11
 
-Este plan detalla la evolución de MDCapp para soportar multi-usuario, gestión completa de fábricas, registro de usuarios y mejoras de UI/UX.
+Este plan aborda la visibilidad de las nuevas facturas mediante la asignación correcta de estados y timestamps, redefine los estados de cobranza y moderniza el sistema de comentarios.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Aislamiento de Datos:** Se implementará una estructura de colecciones `users/{userId}/[clients|orders|billings|factories]`. Esto significa que al registrarse, el usuario empezará con sus listas vacías.
-> ¿Deseas que migremos algún dato de las colecciones globales actuales al primer usuario que se registre, o empezamos de cero para todos?
-
-> [!NOTE]
-> **Fábricas y Segmentos:** Se utilizará el término "Segmentos" en la UI para lo que internamente en el código se llama "Marcas" (`branchList`), para mantener la consistencia con tu pedido.
+> **Nuevos Estados de Cobranza:** Se unificarán los estados a: `Pendiente`, `En proceso`, `Cobrado`, `Devuelta`, `Cerrada`, `Vencido` y `Por vencer`.
+> Las facturas recién creadas se guardarán con estado `Pendiente` por defecto.
 
 ## Proposed Changes
 
-### 1. Autenticación y Multi-tenencia (Aislamiento de Datos)
+### 1. Actualización de Modelos y Mapeadores
 
-#### [MODIFY] [AuthService.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/commonMain/kotlin/com/mdcapp/data/service/AuthService.kt)
-* Agregar función `signUp(email, password)` para registro de nuevos vendedores.
+#### [MODIFY] [BillingModel.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/commonMain/kotlin/com/mdcapp/data/model/BillingModel.kt)
+*   Asegurar que `BillingComments` soporte fecha y texto.
+*   Actualizar `recalculate()` para que cambie automáticamente el estado a `En proceso` si hay un pago parcial, o `Cobrado` si el saldo es cero.
 
-#### [MODIFY] Servicios de Datos (`ClientService`, `OrderService`, `BillingPaginationService`)
-* Refactorizar para que todas las consultas a Firestore incluyan el `userId` del usuario autenticado.
-* Nueva ruta base: `users/{userId}/...`
+### 2. Corrección de Visibilidad en Creación
 
-### 2. Navegación y Estructura Principal
+#### [MODIFY] [AddInvoiceViewModel.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/commonMain/kotlin/com/mdcapp/ui/viewmodels/invoices/AddInvoiceViewModel.kt)
+*   **Timestamp:** Asignar `System.currentTimeMillis()` al crear la factura.
+*   **Estado Inicial:** Asignar `Pendiente` por defecto.
+*   **Fecha de Carga:** Asignar la fecha actual del sistema automáticamente.
+*   **Comentarios Estructurados:** Guardar la nota inicial con la fecha actual.
 
-#### [NEW] MainScreen (Scaffold con BottomBar)
-* Implementar una pantalla contenedora con `NavigationBar`.
-* Ítems: **Facturas** e **Clientes**.
+### 3. Redefinición de Filtros en el Dashboard
 
-#### [MODIFY] [AndroidNavigation.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/androidMain/kotlin/com/mdcapp/ui/navigation/AndroidNavigation.kt)
-* Ajustar el `NavHost` para soportar la nueva estructura de `MainScreen`.
+#### [MODIFY] [InvoicesPagedViewModel.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/commonMain/kotlin/com/mdcapp/ui/viewmodels/invoices/InvoicesPagedViewModel.kt)
+*   Actualizar `availableStates` con la nueva lista: `Pendiente`, `En proceso`, `Cobrado`, `Vencido`, `Por vencer`, `Devuelta`, `Cerrada`.
+*   Cambiar el estado inicial seleccionado a `Pendiente` para que las facturas nuevas sean visibles de inmediato.
 
-### 3. Gestión de Clientes (CRUD Completo)
+### 4. Gestión de Comentarios y Estados en el Detalle
 
-#### [NEW] ClientsScreen.kt
-* Listado de clientes con búsqueda.
-* Opciones de Editar y Eliminar para cada cliente.
-* Reutilización de `AddClientScreen` para el modo "Edición".
-
-### 4. Gestión de Fábricas y Segmentos
-
-#### [NEW] FactoryManagementScreen
-* Listado de fábricas creadas por el usuario.
-* Creación/Edición de Fábricas:
-    * Nombre de la fábrica.
-    * Lista de **Segmentos** (Agregar/Editar/Eliminar).
-    * Asignación de **Condiciones de Pago** (usando la lógica de `PaymentCondition`).
-
-### 5. Mejoras de UI/UX y Registro
-
-#### [NEW] SignUpScreen.kt
-* Pantalla de registro para nuevos usuarios.
-
-#### [MODIFY] [LoginScreen.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/commonMain/kotlin/com/mdcapp/ui/screens/LoginScreen.kt)
-* Agregar icono de "ojo" para alternar visibilidad de contraseña.
-* Enlace a la pantalla de Registro.
-
-#### [MODIFY] Restricciones de Entrada (Inputs)
-* Configurar `singleLine = true` en todos los campos de texto de entrada.
-* Configurar `keyboardType = KeyboardType.Number` para campos numéricos (cantidades, montos).
+#### [MODIFY] [DetailInvoiceViewModel.kt](file:///C:/Users/git/Android/MDCapp/composeApp/src/commonMain/kotlin/com/mdcapp/ui/viewmodels/invoices/DetailInvoiceViewModel.kt)
+*   Implementar `addComment(text: String)`: Agrega un nuevo comentario con timestamp a la lista.
+*   Implementar `updateState(newState: String)`: Permite cambiar manualmente el estado (ej: a `Devuelta` o `Cerrada`).
 
 ## Verification Plan
 
 ### Manual Verification
-1.  **Registro:** Crear un nuevo usuario y verificar que se guarde en Firebase Auth.
-2.  **Aislamiento:** Crear un cliente con el "Usuario A", desloguearse, entrar con "Usuario B" y verificar que la lista esté vacía.
-3.  **Fábricas:** Crear una fábrica, agregarle 3 segmentos, editar uno y eliminar otro.
-4.  **UI:** Verificar que al presionar "Enter" en los inputs no se creen nuevas líneas y que el teclado numérico aparezca en los campos de "pares".
-5.  **BottomBar:** Navegar entre Facturas y Clientes asegurando que el estado de la pantalla anterior se mantenga (si es posible).
+1.  **Visibilidad:** Crear una factura y verificar que aparezca inmediatamente en el Dashboard bajo la pestaña "Pendiente".
+2.  **Timestamp:** Verificar en Firebase que el campo `Timestamp` ya no sea 0.
+3.  **Comentarios:** Agregar un comentario desde el detalle de la factura y verificar que se apile en una lista con su respectiva fecha.
+4.  **Auto-Estado:** Registrar un pago parcial y confirmar que el estado cambia automáticamente a `En proceso`. Registrar el pago total y confirmar que cambia a `Cobrado`.

@@ -12,10 +12,12 @@ import androidx.navigation.navArgument
 import com.mdcapp.domain.entities.AppRoute
 import com.mdcapp.ui.screens.AddClientScreen
 import com.mdcapp.ui.screens.AddInvoiceScreen
+import com.mdcapp.ui.screens.ClientOrdersScreen
 import com.mdcapp.ui.screens.CreateOrderScreen
 import com.mdcapp.ui.screens.FactoryManagementScreen
 import com.mdcapp.ui.screens.LoginScreen
 import com.mdcapp.ui.screens.MainScreen
+import com.mdcapp.ui.screens.OrderDetailScreen
 import com.mdcapp.ui.screens.SignUpScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.DetailInvoiceScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.InvoicesScreen
@@ -78,8 +80,13 @@ fun AndroidNavigation(startRoute: String) {
             )
         }
 
-        composable(route = AppRoute.CreateOrder.route) {
+        composable(
+            route = AppRoute.CreateOrder.BASE_ROUTE,
+            arguments = listOf(navArgument("clientId") { nullable = true; defaultValue = null })
+        ) {
+            val clientId = it.arguments?.getString("clientId")
             CreateOrderScreen(
+                clientId = clientId,
                 onBack = { navController.popBackStack() },
                 onManageFactories = { navController.navigate(AppRoute.Factories.route) }
             )
@@ -93,11 +100,35 @@ fun AndroidNavigation(startRoute: String) {
 
         composable(
             route = AppRoute.AddInvoice.BASE_ROUTE,
-            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("clientId") { type = NavType.StringType },
+                navArgument("orderId") { type = NavType.StringType }
+            )
         ) {
+            val clientId = it.arguments?.getString("clientId") ?: return@composable
             val orderId = it.arguments?.getString("orderId") ?: return@composable
             AddInvoiceScreen(
+                clientId = clientId,
                 orderId = orderId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = AppRoute.OrderDetail.BASE_ROUTE,
+            arguments = listOf(
+                navArgument("clientId") { type = NavType.StringType },
+                navArgument("orderId") { type = NavType.StringType },
+                navArgument("factoryName") { type = NavType.StringType }
+            )
+        ) {
+            val clientId = it.arguments?.getString("clientId") ?: return@composable
+            val orderId = it.arguments?.getString("orderId") ?: return@composable
+            val factoryName = it.arguments?.getString("factoryName") ?: return@composable
+            OrderDetailScreen(
+                clientId = clientId,
+                orderId = orderId,
+                factoryName = factoryName,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -108,7 +139,7 @@ fun AndroidNavigation(startRoute: String) {
                     navController.navigateToDetailInvoice(invoiceNumber)
                 },
                 onNavigateToClientInvoices = { clientId ->
-                    navController.navigateToInvoices(clientId)
+                    navController.navigate(AppRoute.ClientOrders.createRoute(clientId))
                 },
                 onNavigateToAddClient = {
                     navController.navigate(AppRoute.AddClient.createRoute())
@@ -117,7 +148,10 @@ fun AndroidNavigation(startRoute: String) {
                     navController.navigate(AppRoute.AddClient.createRoute(id, name))
                 },
                 onNavigateToCreateOrder = {
-                    navController.navigate(AppRoute.CreateOrder.route)
+                    navController.navigate(AppRoute.CreateOrder.createRoute())
+                },
+                onManageFactories = {
+                    navController.navigate(AppRoute.Factories.route)
                 },
                 onLogout = {
                     scope.launch {
@@ -126,6 +160,32 @@ fun AndroidNavigation(startRoute: String) {
                             popUpTo(AppRoute.InvoicesPaged.route) { inclusive = true }
                         }
                     }
+                }
+            )
+        }
+
+        composable(
+            route = AppRoute.ClientOrders.BASE_ROUTE,
+            arguments = listOf(navArgument("clientId") { type = NavType.StringType })
+        ) {
+            val clientId = it.arguments?.getString("clientId") ?: return@composable
+            ClientOrdersScreen(
+                clientId = clientId,
+                onBack = { navController.popBackStack() },
+                onAddOrder = { id ->
+                    navController.navigate(AppRoute.CreateOrder.createRoute(id))
+                },
+                onOrderClick = { orderId, factoryName ->
+                    navController.navigate(
+                        AppRoute.OrderDetail.createRoute(
+                            clientId,
+                            orderId,
+                            factoryName
+                        )
+                    )
+                },
+                onAssignInvoice = { orderId ->
+                    navController.navigate(AppRoute.AddInvoice.createRoute(clientId, orderId))
                 }
             )
         }

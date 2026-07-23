@@ -57,8 +57,9 @@ class DetailInvoiceViewModel(
                 }
 
                 val buyOrder = if (billing.orderId.isNotEmpty()) {
-                    getBuyOrderUseCase(billing.orderId)
+                    getBuyOrderUseCase(billing.clientId, billing.orderId)
                 } else BuyOrderModel()
+// ...
 
                 val paymentConditions = getPaymentConditionUseCase(billing.brand)
 
@@ -135,10 +136,42 @@ class DetailInvoiceViewModel(
         saveBilling()
     }
 
+    @androidx.annotation.RequiresApi(26)
+    fun addComment(text: String) {
+        val now = try {
+            val date = java.time.LocalDate.now()
+            val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            date.format(formatter)
+        } catch (e: Exception) {
+            ""
+        }
+
+        val newComment = com.mdcapp.data.model.BillingComments(text, now)
+        val current = _state.value
+        val updated = current.billing.copy(
+            comments = current.billing.comments + newComment
+        )
+
+        _state.update { it.copy(billing = updated) }
+        saveBilling()
+    }
+
+    fun updateState(newState: String) {
+        val current = _state.value
+        val updated = current.billing.copy(stateBilling = newState)
+        _state.update { it.copy(billing = updated) }
+        saveBilling()
+    }
+
     private fun saveBilling() {
         viewModelScope.launch {
             val billing = _state.value.billing
-            val result = updateInvoiceUseCase(billing.billingNumber, billing)
+            val result = updateInvoiceUseCase(
+                billing.clientId,
+                billing.orderId,
+                billing.billingNumber,
+                billing
+            )
 
             _state.update {
                 it.copy(

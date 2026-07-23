@@ -37,7 +37,17 @@ class OrderService(
     private val factoriesCollection get() = userDoc.collection(FACTORIES)
     private val paymentsRegisterCollection get() = userDoc.collection(PAYMENTS_REGISTER)
 
+    // Global Billings for Dashboard
+    private val allBillingsCollection get() = userDoc.collection("allBillings")
+
+    private fun clientOrdersCollection(clientId: String) =
+        userDoc.collection("clients").document(clientId).collection(BUY_ORDERS)
+
+    private fun orderBillingsCollection(clientId: String, orderId: String) =
+        clientOrdersCollection(clientId).document(orderId).collection(BILLINGS)
+
     suspend fun fetchAllOrders(): List<RemoteResultOrder> {
+// ...
         return try {
             val documents = ordersCollection
                 .get()
@@ -53,9 +63,9 @@ class OrderService(
         }
     }
 
-    suspend fun fetchOrderBranch(orderId: String): String {
+    suspend fun fetchOrderBranch(clientId: String, orderId: String): String {
         return try {
-            val data = buyOrdersCollection
+            val data = clientOrdersCollection(clientId)
                 .where { FieldPath("Orden Id").equalTo(orderId) }
                 .get()
                 .documents
@@ -65,7 +75,6 @@ class OrderService(
             Log.e("MdcAppOnly", "firestore --- on fetchOrderBranchList: $e")
             ""
         }
-
     }
 
     suspend fun fetchOrdersByFactory(name: String): List<RemoteResultOrder> {
@@ -84,30 +93,38 @@ class OrderService(
         }
     }
 
-    suspend fun fetchBuyOrder(orderId: String): RemoteResultBuyOrder {
+    suspend fun fetchBuyOrder(clientId: String, orderId: String): RemoteResultBuyOrder {
         return try {
-            val document = buyOrdersCollection
-                .where { FieldPath("Orden Id").equalTo(orderId) }
-                .get()
-                .documents
-                .map { it.data<RemoteResultBuyOrder>() }
-                .first()
-            Log.i("MdcAppOnly", "firestore --- on fetchBuyOrder in firestore: $document")
-            document
+            val document = clientOrdersCollection(clientId).document(orderId).get()
+            val data = document.data<RemoteResultBuyOrder>()
+            Log.i("MdcAppOnly", "firestore --- on fetchBuyOrder: $data")
+            data
         } catch (e: Exception) {
             Log.i("MdcAppOnly", "Firestore : on firestore fetchBuyOrder: $e")
             RemoteResultBuyOrder()
         }
     }
 
-    suspend fun fetchBillings(orderId: String): List<RemoteResultBillingModel> {
+    suspend fun fetchBuyOrdersByClient(clientId: String): List<RemoteResultBuyOrder> {
         return try {
-            val document = billingsCollection
-                .where { FieldPath("Orden").equalTo(orderId) }
+            val documents = clientOrdersCollection(clientId)
+                .get()
+                .documents
+                .map { it.data<RemoteResultBuyOrder>() }
+            documents
+        } catch (e: Exception) {
+            Log.e("OrderService", "Error fetchBuyOrdersByClient", e)
+            emptyList()
+        }
+    }
+
+    suspend fun fetchBillings(clientId: String, orderId: String): List<RemoteResultBillingModel> {
+        return try {
+            val document = orderBillingsCollection(clientId, orderId)
                 .get()
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }
-            Log.i("MdcAppOnly", "firestore --- on fetchBillings in firestore : $document")
+            Log.i("MdcAppOnly", "firestore --- on fetchBillings: $document")
             document
         } catch (e: Exception) {
             Log.i("MdcAppOnly", "Firestore: on fetchBillings $e")
@@ -215,25 +232,47 @@ class OrderService(
         }
     }
 
-    suspend fun updateBilling(document: String, data: RemoteResultBillingModel): Boolean {
+    suspend fun updateBilling(
+        clientId: String,
+        orderId: String,
+        document: String,
+        data: RemoteResultBillingModel
+    ): Boolean {
         return try {
-            billingsCollection
+            // Update in global mirror
+            allBillingsCollection
                 .document(document)
                 .update(data)
+
+            // Update in hierarchy
+            orderBillingsCollection(clientId, orderId)
+                .document(document)
+                .update(data)
+            
             Log.i("MdcAppOnly", "firestore --- on updateBilling success $data")
             true
         } catch (e: Exception) {
             Log.e("MdcAppOnly", "firestore --- on updateBilling $e")
             false
         }
-
     }
 
-    suspend fun saveBilling(data: RemoteResultBillingModel): Boolean {
+    suspend fun saveBilling(
+        clientId: String,
+        orderId: String,
+        data: RemoteResultBillingModel
+    ): Boolean {
         return try {
-            billingsCollection
+            // Save in hierarchy
+            orderBillingsCollection(clientId, orderId)
                 .document(data.billingNumber)
                 .set(data)
+
+            // Save in global collection for Dashboard
+            allBillingsCollection
+                .document(data.billingNumber)
+                .set(data)
+
             Log.i("MdcAppOnly", "firestore --- on saveBilling success $data")
             true
         } catch (e: Exception) {
@@ -295,50 +334,67 @@ class OrderService(
         clientId: String
     ): List<RemoteResultBillingModel> {
         return try {
-            val documents = billingsCollection
-                .where { FieldPath("Cliente id").equalTo(clientId) }
+            val documents = allBillingsCollection
+                .where { FieldPath("Cliente Id").equalTo(clientId) }
                 .where { FieldPath("Marca").equalTo(brand) }
                 .get()
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }
-            Log.i("OrderService", "on fetchBillingsByClient in firestore : $documents")
+            Log.i("OrderService", "on fetchBillingsByBrand: $documents")
             documents
         } catch (e: Exception) {
-            println("OrderService: on fetchBillingsByClient $e")
+            println("OrderService: on fetchBillingsByBrand $e")
             emptyList()
         }
     }
 
     suspend fun fetchInvoiceByNumber(invoiceNumber: String): RemoteResultBillingModel {
         return try {
-            val document = billingsCollection
+            val document = allBillingsCollection
                 .where { FieldPath("Numero").equalTo(invoiceNumber) }
                 .get()
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }
                 .first()
-            Log.i("OrderService", "on fetchInvoiceByNumber in firestore : $document")
+            Log.i("OrderService", "on fetchInvoiceByNumber: $document")
 
             document
         } catch (e: Exception) {
             println("OrderService: on fetchInvoiceByNumber $e")
             RemoteResultBillingModel()
         }
-
     }
 
-    suspend fun saveOrder(order: RemoteResultBuyOrder): Boolean {
+    suspend fun saveOrder(clientId: String, order: RemoteResultBuyOrder): Boolean {
         return try {
-            if (order.id.isEmpty()) {
-                val docRef = buyOrdersCollection.add(order)
-                docRef.update(mapOf("Pedido Id" to docRef.id))
-            } else {
-                buyOrdersCollection.document(order.id).set(order)
-            }
+            val nextNumber = getNextOrderNumber()
+            val orderId = nextNumber.toString()
+
+            val finalOrder = order.copy(
+                id = orderId,
+                order = orderId,
+                loadedDate = "" // TODO: set date properly
+            )
+
+            clientOrdersCollection(clientId).document(orderId).set(finalOrder)
             true
         } catch (e: Exception) {
             Log.e("OrderService", "Error saving order", e)
             false
+        }
+    }
+
+    private suspend fun getNextOrderNumber(): Int {
+        val configDoc = userDoc.collection("config").document("counters")
+        return try {
+            val snapshot = configDoc.get()
+            val current = if (snapshot.exists) snapshot.get<Int>("lastOrderNumber") else 0
+            val next = current + 1
+            configDoc.set(mapOf("lastOrderNumber" to next))
+            next
+        } catch (e: Exception) {
+            Log.e("OrderService", "Error getting next order number", e)
+            1
         }
     }
 

@@ -13,17 +13,32 @@ sealed class AppRoute(val route: String) {
             }
         }
     }
-    data object CreateOrder : AppRoute("CreateOrder")
+    data class CreateOrder(val clientId: String? = null) : AppRoute("CreateOrder") {
+        companion object {
+            const val BASE_ROUTE = "CreateOrder?clientId={clientId}"
+            fun createRoute(clientId: String? = null): String {
+                return if (clientId != null) "CreateOrder?clientId=$clientId" else "CreateOrder"
+            }
+        }
+    }
     data object Factories : AppRoute("Factories")
 
-    data class AddInvoice(val orderId: String) : AppRoute("AddInvoice") {
+    data class AddInvoice(val clientId: String, val orderId: String) : AppRoute("AddInvoice") {
         companion object {
-            const val BASE_ROUTE = "AddInvoice/{orderId}"
-            fun createRoute(orderId: String) = "AddInvoice/$orderId"
+            const val BASE_ROUTE = "AddInvoice/{clientId}/{orderId}"
+            fun createRoute(clientId: String, orderId: String) = "AddInvoice/$clientId/$orderId"
         }
     }
 
     data object Clients : AppRoute("Clients")
+
+    data class ClientOrders(val clientId: String) : AppRoute("ClientOrders") {
+        companion object {
+            const val BASE_ROUTE = "ClientOrders/{clientId}"
+            fun createRoute(clientId: String) = "ClientOrders/$clientId"
+        }
+    }
+
     data object InvoicesPaged : AppRoute("InvoicesPaged")
 
 
@@ -49,12 +64,12 @@ sealed class AppRoute(val route: String) {
         }
     }
 
-    data class OrderDetail(val orderId: String, val factoryName: String) :
-        AppRoute("OrderDetail/$orderId/$factoryName") {
+    data class OrderDetail(val clientId: String, val orderId: String, val factoryName: String) :
+        AppRoute("OrderDetail/$clientId/$orderId/$factoryName") {
         companion object {
-            const val BASE_ROUTE = "OrderDetail/{orderId}/{factoryName}"
-            fun createRoute(orderId: String, factoryName: String) =
-                "OrderDetail/$orderId/$factoryName"
+            const val BASE_ROUTE = "OrderDetail/{clientId}/{orderId}/{factoryName}"
+            fun createRoute(clientId: String, orderId: String, factoryName: String) =
+                "OrderDetail/$clientId/$orderId/$factoryName"
         }
     }
 }

@@ -5,6 +5,7 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +16,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -57,7 +62,10 @@ fun DetailInvoiceScreen(
     var showOrder by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showPaymentDialog by remember { mutableStateOf(false) }
+    var showCommentDialog by remember { mutableStateOf(false) }
     var paymentAmount by remember { mutableStateOf("") }
+    var commentText by remember { mutableStateOf("") }
+    var showStateDialog by remember { mutableStateOf(false) }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val scope = rememberCoroutineScope()
@@ -136,11 +144,11 @@ fun DetailInvoiceScreen(
 
             TotalsCard(billing = state.billing)
 
-            ArticlesCard(
-                articles = state.billing.articles,
-                expanded = showArticles,
-                onToggle = { showArticles = !showArticles }
-            )
+            /*            ArticlesCard(
+                            articles = state.billing.articles,
+                            expanded = showArticles,
+                            onToggle = { showArticles = !showArticles }
+                        )*/
 
             PaymentConditionCard(billing = state.billing) { showSheet = true }
 
@@ -149,7 +157,80 @@ fun DetailInvoiceScreen(
                 expanded = showOrder,
                 onToggle = { showOrder = !showOrder }
             )
+
+            // Nueva sección de Comentarios
+            CommentsSection(
+                comments = state.billing.comments,
+                onAddComment = { showCommentDialog = true }
+            )
+
+            // Nueva sección de Cambio de Estado
+            Button(
+                onClick = { showStateDialog = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            ) {
+                Text("Cambiar Estado (${state.billing.stateBilling})")
+            }
         }
+    }
+
+    if (showCommentDialog) {
+        AlertDialog(
+            onDismissRequest = { showCommentDialog = false },
+            title = { Text("Agregar Comentario") },
+            text = {
+                OutlinedTextField(
+                    value = commentText,
+                    onValueChange = { commentText = it },
+                    label = { Text("Nota") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (commentText.isNotBlank()) {
+                        vm.addComment(commentText)
+                        commentText = ""
+                        showCommentDialog = false
+                    }
+                }) { Text("Guardar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCommentDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
+    if (showStateDialog) {
+        AlertDialog(
+            onDismissRequest = { showStateDialog = false },
+            title = { Text("Cambiar Estado") },
+            text = {
+                val states = listOf("Pendiente", "En proceso", "Cobrado", "Devuelta", "Cerrada")
+                Column {
+                    states.forEach { s ->
+                        TextButton(
+                            onClick = {
+                                vm.updateState(s)
+                                showStateDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                s,
+                                color = if (state.billing.stateBilling == s) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showStateDialog = false }) { Text("Cerrar") }
+            }
+        )
     }
 
     if (showPaymentDialog) {
@@ -188,5 +269,43 @@ fun DetailInvoiceScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun CommentsSection(
+    comments: List<com.mdcapp.data.model.BillingComments>,
+    onAddComment: () -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Text("Seguimiento / Notas", style = MaterialTheme.typography.titleMedium)
+                TextButton(onClick = onAddComment) { Text("+ Nota") }
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            if (comments.isEmpty()) {
+                Text("No hay notas registradas.", style = MaterialTheme.typography.bodySmall)
+            } else {
+                comments.forEach { comment ->
+                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                        Text(
+                            comment.date,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(comment.comments, style = MaterialTheme.typography.bodyMedium)
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        thickness = 0.5.dp
+                    )
+                }
+            }
+        }
     }
 }

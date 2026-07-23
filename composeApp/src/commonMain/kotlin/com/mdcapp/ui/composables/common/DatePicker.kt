@@ -39,7 +39,9 @@ fun DatePicker(
                         date?.let {
                             val localDate =
                                 Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
-                            onConfirmButton("${localDate.dayOfMonth}/${localDate.monthValue}/${localDate.year}")
+                            val day = localDate.dayOfMonth.toString().padStart(2, '0')
+                            val month = localDate.monthValue.toString().padStart(2, '0')
+                            onConfirmButton("$day/$month/${localDate.year}")
                             onDateSelected(localDate)
                         }
                     },

@@ -1,5 +1,6 @@
 package com.mdcapp.ui.composables.invoicePage
 
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import com.mdcapp.data.model.toPrint
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@RequiresApi(26)
 @Composable
 fun InvoiceRow(
     invoice: BillingModel,
@@ -129,6 +131,7 @@ fun InvoiceRow(
     }
 }
 
+@RequiresApi(26)
 @Composable
 fun rememberStatusColor(invoice: BillingModel): Color {
     return remember(invoice.rest, invoice.payDate) {
@@ -164,7 +167,7 @@ private fun AmountLabel(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = "$ ${value.toPrint()}",
+            text = value.toPrint(),
             style = MaterialTheme.typography.bodyMedium,
             color = color
         )

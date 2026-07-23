@@ -16,10 +16,14 @@ import com.mdcapp.data.service.OrderService
 class OrderRepository(private val service: OrderService) {
     suspend fun getAllOrders(): List<OrderModel> = service.fetchAllOrders().map { it.toDomain() }
 
-    suspend fun getBuyOrderById(orderId: String) = service.fetchBuyOrder(orderId).toDomain()
+    suspend fun getBuyOrderById(clientId: String, orderId: String) =
+        service.fetchBuyOrder(clientId, orderId).toDomain()
 
-    suspend fun getBillingsByOrder(orderId: String) =
-        service.fetchBillings(orderId).map { it.toDomain() }
+    suspend fun getBuyOrdersByClient(clientId: String) =
+        service.fetchBuyOrdersByClient(clientId).map { it.toDomain() }
+
+    suspend fun getBillingsByOrder(clientId: String, orderId: String) =
+        service.fetchBillings(clientId, orderId).map { it.toDomain() }
 
     suspend fun getBillingsByClientID(clientId: String) =
         service.fetchBillingsByClient(clientId).map { it.toDomain() }
@@ -46,16 +50,22 @@ class OrderRepository(private val service: OrderService) {
 
     suspend fun getLastId() = service.fetchLastIdFromPayments()
 
-    suspend fun updateBillingOnService(documentId: String, data: BillingModel) =
-        service.updateBilling(documentId, data.toRemote())
+    suspend fun updateBillingOnService(
+        clientId: String,
+        orderId: String,
+        documentId: String,
+        data: BillingModel
+    ) =
+        service.updateBilling(clientId, orderId, documentId, data.toRemote())
 
-    suspend fun saveBilling(data: BillingModel) =
-        service.saveBilling(data.toRemote())
+    suspend fun saveBilling(clientId: String, orderId: String, data: BillingModel) =
+        service.saveBilling(clientId, orderId, data.toRemote())
 
     suspend fun getPaymentsRegisterByNumberDocument(documentList: List<String>) =
         service.fetchPaymentRegisterByNumberList(documentList).map { it.toDomain() }
 
-    suspend fun getOrderBranch(orderId: String) = service.fetchOrderBranch(orderId)
+    suspend fun getOrderBranch(clientId: String, orderId: String) =
+        service.fetchOrderBranch(clientId, orderId)
 
     suspend fun getFactoriesList() = service.fetchFactoriesLisName()
 
@@ -63,8 +73,8 @@ class OrderRepository(private val service: OrderService) {
         return service.fetchInvoiceByNumber(invoiceNumber).toDomain()
     }
 
-    suspend fun saveOrder(order: BuyOrderModel): Boolean {
-        return service.saveOrder(order.toRemote())
+    suspend fun saveOrder(clientId: String, order: BuyOrderModel): Boolean {
+        return service.saveOrder(clientId, order.toRemote())
     }
 
     suspend fun saveFactory(factory: FactoryModel): Boolean {

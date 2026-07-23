@@ -7,14 +7,20 @@ import com.mdcapp.domain.repositories.OrderRepository
 
 class BuyOrderUseCase(private val repository: OrderRepository) {
     inner class GetBuyOrderById {
-        suspend operator fun invoke(orderId: String): BuyOrderModel {
-            return repository.getBuyOrderById(orderId)
+        suspend operator fun invoke(clientId: String, orderId: String): BuyOrderModel {
+            return repository.getBuyOrderById(clientId, orderId)
+        }
+    }
+
+    inner class GetBuyOrdersByClient {
+        suspend operator fun invoke(clientId: String): List<BuyOrderModel> {
+            return repository.getBuyOrdersByClient(clientId)
         }
     }
 
     inner class GetBillings {
-        suspend operator fun invoke(orderId: String): List<BillingModel> {
-            return repository.getBillingsByOrder(orderId)
+        suspend operator fun invoke(clientId: String, orderId: String): List<BillingModel> {
+            return repository.getBillingsByOrder(clientId, orderId)
         }
     }
 
@@ -31,8 +37,13 @@ class BuyOrderUseCase(private val repository: OrderRepository) {
     }
 
     inner class UpdateBilling {
-        suspend operator fun invoke(numberBilling: String, billingModel: BillingModel): Boolean {
-            return repository.updateBillingOnService(numberBilling, billingModel)
+        suspend operator fun invoke(
+            clientId: String,
+            orderId: String,
+            numberBilling: String,
+            billingModel: BillingModel
+        ): Boolean {
+            return repository.updateBillingOnService(clientId, orderId, numberBilling, billingModel)
         }
     }
 
@@ -45,8 +56,8 @@ class BuyOrderUseCase(private val repository: OrderRepository) {
     }
 
     inner class SaveOrder {
-        suspend operator fun invoke(order: BuyOrderModel): Boolean {
-            return repository.saveOrder(order)
+        suspend operator fun invoke(clientId: String, order: BuyOrderModel): Boolean {
+            return repository.saveOrder(clientId, order)
         }
     }
 }

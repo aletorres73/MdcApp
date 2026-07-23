@@ -95,9 +95,9 @@ fun OrderInfoSection(order: BuyOrderModel) {
         InfoRow("Pedido Nº", order.order)
         InfoRow("Cliente", order.client)
         InfoRow("Marca", order.branch)
-        InfoRow("Tipo", order.type)
-        InfoRow("Entrega", order.deliveryDate)
-        InfoRow("Cargado", order.loadedDate)
+        /*        InfoRow("Tipo", order.type)
+                InfoRow("Entrega", order.deliveryDate)
+                InfoRow("Cargado", order.loadedDate)*/
     }
 }
 
@@ -125,10 +125,10 @@ fun OrderArticlesTable(articles: List<ArticleOrderModel>) {
 
         // Encabezado
         Row(Modifier.fillMaxWidth()) {
-            TableHeader("Artículo", Modifier.weight(0.25f))
+            TableHeader("Artículo", Modifier.weight(0.35f))
             TableHeader("Color", Modifier.weight(0.25f))
             TableHeader("Pares", Modifier.weight(0.25f))
-            TableHeader("Entregados", Modifier.weight(0.25f))
+//            TableHeader("Entregados", Modifier.weight(0.25f))
         }
 
         Spacer(Modifier.height(8.dp))
@@ -141,10 +141,10 @@ fun OrderArticlesTable(articles: List<ArticleOrderModel>) {
                     .fillMaxWidth()
                     .padding(vertical = 4.dp)
             ) {
-                TableCell(item.name, Modifier.weight(0.25f), TextAlign.Start)
-                TableCell(item.color, Modifier.weight(0.35f), TextAlign.Start)
-                TableCell(item.pairs.toString(), Modifier.weight(0.2f), TextAlign.Start)
-                TableCell(item.delivered.toString(), Modifier.weight(0.2f), TextAlign.Center)
+                TableCell(item.name, Modifier.weight(0.35f), TextAlign.Start)
+                TableCell(item.color, Modifier.weight(0.25f), TextAlign.Start)
+                TableCell(item.pairs.toString(), Modifier.weight(0.25f), TextAlign.Start)
+//                TableCell(item.delivered.toString(), Modifier.weight(0.2f), TextAlign.Center)
             }
         }
     }
