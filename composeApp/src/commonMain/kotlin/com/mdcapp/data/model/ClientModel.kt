@@ -35,6 +35,12 @@ fun RemoteResultClientModel.toDomain() =
         clientName = clientName,
     )
 
+fun ClientModel.toRemote() =
+    RemoteResultClientModel(
+        clientId = clientId,
+        clientName = clientName,
+    )
+
 
 @Serializable
 data class RemoteResultInfoClientModel(

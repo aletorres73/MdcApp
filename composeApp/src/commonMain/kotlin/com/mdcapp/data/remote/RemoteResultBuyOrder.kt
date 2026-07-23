@@ -32,6 +32,19 @@ fun RemoteResultBuyOrder.toDomain() = BuyOrderModel(
     loadedDate = loadedDate
 )
 
+fun BuyOrderModel.toRemote() = RemoteResultBuyOrder(
+    id = id,
+    order = order,
+    client = client,
+    branch = branch,
+    deliveryDate = deliveryDate,
+    type = type,
+    billing = billing,
+    comments = comments,
+    articles = articles.map { it.toRemote() },
+    loadedDate = loadedDate
+)
+
 @Serializable
 data class RemoteArticleOrderModel(
     @SerialName("Articulo") val name: String = "",
@@ -43,6 +56,13 @@ data class RemoteArticleOrderModel(
 fun RemoteArticleOrderModel.toDomain() = ArticleOrderModel(
     name,
     color,
-    delivered.toInt(),
-    pairs.toInt()
+    delivered.toIntOrNull() ?: 0,
+    pairs.toIntOrNull() ?: 0
+)
+
+fun ArticleOrderModel.toRemote() = RemoteArticleOrderModel(
+    name = name,
+    color = color,
+    delivered = delivered.toString(),
+    pairs = pairs.toString()
 )

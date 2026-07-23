@@ -43,4 +43,10 @@ class BuyOrderUseCase(private val repository: OrderRepository) {
 
         suspend operator fun invoke(clientId: String) {}
     }
+
+    inner class SaveOrder {
+        suspend operator fun invoke(order: BuyOrderModel): Boolean {
+            return repository.saveOrder(order)
+        }
+    }
 }

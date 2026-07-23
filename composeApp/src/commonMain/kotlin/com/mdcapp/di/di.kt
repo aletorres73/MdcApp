@@ -3,11 +3,13 @@ package com.mdcapp.di
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.mdcapp.data.service.AuthService
 import com.mdcapp.data.service.BillingPaginationService
 import com.mdcapp.data.service.ClientService
 import com.mdcapp.data.service.HomeService
 import com.mdcapp.data.service.InitService
 import com.mdcapp.data.service.OrderService
+import com.mdcapp.domain.repositories.AuthRepository
 import com.mdcapp.domain.repositories.HomeRepository
 import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.usescases.InitConfigUseCase
@@ -18,13 +20,19 @@ import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import com.mdcapp.domain.usescases.ordersusescases.GetFactoriesListUseCase
 import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
+import com.mdcapp.ui.viewmodels.AddClientViewModel
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import com.mdcapp.ui.viewmodels.HomeViewModel
+import com.mdcapp.ui.viewmodels.LoginViewModel
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
+import com.mdcapp.ui.viewmodels.invoices.AddInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesPagedViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
+import com.mdcapp.ui.viewmodels.orders.CreateOrderViewModel
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
+import dev.gitlive.firebase.auth.FirebaseAuth
+import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
 import org.koin.compose.viewmodel.dsl.viewModel
 import org.koin.compose.viewmodel.dsl.viewModelOf
@@ -36,6 +44,7 @@ import org.koin.dsl.module
 val appModule = module {
     single<FirebaseFirestore> { Firebase.firestore }
     single<dev.gitlive.firebase.firestore.FirebaseFirestore> { dev.gitlive.firebase.Firebase.firestore }
+    single<FirebaseAuth> { dev.gitlive.firebase.Firebase.auth }
 
     single<HomeUseCase.GetAllFactories> { get<HomeUseCase>().GetAllFactories() }
 
@@ -49,6 +58,7 @@ val appModule = module {
     single<BuyOrderUseCase.GetLastIdPaymentFromRegister> { get<BuyOrderUseCase>().GetLastIdPaymentFromRegister() }
     single<BuyOrderUseCase.UpdateBilling> { get<BuyOrderUseCase>().UpdateBilling() }
     single<BuyOrderUseCase.GetPaymentsRegister> { get<BuyOrderUseCase>().GetPaymentsRegister() }
+    single<BuyOrderUseCase.SaveOrder> { get<BuyOrderUseCase>().SaveOrder() }
     single<GetFactoriesListUseCase> { get<GetFactoriesListUseCase>() }
 
     single<PaymentConditionsUseCase.GetPaymentsConditions> { get<PaymentConditionsUseCase>().GetPaymentsConditions() }
@@ -65,7 +75,9 @@ val appModule = module {
     single<InvoiceUseCase.GetAllClients> { get<InvoiceUseCase>().GetAllClients() }
     single<InitConfigUseCase> { get<InitConfigUseCase>() }
     single<InvoiceUseCase.UpdateInvoice> { get<InvoiceUseCase>().UpdateInvoice() }
+    single<InvoiceUseCase.CreateInvoice> { get<InvoiceUseCase>().CreateInvoice() }
 }
+
 
 val dataModule = module {
 //services
@@ -74,9 +86,11 @@ val dataModule = module {
     factoryOf(::HomeService)
     factoryOf(::ClientService)
     factoryOf(::BillingPaginationService)
+    factoryOf(::AuthService)
 //repositories
     factoryOf(::OrderRepository)
     factoryOf(::HomeRepository)
+    factoryOf(::AuthRepository)
 // use cases
     factoryOf(::InitConfigUseCase)
     factoryOf(::OrdersUseCase)
@@ -90,11 +104,22 @@ val dataModule = module {
 
 val viewModelModule = module {
     viewModelOf(::OrdersViewModel)
+    viewModelOf(::CreateOrderViewModel)
     viewModelOf(::BuyOrdersViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::ClientsViewModel)
+    viewModelOf(::LoginViewModel)
+    viewModelOf(::AddClientViewModel)
 //    viewModelOf(::InvoicesViewModel)
     viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get(), get()) }
+    viewModel { (orderId: String) ->
+        AddInvoiceViewModel(
+            orderId,
+            get(),
+            get(),
+            get()
+        )
+    }
     viewModel { (invoiceNumber: String) ->
         DetailInvoiceViewModel(
             invoiceNumber,

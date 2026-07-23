@@ -3,6 +3,17 @@ package com.mdcapp.domain.entities
 sealed class AppRoute(val route: String) {
 
     data object Home : AppRoute("Home")
+    data object Login : AppRoute("Login")
+    data object AddClient : AppRoute("AddClient")
+    data object CreateOrder : AppRoute("CreateOrder")
+
+    data class AddInvoice(val orderId: String) : AppRoute("AddInvoice") {
+        companion object {
+            const val BASE_ROUTE = "AddInvoice/{orderId}"
+            fun createRoute(orderId: String) = "AddInvoice/$orderId"
+        }
+    }
+
     data object Clients : AppRoute("Clients")
     data object InvoicesPaged : AppRoute("InvoicesPaged")
 

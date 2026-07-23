@@ -216,6 +216,19 @@ class OrderService(
 
     }
 
+    suspend fun saveBilling(data: RemoteResultBillingModel): Boolean {
+        return try {
+            db.collection(BILLINGS)
+                .document(data.billingNumber)
+                .set(data)
+            Log.i("MdcAppOnly", "firestore --- on saveBilling success $data")
+            true
+        } catch (e: Exception) {
+            Log.e("MdcAppOnly", "firestore --- on saveBilling $e")
+            false
+        }
+    }
+
     suspend fun fetchPaymentRegisterByNumberList(documentList: List<String>): List<RemotePaymentRegisterResult> {
         val paymentRegisterResult: MutableList<RemotePaymentRegisterResult> = mutableListOf()
         return try {
@@ -287,5 +300,20 @@ class OrderService(
             RemoteResultBillingModel()
         }
 
+    }
+
+    suspend fun saveOrder(order: RemoteResultBuyOrder): Boolean {
+        return try {
+            if (order.id.isEmpty()) {
+                val docRef = db.collection(BUY_ORDERS).add(order)
+                docRef.update(mapOf("Pedido Id" to docRef.id))
+            } else {
+                db.collection(BUY_ORDERS).document(order.id).set(order)
+            }
+            true
+        } catch (e: Exception) {
+            Log.e("OrderService", "Error saving order", e)
+            false
+        }
     }
 }

@@ -131,4 +131,19 @@ class ClientService(
         }
     }
 
+    suspend fun saveClient(client: RemoteResultClientModel): Boolean {
+        return try {
+            if (client.clientId.isEmpty()) {
+                val docRef = db.collection(CLIENTS).add(client)
+                docRef.update(mapOf("Cliente Id" to docRef.id))
+            } else {
+                db.collection(CLIENTS).document(client.clientId).set(client)
+            }
+            true
+        } catch (e: Exception) {
+            println("Error saving client: ${e.message}")
+            false
+        }
+    }
+
 }

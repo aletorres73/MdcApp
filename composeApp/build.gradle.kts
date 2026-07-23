@@ -44,6 +44,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
 
             implementation(libs.gitlive.firebase.firestore)
+            implementation(libs.gitlive.auth)
             implementation(libs.koin.core)
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.compose)

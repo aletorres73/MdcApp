@@ -2,6 +2,7 @@ package com.mdcapp.domain.usescases.clientsusecase
 
 import com.mdcapp.data.model.ClientModel
 import com.mdcapp.data.model.toDomain
+import com.mdcapp.data.model.toRemote
 import com.mdcapp.data.service.ClientService
 
 class GetClientsUseCase(private val service: ClientService) {
@@ -27,5 +28,9 @@ class GetClientsUseCase(private val service: ClientService) {
 
     suspend fun search(clientName: String): List<ClientModel> {
         return service.searchClientsByName(clientName).map { it.toDomain() }
+    }
+
+    suspend fun save(client: ClientModel): Boolean {
+        return service.saveClient(client.toRemote())
     }
 }

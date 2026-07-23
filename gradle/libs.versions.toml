@@ -44,6 +44,7 @@ kotlinx-serilization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializat
 
 android-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 gitlive-firebase-firestore = { group = "dev.gitlive", name = "firebase-firestore", version.ref = "gitlive" }
+gitlive-auth = { group = "dev.gitlive", name = "firebase-auth", version.ref = "gitlive" }
 
 koin-bom = { group = "io.insert-koin", name = "koin-bom", version.ref = "koin" }
 koin-android = { group = "io.insert-koin", name = "koin-android" }

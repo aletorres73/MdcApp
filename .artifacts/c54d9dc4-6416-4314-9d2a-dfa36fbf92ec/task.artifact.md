@@ -1,0 +1,22 @@
+# Tareas de Refactorización MDCapp - MVP Vendedor
+
+- [x] **Fase 1: Infraestructura y Autenticación**
+    - [x] Agregar dependencias de Firebase Auth en `libs.versions.toml` y `build.gradle.kts`.
+    - [x] Crear `AuthService` y `AuthRepository`.
+    - [x] Implementar `LoginViewModel` and `LoginScreen`.
+    - [x] Configurar el estado de autenticación en el arranque de la app.
+- [x] **Fase 2: Gestión de Clientes**
+    - [x] Actualizar `ClientService` para permitir creación de clientes.
+    - [x] Crear `AddClientViewModel` y `AddClientScreen`.
+- [x] **Fase 3: Gestión de Pedidos (Orders)**
+    - [x] Definir modelos para ítems manuales y pedidos nuevos.
+    - [x] Actualizar `OrderService` para persistir nuevos pedidos.
+    - [x] Crear `CreateOrderViewModel` y `CreateOrderScreen` (Formulario de artículos manuales).
+- [x] **Fase 4: Facturación y Pagos**
+    - [x] Implementar lógica de cálculo automático de vencimientos y descuentos en el dominio.
+    - [x] Crear `AddInvoiceScreen` para vincular comprobantes a pedidos.
+    - [x] Implementar registro de pagos y actualización de saldos (`rest`).
+- [/] **Fase 5: Dashboard y Navegación**
+    - [x] Crear Dashboard con el listado de facturas y el "Semáforo" de colores.
+    - [x] Refactorizar `AndroidNavigation.kt` para orquestar el nuevo flujo.
+    - [ ] Limpiar código y rutas antiguas no utilizadas.

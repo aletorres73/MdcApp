@@ -6,7 +6,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -32,7 +37,9 @@ import org.koin.core.annotation.KoinExperimentalAPI
 fun InvoicesPageScreen(
     viewModel: InvoicesPagedViewModel = koinViewModel(),
     onNavigationInvoice: (String) -> Unit = {},
-    onNavigationClientDetail: (String) -> Unit
+    onNavigationClientDetail: (String) -> Unit,
+    onAddClientClick: () -> Unit = {},
+    onCreateOrderClick: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     val query = state.searchQuery
@@ -72,8 +79,16 @@ fun InvoicesPageScreen(
             TopAppBar(
                 title = { Text("Facturas") },
                 actions = {
+                    IconButton(onClick = onCreateOrderClick) {
+                        Icon(Icons.Default.Add, contentDescription = "Nuevo Pedido")
+                    }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onAddClientClick) {
+                Icon(Icons.Default.Add, contentDescription = "Agregar Cliente")
+            }
         }
 
     ) { paddingValues ->

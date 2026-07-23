@@ -1,6 +1,7 @@
 package com.mdcapp.domain.repositories
 
 import com.mdcapp.data.model.BillingModel
+import com.mdcapp.data.model.BuyOrderModel
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.data.model.PaymentCondition
 import com.mdcapp.data.model.PaymentRegisterModel
@@ -8,6 +9,7 @@ import com.mdcapp.data.model.toDomain
 import com.mdcapp.data.model.toRemote
 import com.mdcapp.data.remote.toDomain
 import com.mdcapp.data.remote.toPaymentConditions
+import com.mdcapp.data.remote.toRemote
 import com.mdcapp.data.service.OrderService
 
 class OrderRepository(private val service: OrderService) {
@@ -46,6 +48,9 @@ class OrderRepository(private val service: OrderService) {
     suspend fun updateBillingOnService(documentId: String, data: BillingModel) =
         service.updateBilling(documentId, data.toRemote())
 
+    suspend fun saveBilling(data: BillingModel) =
+        service.saveBilling(data.toRemote())
+
     suspend fun getPaymentsRegisterByNumberDocument(documentList: List<String>) =
         service.fetchPaymentRegisterByNumberList(documentList).map { it.toDomain() }
 
@@ -55,5 +60,9 @@ class OrderRepository(private val service: OrderService) {
 
     suspend fun getInvoiceByNumber(invoiceNumber: String): BillingModel {
         return service.fetchInvoiceByNumber(invoiceNumber).toDomain()
+    }
+
+    suspend fun saveOrder(order: BuyOrderModel): Boolean {
+        return service.saveOrder(order.toRemote())
     }
 }

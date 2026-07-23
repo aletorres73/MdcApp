@@ -1,5 +1,7 @@
 package com.mdcapp.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -8,6 +10,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mdcapp.domain.entities.AppRoute
+import com.mdcapp.ui.screens.AddClientScreen
+import com.mdcapp.ui.screens.AddInvoiceScreen
+import com.mdcapp.ui.screens.CreateOrderScreen
+import com.mdcapp.ui.screens.LoginScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.DetailInvoiceScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.InvoicesScreen
 import com.mdcapp.ui.screens.invoicesPage.InvoicesPageScreen
@@ -17,6 +23,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.parameter.parametersOf
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(KoinExperimentalAPI::class)
 @Composable
 fun AndroidNavigation(startRoute: String) {
@@ -26,6 +33,39 @@ fun AndroidNavigation(startRoute: String) {
         navController = navController,
         startDestination = startRoute
     ) {
+        composable(route = AppRoute.Login.route) {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(AppRoute.InvoicesPaged.route) {
+                        popUpTo(AppRoute.Login.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(route = AppRoute.AddClient.route) {
+            AddClientScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = AppRoute.CreateOrder.route) {
+            CreateOrderScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = AppRoute.AddInvoice.BASE_ROUTE,
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) {
+            val orderId = it.arguments?.getString("orderId") ?: return@composable
+            AddInvoiceScreen(
+                orderId = orderId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
         composable(route = AppRoute.InvoicesPaged.route) {
             InvoicesPageScreen(
                 onNavigationInvoice = { invoiceNumber ->
@@ -33,7 +73,9 @@ fun AndroidNavigation(startRoute: String) {
                         invoiceNumber
                     )
                 },
-                onNavigationClientDetail = { clientId -> navController.navigateToInvoices(clientId) }
+                onNavigationClientDetail = { clientId -> navController.navigateToInvoices(clientId) },
+                onAddClientClick = { navController.navigate(AppRoute.AddClient.route) },
+                onCreateOrderClick = { navController.navigate(AppRoute.CreateOrder.route) }
             )
         }
 

@@ -122,6 +122,19 @@ class DetailInvoiceViewModel(
         Log.i("MdcAppOnly", "DetailInvoiceViewModel --- on updateDeliveryDate: $updated")
     }
 
+    fun registerPayment(amount: Double) {
+        val current = _state.value
+        val updated = current.billing.copy(
+            payed = current.billing.payed + amount
+        ).recalculate()
+
+        _state.update {
+            it.copy(billing = updated)
+        }
+
+        saveBilling()
+    }
+
     private fun saveBilling() {
         viewModelScope.launch {
             val billing = _state.value.billing

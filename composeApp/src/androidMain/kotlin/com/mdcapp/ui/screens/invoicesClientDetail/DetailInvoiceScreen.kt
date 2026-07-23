@@ -5,16 +5,25 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,6 +56,8 @@ fun DetailInvoiceScreen(
     var showArticles by remember { mutableStateOf(false) }
     var showOrder by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showPaymentDialog by remember { mutableStateOf(false) }
+    var paymentAmount by remember { mutableStateOf("") }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val scope = rememberCoroutineScope()
@@ -97,6 +108,20 @@ fun DetailInvoiceScreen(
                 billing = state.billing,
                 onBack = onBack
             )
+        },
+        bottomBar = {
+            if (state.billing.rest > 0) {
+                BottomAppBar {
+                    Button(
+                        onClick = { showPaymentDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Text("Registrar Pago")
+                    }
+                }
+            }
         }
     ) { padding ->
         Column(
@@ -125,5 +150,43 @@ fun DetailInvoiceScreen(
                 onToggle = { showOrder = !showOrder }
             )
         }
+    }
+
+    if (showPaymentDialog) {
+        AlertDialog(
+            onDismissRequest = { showPaymentDialog = false },
+            title = { Text("Registrar Pago") },
+            text = {
+                Column {
+                    Text("Saldo pendiente: $ ${state.billing.rest}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = paymentAmount,
+                        onValueChange = { paymentAmount = it },
+                        label = { Text("Monto a pagar") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val amount = paymentAmount.toDoubleOrNull() ?: 0.0
+                        if (amount > 0) {
+                            vm.registerPayment(amount)
+                            showPaymentDialog = false
+                            paymentAmount = ""
+                        }
+                    }
+                ) {
+                    Text("Confirmar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPaymentDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
