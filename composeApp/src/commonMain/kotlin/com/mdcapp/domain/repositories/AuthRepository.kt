@@ -10,3 +10,4 @@ class AuthRepository(private val authService: AuthService) {
     fun getCurrentUser() = authService.currentUser
     fun getUserId() = authService.currentUser?.uid
 }
+

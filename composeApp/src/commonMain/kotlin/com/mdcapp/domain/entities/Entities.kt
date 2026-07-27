@@ -1,6 +1,5 @@
 package com.mdcapp.domain.entities
 
-import androidx.annotation.RequiresApi
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -155,10 +154,8 @@ fun Double.discountToPrint(): String {
     return "%,.0f".format(this * 100)
 }
 
-@RequiresApi(26)
-private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
-@RequiresApi(26)
 fun BillingModel.recalculate(
     condition: PaymentCondition? = null
 ): BillingModel {
@@ -226,7 +223,7 @@ fun BillingModel.recalculate(
     )
 }
 
-@RequiresApi(26)
 fun LocalDate.formatter(): String {
     return this.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 }
+

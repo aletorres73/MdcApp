@@ -77,3 +77,4 @@ class FactoryViewModel(private val repository: OrderRepository) : ViewModel() {
         _state.update { it.copy(message = null) }
     }
 }
+

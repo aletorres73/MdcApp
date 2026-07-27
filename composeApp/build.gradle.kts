@@ -76,6 +76,10 @@ kotlin {
     task("testClasses")
 }
 
+dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+}
+
 android {
     namespace = "com.mdcapp"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -108,6 +112,7 @@ android {
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -127,3 +132,4 @@ compose.desktop {
         }
     }
 }
+

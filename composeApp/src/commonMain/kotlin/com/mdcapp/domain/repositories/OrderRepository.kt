@@ -120,3 +120,4 @@ class OrderRepository(private val service: OrderService) {
         return service.fetchAllFactories().map { it.toFactoryDomain() }
     }
 }
+

@@ -1,7 +1,5 @@
 package com.mdcapp.ui
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -11,7 +9,6 @@ import com.mdcapp.domain.repositories.AuthRepository
 import com.mdcapp.ui.navigation.AndroidNavigation
 import org.koin.compose.koinInject
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 actual fun PlatformNavigation() {
     val authRepo: AuthRepository = koinInject()
@@ -28,3 +25,4 @@ actual fun PlatformNavigation() {
             }
         }
 }
+

@@ -36,3 +36,4 @@ fun InputSearchBar(onTypeSelected: (TypeSearch) -> Unit) {
         )
     }
 }
+

@@ -5,3 +5,4 @@ enum class UpdateState {
     OPTIONAL_UPDATE,
     FORCE_UPDATE
 }
+

@@ -1,8 +1,6 @@
 package com.mdcapp.ui.screens.invoicesClientDetail
 
-import android.os.Build
 import androidx.activity.compose.BackHandler
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,7 +45,6 @@ import com.mdcapp.ui.screens.orders.OrderCard
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import kotlinx.coroutines.launch
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailInvoiceScreen(
@@ -349,3 +346,4 @@ fun CommentsSection(
         }
     }
 }
+

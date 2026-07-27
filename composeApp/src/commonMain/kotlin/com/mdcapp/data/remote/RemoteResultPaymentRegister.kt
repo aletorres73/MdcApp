@@ -23,3 +23,4 @@ fun RemotePaymentRegisterResult.toPaymentDomain() = PaymentRegisterModel(
 fun PaymentRegisterModel.toPaymentRemote() = RemotePaymentRegisterResult(
     id, clientId, branch, date, clientName, documentNumber, type, total
 )
+

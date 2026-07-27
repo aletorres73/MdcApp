@@ -7,13 +7,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -25,9 +30,15 @@ fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     onCleanQuery: () -> Unit,
+    onBack: () -> Unit,
     onSearch: () -> Unit = {},
     searchText: String = "Buscar cliente..."
 ) {
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     OutlinedTextField(
         value = query,
@@ -36,11 +47,16 @@ fun SearchBar(
         modifier = Modifier
             .wrapContentHeight()
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = 4.dp)
+            .focusRequester(focusRequester),
         placeholder = { Text(text = searchText, fontSize = 14.sp) },
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
-
+        leadingIcon = {
+            IconButton(onClick = onBack) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+            }
+        },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = onCleanQuery) {
@@ -60,3 +76,4 @@ fun SearchBar(
         )
     )
 }
+

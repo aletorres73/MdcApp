@@ -17,3 +17,4 @@ fun SearchButton(isNavigationOn: Boolean, onSearchIconClick: () -> Unit) {
         }
     }
 }
+

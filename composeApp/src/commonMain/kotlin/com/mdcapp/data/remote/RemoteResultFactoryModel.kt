@@ -49,3 +49,4 @@ fun List<PaymentCondition>.toRemoteMap(): Map<String, Map<String, String>> {
         )
     }.toMap()
 }
+

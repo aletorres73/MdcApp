@@ -19,3 +19,4 @@ fun TableCell(
         textAlign = textAlign
     )
 }
+

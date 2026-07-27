@@ -5,7 +5,6 @@ import android.util.Log
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.remote.toBillingDomain
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.ClientModel
 import com.mdcapp.domain.entities.TypeSearch
@@ -20,9 +19,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@androidx.annotation.RequiresApi(26)
 class InvoicesPagedViewModel(
-    private val getInvoicePaged: InvoiceUseCase.GetInvoicePaged,
     private val getClients: InvoiceUseCase.GetAllClients,
     private val initConfigUseCase: InitConfigUseCase,
     private val observeAllBillingsUseCase: InvoiceUseCase.ObserveAllBillings,
@@ -41,6 +38,7 @@ class InvoicesPagedViewModel(
         val cursor: String? = null,
         val endReached: Boolean = false,
         val availableStates: List<String> = listOf(
+            "Todas",
             "Pendiente",
             "En proceso",
             "Cobrado",
@@ -56,7 +54,10 @@ class InvoicesPagedViewModel(
         val selectedSuggestion: String? = null,
         val updateState: UpdateState = UpdateState.OK,
         val message: String? = null,
-        val stateCounts: Map<String, Int> = emptyMap()
+        val stateCounts: Map<String, Int> = emptyMap(),
+        val allInvoices: List<BillingModel> = emptyList(),
+        val displayInvoices: List<BillingModel> = emptyList(),
+        val isSearchMode: Boolean = false
     )
 
     sealed interface Overlay {
@@ -67,7 +68,6 @@ class InvoicesPagedViewModel(
     init {
         initConfig()
         loadAllClients()
-        loadNextPage()
         observeAllBillings()
     }
 
@@ -93,173 +93,108 @@ class InvoicesPagedViewModel(
 
                 val counts = recalculated.groupBy { it.stateBilling }
                     .mapValues { it.value.size }
-                _uiState.update { it.copy(stateCounts = counts) }
+                    .toMutableMap()
+
+                counts["Todas"] = recalculated.size
+
+                _uiState.update {
+                    it.copy(
+                        stateCounts = counts,
+                        allInvoices = recalculated
+                    )
+                }
+
+                applyFilters()
             }.launchIn(viewModelScope)
     }
 
     private fun initConfig() {
         viewModelScope.launch {
             val (result, releaseNotes) = initConfigUseCase()
-            _uiState.value =
-                _uiState.value.copy(
+            _uiState.update {
+                it.copy(
                     updateState = result,
                     overlay = Overlay.UpdateApp(result, releaseNotes)
                 )
+            }
             Log.i("MdcAppOnly", "InvoicesPagedViewModel--- initConfig: $result")
         }
     }
 
+    private fun applyFilters() {
+        val current = _uiState.value
+        val query = current.searchQuery.text.lowercase()
+        val state = current.selectedState
+
+        val result = if (current.isSearchMode && query.isNotEmpty()) {
+            // Modo Búsqueda Global: Filtra en toda la base por Razón Social O Número (WhatsApp Style)
+            current.allInvoices.filter { billing ->
+                billing.clientName.lowercase().contains(query) ||
+                        billing.billingNumber.lowercase().contains(query)
+            }
+        } else {
+            // Modo Navegación: Filtrar por estado
+            if (state == "Todas") {
+                current.allInvoices
+            } else {
+                current.allInvoices.filter { it.stateBilling == state }
+            }
+        }
+
+        _uiState.update {
+            it.copy(displayInvoices = result.sortedByDescending { b -> b.timeStamp })
+        }
+    }
 
     fun onQueryChange(value: String) {
         _uiState.update { it.copy(searchQuery = TextFieldValue(value)) }
+        applyFilters()
+    }
+
+    fun setSearchMode(enabled: Boolean) {
+        _uiState.update { it.copy(isSearchMode = enabled) }
+        if (!enabled) {
+            _uiState.update { it.copy(searchQuery = TextFieldValue("")) }
+        }
+        applyFilters()
     }
 
     fun selectSuggestion(value: String) {
         _uiState.update {
             it.copy(
                 selectedSuggestion = value,
-                searchQuery = TextFieldValue(value),
-                clientSearch = if (it.typeSearch is TypeSearch.Client) value else it.clientSearch,
-                numberSearch = if (it.typeSearch is TypeSearch.Number) value else it.numberSearch,
-                cursor = getInvoicePaged.reset(),
-                invoices = emptyList(),
-                endReached = false
+                searchQuery = TextFieldValue(value)
             )
         }
-
-        loadNextPage()
+        applyFilters()
     }
 
 
     private fun loadAllClients() {
         viewModelScope.launch {
             _uiState.update { it.copy(clientNameList = getClients()) }
-            Log.i("InvoicesPagedViewModel", "Clients: ${_uiState.value.clientNameList}")
         }
     }
 
     fun stateSelected(state: String) {
         _uiState.update {
-            it.copy(
-                selectedState = state,
-                endReached = false
-            )
+            it.copy(selectedState = state)
         }
-        reload()
-    }
-
-    fun loadNextPage() {
-        val current = _uiState.value
-        if (current.isLoading || current.endReached) return
-
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-
-            val (page, cursor) = getInvoicePaged.loadNextPage(
-                limit = 20,
-                state = current.selectedState,
-                cursor = current.cursor,
-                client = current.clientSearch,
-                number = current.numberSearch
-            )
-
-            _uiState.update {
-                it.copy(
-                    invoices = it.invoices + page.items.map { item ->
-                        item.toBillingDomain().recalculate()
-                    },
-                    cursor = cursor,
-                    isLoading = false,
-                    endReached = page.items.isEmpty()
-                )
-            }
-        }
+        applyFilters()
     }
 
     fun refresh() {
-        _uiState.update {
-            it.copy(
-                isLoading = true,
-                invoices = emptyList(),
-                cursor = null,
-                endReached = false
-            )
-        }
-        loadNextPage()
-    }
-
-    private fun reload() {
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    invoices = emptyList(),
-                    cursor = getInvoicePaged.reset(),
-                    endReached = false
-                )
-            }
-
-            val state = _uiState.value.selectedState
-            val client = _uiState.value.clientSearch
-            val number = _uiState.value.numberSearch
-
-            val (page, cursor) = getInvoicePaged.loadNextPage(
-                limit = 20,
-                state = state,
-                cursor = null,
-                client = client,
-                number = number
-            )
-
-            _uiState.update {
-                it.copy(
-                    invoices = page.items.map { invoice ->
-                        invoice.toBillingDomain().recalculate()
-                    },
-                    cursor = cursor,
-                    isLoading = false,
-                    endReached = page.items.isEmpty()
-                )
-            }
-        }
-    }
-
-
-    fun onSelectedTypeSearch(type: TypeSearch) {
-        _uiState.update { it.copy(typeSearch = type) }
-    }
-
-    fun onSearch() {
-        val query = _uiState.value.searchQuery
-
-        when (_uiState.value.typeSearch) {
-            TypeSearch.Client -> {
-                _uiState.update {
-                    it.copy(clientSearch = query.text, numberSearch = null)
-                }
-            }
-
-            TypeSearch.Number -> {
-                _uiState.update {
-                    it.copy(numberSearch = query.text, clientSearch = null)
-                }
-            }
-
-            null -> return
-        }
-
-        reload()
+        // Al ser reactivo, Firestore notificará cualquier cambio automáticamente.
+        // No se requiere lógica manual de refresh aquí.
     }
 
     fun clearQuery() {
         _uiState.update {
             it.copy(
-                clientSearch = null,
-                numberSearch = null,
                 searchQuery = TextFieldValue("")
             )
         }
-        reload()
+        applyFilters()
     }
 
     fun closeOverlay() {
@@ -287,3 +222,4 @@ class InvoicesPagedViewModel(
     }
 
 }
+

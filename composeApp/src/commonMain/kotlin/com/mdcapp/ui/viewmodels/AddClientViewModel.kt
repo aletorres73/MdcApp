@@ -41,3 +41,4 @@ class AddClientViewModel(private val clientUseCase: GetClientsUseCase) : ViewMod
         _state.update { UiState() }
     }
 }
+

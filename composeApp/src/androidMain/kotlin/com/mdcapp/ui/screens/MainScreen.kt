@@ -9,7 +9,6 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -101,12 +100,6 @@ fun MainScreen(
                 FloatingActionButton(onClick = onNavigateToAddClient) {
                     Icon(Icons.Default.Add, contentDescription = "Agregar Cliente")
                 }
-            } else {
-                ExtendedFloatingActionButton(
-                    text = { Text("Nuevo Pedido") },
-                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    onClick = onNavigateToCreateOrder
-                )
             }
         }
     ) { innerPadding ->
@@ -117,8 +110,7 @@ fun MainScreen(
         ) {
             composable(AppRoute.InvoicesPaged.route) {
                 InvoicesPageScreen(
-                    onNavigationInvoice = onNavigateToInvoice,
-                    onNavigationClientDetail = onNavigateToClientInvoices
+                    onNavigationInvoice = onNavigateToInvoice
                 )
             }
             composable(AppRoute.Clients.route) {
@@ -157,3 +149,4 @@ data class NavigationItem(
     val route: String,
     val icon: androidx.compose.ui.graphics.vector.ImageVector
 )
+

@@ -63,7 +63,6 @@ class AddInvoiceViewModel(
         }
     }
 
-    @androidx.annotation.RequiresApi(26)
     fun saveInvoice(
         number: String,
         amount: Double,
@@ -125,3 +124,4 @@ class AddInvoiceViewModel(
         }
     }
 }
+

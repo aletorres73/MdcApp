@@ -48,3 +48,4 @@ fun DataCell(
             .padding(horizontal = 4.dp)
     )
 }
+

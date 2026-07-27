@@ -151,7 +151,6 @@ val viewModelModule = module {
             get(),
             get(),
             get(),
-            get(),
             get()
         )
     }
@@ -165,3 +164,4 @@ fun initKoin(config: KoinAppDeclaration? = null) {
         modules(appModule, dataModule, viewModelModule)
     }
 }
+

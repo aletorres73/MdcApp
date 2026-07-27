@@ -394,6 +394,14 @@ class OrderService(
             }
     }
 
+    /**
+     * SCALABILITY NOTE:
+     * Currently observing the entire 'allBillings' collection to support real-time state counts
+     * and instant memory search across all invoices.
+     * If the collection grows significantly (e.g., > 5000 documents per user), this query should
+     * be limited (e.g., .where("Timestamp", ">", oneYearAgo)) to avoid performance degradation
+     * and excessive Firestore read costs.
+     */
     fun observeAllBillings(): Flow<List<RemoteResultBillingModel>> {
         return allBillingsCollection
             .snapshots()
@@ -482,3 +490,4 @@ class OrderService(
         }
     }
 }
+

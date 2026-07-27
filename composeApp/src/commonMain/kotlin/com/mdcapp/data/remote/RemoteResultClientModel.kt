@@ -37,3 +37,4 @@ data class RemoteResultInfoClientModel(
     @SerialName("Telefono") val phone: String = "",
     @SerialName("Contacto") val contactName: String = ""
 )
+

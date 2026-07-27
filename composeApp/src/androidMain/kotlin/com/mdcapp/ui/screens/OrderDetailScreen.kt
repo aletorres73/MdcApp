@@ -18,8 +18,9 @@ import androidx.compose.ui.Modifier
 import com.mdcapp.ui.composables.detailorders.OrderDetailInfo
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
 fun OrderDetailScreen(
     clientId: String,
@@ -56,3 +57,4 @@ fun OrderDetailScreen(
         }
     }
 }
+

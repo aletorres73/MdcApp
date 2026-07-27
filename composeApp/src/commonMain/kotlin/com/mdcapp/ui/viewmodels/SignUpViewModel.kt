@@ -53,3 +53,4 @@ class SignUpViewModel(private val authRepository: AuthRepository) : ViewModel() 
         _state.update { UiState() }
     }
 }
+

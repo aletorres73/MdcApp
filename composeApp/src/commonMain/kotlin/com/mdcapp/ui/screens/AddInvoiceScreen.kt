@@ -1,6 +1,5 @@
 package com.mdcapp.ui.screens
 
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,7 +46,6 @@ import org.koin.core.parameter.parametersOf
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-@RequiresApi(26)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddInvoiceScreen(
@@ -256,7 +254,6 @@ fun ConditionSelector(
     }
 }
 
-@RequiresApi(26)
 fun addDate(date: String, quantity: Int?): String {
     // Definir el formato de entrada y salida "dd/MM/yyyy"
     val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")

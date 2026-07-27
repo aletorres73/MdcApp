@@ -35,3 +35,4 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _state.update { UiState() }
     }
 }
+

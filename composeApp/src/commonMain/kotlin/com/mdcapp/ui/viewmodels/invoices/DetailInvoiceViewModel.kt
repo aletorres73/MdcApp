@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@androidx.annotation.RequiresApi(26)
 class DetailInvoiceViewModel(
     invoiceNumber: String,
     private val observeInvoiceUseCase: InvoiceUseCase.ObserveInvoice,
@@ -160,7 +159,6 @@ class DetailInvoiceViewModel(
         Log.i("MdcAppOnly", "DetailInvoiceViewModel --- on updateDeliveryDate: $updated")
     }
 
-    @androidx.annotation.RequiresApi(26)
     fun registerPayment(amount: Double) {
         viewModelScope.launch {
             val current = _state.value
@@ -212,7 +210,6 @@ class DetailInvoiceViewModel(
         }
     }
 
-    @androidx.annotation.RequiresApi(26)
     fun addComment(text: String) {
         val now = try {
             val date = java.time.LocalDate.now()
@@ -261,3 +258,4 @@ class DetailInvoiceViewModel(
         _state.update { it.copy(message = null) }
     }
 }
+

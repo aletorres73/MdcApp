@@ -1,7 +1,6 @@
 package com.mdcapp.ui.viewmodels.buyorders
 
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingModel
@@ -19,7 +18,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-@RequiresApi(26)
 class BuyOrdersViewModel(
     private val getBuyOrder: BuyOrderUseCase.GetBuyOrderById,
     private val getBillings: BuyOrderUseCase.GetBillings,
@@ -215,7 +213,6 @@ class BuyOrdersViewModel(
     }
 
     // Seleccionar condición de pago
-    @RequiresApi(26)
     fun onSelectedPaymentCondition(paymentCondition: PaymentCondition, billingNumber: String) {
         _tempState.value = _tempState.value.copy(
             billings = _tempState.value.billings.map { billing ->
@@ -253,7 +250,6 @@ class BuyOrdersViewModel(
     }
 
     // Obtener fecha actual
-    @RequiresApi(26)
     private fun getCurrentDate(): String {
         val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         return LocalDate.now().format(dateFormatter)
@@ -280,7 +276,6 @@ class BuyOrdersViewModel(
         }
     }
 
-    @RequiresApi(26)
     fun addPayment(billingNumber: String, payed: Double) {
         viewModelScope.launch {
             try {

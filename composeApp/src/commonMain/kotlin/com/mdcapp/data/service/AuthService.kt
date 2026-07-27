@@ -34,3 +34,4 @@ class AuthService(private val auth: FirebaseAuth) {
         return auth.currentUser != null
     }
 }
+

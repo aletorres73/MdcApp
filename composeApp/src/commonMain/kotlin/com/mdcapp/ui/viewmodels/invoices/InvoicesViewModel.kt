@@ -17,7 +17,6 @@ import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-@androidx.annotation.RequiresApi(26)
 class InvoicesViewModel(
     clientId: String,
     private val observeDocumentsUseCase: InvoiceUseCase.ObserveBillingsByClient,
@@ -149,5 +148,6 @@ class InvoicesViewModel(
         // Al usar combine, esto se actualiza automáticamente al llamar a setBrand
     }
 }
+
 
 

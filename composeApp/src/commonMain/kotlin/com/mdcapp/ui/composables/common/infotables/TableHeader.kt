@@ -13,3 +13,4 @@ fun TableHeader(text: String, modifier: Modifier = Modifier) {
         style = MaterialTheme.typography.titleSmall
     )
 }
+

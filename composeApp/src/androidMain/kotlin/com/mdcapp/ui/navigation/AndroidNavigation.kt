@@ -1,7 +1,5 @@
 package com.mdcapp.ui.navigation
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -28,7 +26,6 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.parameter.parametersOf
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(KoinExperimentalAPI::class)
 @Composable
 fun AndroidNavigation(startRoute: String) {

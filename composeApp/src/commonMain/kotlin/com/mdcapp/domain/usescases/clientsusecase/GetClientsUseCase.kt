@@ -42,3 +42,4 @@ class GetClientsUseCase(private val service: ClientService) {
         return service.fetchAllClientsName().map { it.toClientDomain() }
     }
 }
+

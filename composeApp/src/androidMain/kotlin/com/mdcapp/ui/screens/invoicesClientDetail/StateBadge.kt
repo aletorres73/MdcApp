@@ -22,3 +22,4 @@ fun StateBadge(state: String) {
         )
     }
 }
+

@@ -1,7 +1,5 @@
 package com.mdcapp.ui.screens.invoicesPage
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.ui.composables.invoicePage.InvoiceRow
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InvoiceList(
     invoices: List<BillingModel>,
@@ -49,3 +46,4 @@ fun InvoiceList(
         }
     }
 }
+

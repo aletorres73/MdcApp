@@ -77,3 +77,4 @@ fun inputPaymentCondition(): PaymentCondition {
         date = date.text.toIntOrNull() ?: 0
     )
 }
+
