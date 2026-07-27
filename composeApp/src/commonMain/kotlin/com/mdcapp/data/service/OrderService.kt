@@ -33,7 +33,6 @@ class OrderService(
 
     private val ordersCollection get() = userDoc.collection(ORDERS)
     private val buyOrdersCollection get() = userDoc.collection(BUY_ORDERS)
-    private val billingsCollection get() = userDoc.collection(BILLINGS)
     private val factoriesCollection get() = userDoc.collection(FACTORIES)
     private val paymentsRegisterCollection get() = userDoc.collection(PAYMENTS_REGISTER)
 
@@ -134,8 +133,8 @@ class OrderService(
 
     suspend fun fetchBillingsByClient(clientId: String): List<RemoteResultBillingModel> {
         return try {
-            val document = billingsCollection
-                .where { FieldPath("Cliente id").equalTo(clientId) }
+            val document = allBillingsCollection
+                .where { FieldPath("Cliente Id").equalTo(clientId) }
                 .get()
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }

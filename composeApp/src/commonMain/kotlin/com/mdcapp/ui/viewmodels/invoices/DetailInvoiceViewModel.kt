@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
 import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.data.model.PaymentRegisterModel
 import com.mdcapp.data.model.recalculate
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
@@ -19,7 +20,10 @@ class DetailInvoiceViewModel(
     private val getInvoiceUseCase: InvoiceUseCase.GetInvoiceByNumber,
     private val getBuyOrderUseCase: BuyOrderUseCase.GetBuyOrderById,
     private val getPaymentConditionUseCase: InvoiceUseCase.GetPaymentCondition,
-    private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice
+    private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
+    private val getPaymentsRegisterUseCase: BuyOrderUseCase.GetPaymentsRegister,
+    private val addPaymentToRegisterUseCase: BuyOrderUseCase.AddPaymentToRegister,
+    private val getLastIdPaymentUseCase: BuyOrderUseCase.GetLastIdPaymentFromRegister
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(invoiceNumber = invoiceNumber))
@@ -32,7 +36,8 @@ class DetailInvoiceViewModel(
         val buyOrder: BuyOrderModel = BuyOrderModel(),
         val error: String? = null,
         val paymentConditionList: List<PaymentCondition> = emptyList(),
-        val message: String? = null
+        val message: String? = null,
+        val payments: List<PaymentRegisterModel> = emptyList()
     )
 
     init {
@@ -62,13 +67,15 @@ class DetailInvoiceViewModel(
 // ...
 
                 val paymentConditions = getPaymentConditionUseCase(billing.brand)
+                val payments = getPaymentsRegisterUseCase(listOf(invoiceNumber))
 
                 _state.update {
                     it.copy(
                         billing = billing.recalculate(),
                         buyOrder = buyOrder,
                         paymentConditionList = paymentConditions,
-                        isLoading = false
+                        isLoading = false,
+                        payments = payments
                     )
                 }
                 Log.i("MdcAppOnly", "DetailInvoiceViewModel --- on loadData: $billing")
@@ -123,17 +130,56 @@ class DetailInvoiceViewModel(
         Log.i("MdcAppOnly", "DetailInvoiceViewModel --- on updateDeliveryDate: $updated")
     }
 
+    @androidx.annotation.RequiresApi(26)
     fun registerPayment(amount: Double) {
-        val current = _state.value
-        val updated = current.billing.copy(
-            payed = current.billing.payed + amount
-        ).recalculate()
+        viewModelScope.launch {
+            val current = _state.value
 
-        _state.update {
-            it.copy(billing = updated)
+            // 1. Get Last ID
+            val lastId = getLastIdPaymentUseCase()
+            val nextId = lastId + 1
+
+            // 2. Create Payment Register
+            val now = try {
+                val date = java.time.LocalDate.now()
+                val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                date.format(formatter)
+            } catch (e: Exception) {
+                ""
+            }
+
+            val paymentRegister = PaymentRegisterModel(
+                id = nextId,
+                clientId = current.billing.clientId,
+                branch = current.billing.brand,
+                date = now,
+                clientName = current.billing.clientName,
+                documentNumber = current.billing.billingNumber,
+                type = current.billing.type.ifEmpty { "Factura" },
+                total = amount
+            )
+
+            // 3. Save Payment
+            val registerResult = addPaymentToRegisterUseCase(paymentRegister)
+
+            if (registerResult) {
+                // 4. Update Billing payed total
+                val updatedBilling = current.billing.copy(
+                    payed = current.billing.payed + amount
+                ).recalculate()
+
+                _state.update {
+                    it.copy(
+                        billing = updatedBilling,
+                        payments = it.payments + paymentRegister,
+                        message = "Pago registrado"
+                    )
+                }
+                saveBilling()
+            } else {
+                _state.update { it.copy(message = "Error al registrar el pago") }
+            }
         }
-
-        saveBilling()
     }
 
     @androidx.annotation.RequiresApi(26)

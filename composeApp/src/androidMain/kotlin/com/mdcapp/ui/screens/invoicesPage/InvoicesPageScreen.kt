@@ -1,5 +1,7 @@
 package com.mdcapp.ui.screens.invoicesPage
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +24,7 @@ import com.mdcapp.ui.viewmodels.invoices.InvoicesPagedViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(KoinExperimentalAPI::class, ExperimentalMaterial3Api::class)
 @Composable
 fun InvoicesPageScreen(

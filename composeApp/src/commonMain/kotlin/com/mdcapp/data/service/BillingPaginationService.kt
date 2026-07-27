@@ -36,7 +36,7 @@ class BillingPaginationService(
             }
 
             if (!client.isNullOrBlank()) {
-                query = query.where { "Razón Social" equalTo client }
+                query = query.where { "Razon Social" equalTo client }
             }
 
             if (!number.isNullOrBlank()) {

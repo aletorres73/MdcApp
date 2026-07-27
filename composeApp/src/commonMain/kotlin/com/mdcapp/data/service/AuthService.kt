@@ -12,6 +12,7 @@ class AuthService(private val auth: FirebaseAuth) {
         return try {
             auth.signInWithEmailAndPassword(email, password).user
         } catch (e: Exception) {
+            println("Error al iniciar sesión: ${e.message}")
             null
         }
     }
@@ -20,6 +21,7 @@ class AuthService(private val auth: FirebaseAuth) {
         return try {
             auth.createUserWithEmailAndPassword(email, password).user
         } catch (e: Exception) {
+            println("Error al registrar usuario: ${e.message}")
             null
         }
     }

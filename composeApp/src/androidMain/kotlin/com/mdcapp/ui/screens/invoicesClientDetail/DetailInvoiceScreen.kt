@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -116,20 +115,6 @@ fun DetailInvoiceScreen(
                 billing = state.billing,
                 onBack = onBack
             )
-        },
-        bottomBar = {
-            if (state.billing.rest > 0) {
-                BottomAppBar {
-                    Button(
-                        onClick = { showPaymentDialog = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        Text("Registrar Pago")
-                    }
-                }
-            }
         }
     ) { padding ->
         Column(
@@ -156,6 +141,12 @@ fun DetailInvoiceScreen(
                 order = buyOrder,
                 expanded = showOrder,
                 onToggle = { showOrder = !showOrder }
+            )
+
+            // Nueva sección de Pagos
+            PaymentsSection(
+                payments = state.payments,
+                onAddPayment = { showPaymentDialog = true }
             )
 
             // Nueva sección de Comentarios
@@ -269,6 +260,53 @@ fun DetailInvoiceScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun PaymentsSection(
+    payments: List<com.mdcapp.data.model.PaymentRegisterModel>,
+    onAddPayment: () -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Text("Historial de Pagos", style = MaterialTheme.typography.titleMedium)
+                TextButton(onClick = onAddPayment) { Text("+ Pago") }
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            if (payments.isEmpty()) {
+                Text("No hay pagos registrados.", style = MaterialTheme.typography.bodySmall)
+            } else {
+                payments.forEach { payment ->
+                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                payment.date,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "$ ${payment.total}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            )
+                        }
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        thickness = 0.5.dp
+                    )
+                }
+            }
+        }
     }
 }
 
