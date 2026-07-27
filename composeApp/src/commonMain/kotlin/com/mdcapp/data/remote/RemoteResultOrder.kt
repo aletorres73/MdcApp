@@ -1,6 +1,6 @@
 package com.mdcapp.data.remote
 
-import com.mdcapp.data.model.OrderModel
+import com.mdcapp.domain.entities.OrderModel
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -54,7 +54,33 @@ data class RemoteResultOrder(
     var date: String? = ""
 )
 
-fun RemoteResultOrder.toDomain() = OrderModel(
+fun RemoteResultOrder.toOrderDomain() = OrderModel(
+    orderNumber = orderNumber,
+    nameClient = nameClient,
+    branch = branch,
+    type = type,
+    documentDate = documentDate,
+    numberDocument = numberDocument,
+    trackingState = trackingState,
+    documentComments = documentComments,
+    sellOut = sellOut,
+    inputDate = inputDate,
+    payState = payState,
+    receptionDate = receptionDate,
+    payDate = payDate,
+    valueDocument = valueDocument,
+    discount = discount,
+    payAmount = payAmount,
+    payedAmount = payedAmount,
+    payDifference = payDifference,
+    orders = orders,
+    documents = documents,
+    checked = checked,
+    calendar = calendar,
+    date = date
+)
+
+fun OrderModel.toOrderRemote() = RemoteResultOrder(
     orderNumber = orderNumber,
     nameClient = nameClient,
     branch = branch,

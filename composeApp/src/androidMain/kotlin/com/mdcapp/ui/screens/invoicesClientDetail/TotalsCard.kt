@@ -2,8 +2,8 @@ package com.mdcapp.ui.screens.invoicesClientDetail
 
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.toPrint
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.toPrint
 import com.mdcapp.ui.screens.invoicesClientDetail.common.CardHeader
 import com.mdcapp.ui.screens.invoicesClientDetail.common.SectionCard
 import com.mdcapp.ui.screens.invoicesClientDetail.common.ValueRow

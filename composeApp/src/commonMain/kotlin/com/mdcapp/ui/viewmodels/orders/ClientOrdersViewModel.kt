@@ -2,7 +2,7 @@ package com.mdcapp.ui.viewmodels.orders
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.model.BuyOrderModel
+import com.mdcapp.domain.entities.BuyOrderModel
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

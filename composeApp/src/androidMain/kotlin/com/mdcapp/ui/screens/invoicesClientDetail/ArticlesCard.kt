@@ -19,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.ArticleModel
+import com.mdcapp.domain.entities.ArticleModel
 import com.mdcapp.ui.composables.common.infotables.TableCell
 import com.mdcapp.ui.composables.common.infotables.TableHeader
 

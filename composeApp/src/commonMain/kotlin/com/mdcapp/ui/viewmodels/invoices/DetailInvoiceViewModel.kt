@@ -3,11 +3,12 @@ package com.mdcapp.ui.viewmodels.invoices
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.BuyOrderModel
-import com.mdcapp.data.model.PaymentCondition
-import com.mdcapp.data.model.PaymentRegisterModel
-import com.mdcapp.data.model.recalculate
+import com.mdcapp.domain.entities.BillingComments
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.BuyOrderModel
+import com.mdcapp.domain.entities.PaymentCondition
+import com.mdcapp.domain.entities.PaymentRegisterModel
+import com.mdcapp.domain.entities.recalculate
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@androidx.annotation.RequiresApi(26)
 class DetailInvoiceViewModel(
     invoiceNumber: String,
     private val observeInvoiceUseCase: InvoiceUseCase.ObserveInvoice,
@@ -66,17 +68,25 @@ class DetailInvoiceViewModel(
                         try {
                             val buyOrder = getBuyOrderUseCase(billing.clientId, billing.orderId)
                             _state.update { it.copy(buyOrder = buyOrder) }
+
+                            // Si aún no tenemos condiciones, intentar cargarlas con la fábrica del pedido
+                            if (_state.value.paymentConditionList.isEmpty()) {
+                                val paymentConditions =
+                                    getPaymentConditionUseCase(billing.brand, buyOrder.factory)
+                                _state.update { it.copy(paymentConditionList = paymentConditions) }
+                            }
                         } catch (e: Exception) {
-                            Log.e("MdcAppOnly", "Error loading BuyOrder: $e")
+                            Log.e("MdcAppOnly", "Error loading BuyOrder or Conditions: $e")
                         }
                     }
-                }
-
-                // Cargar condiciones solo una vez
-                if (_state.value.paymentConditionList.isEmpty()) {
+                } else if (_state.value.paymentConditionList.isEmpty()) {
+                    // Si ya tenemos el BuyOrder pero no las condiciones
                     viewModelScope.launch {
                         try {
-                            val paymentConditions = getPaymentConditionUseCase(billing.brand)
+                            val paymentConditions = getPaymentConditionUseCase(
+                                billing.brand,
+                                _state.value.buyOrder.factory
+                            )
                             _state.update { it.copy(paymentConditionList = paymentConditions) }
                         } catch (e: Exception) {
                             Log.e("MdcAppOnly", "Error loading PaymentConditions: $e")
@@ -84,9 +94,23 @@ class DetailInvoiceViewModel(
                     }
                 }
 
+                val updatedBilling = billing.recalculate()
+
+                // Silent Sync: Si el estado cambia por el paso del tiempo, sincronizar con Firestore
+                if (updatedBilling.stateBilling != billing.stateBilling) {
+                    viewModelScope.launch {
+                        updateInvoiceUseCase(
+                            updatedBilling.clientId,
+                            updatedBilling.orderId,
+                            updatedBilling.billingNumber,
+                            updatedBilling
+                        )
+                    }
+                }
+
                 _state.update {
                     it.copy(
-                        billing = billing.recalculate(),
+                        billing = updatedBilling,
                         isLoading = false
                     )
                 }
@@ -122,7 +146,6 @@ class DetailInvoiceViewModel(
 
         val condition = current.paymentConditionList
             .find { it.paymentName == current.billing.paymentCondition }
-            ?: return
 
         val updated = current.billing
             .copy(deliveryDate = newDate)
@@ -199,7 +222,7 @@ class DetailInvoiceViewModel(
             ""
         }
 
-        val newComment = com.mdcapp.data.model.BillingComments(text, now)
+        val newComment = BillingComments(text, now)
         val current = _state.value
         val updated = current.billing.copy(
             comments = current.billing.comments + newComment

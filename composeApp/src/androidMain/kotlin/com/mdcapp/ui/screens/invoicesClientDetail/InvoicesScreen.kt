@@ -32,7 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.BillingModel
+import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.ui.composables.common.LoadingIndicator
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 

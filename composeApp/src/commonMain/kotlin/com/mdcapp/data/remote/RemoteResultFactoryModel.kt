@@ -1,7 +1,7 @@
 package com.mdcapp.data.remote
 
-import com.mdcapp.data.model.FactoryModel
-import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.domain.entities.FactoryModel
+import com.mdcapp.domain.entities.PaymentCondition
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -12,16 +12,16 @@ data class RemoteResultFactoryModel(
     @SerialName("Condiciones") val paymentsTypes: Map<String, Map<String, String>> = emptyMap()
 )
 
-fun RemoteResultFactoryModel.toDomain() = FactoryModel(
+fun RemoteResultFactoryModel.toFactoryDomain() = FactoryModel(
     name = name,
     branchList = branchList,
     paymentType = paymentsTypes.toPaymentConditions()
 )
 
-fun FactoryModel.toRemote() = RemoteResultFactoryModel(
+fun FactoryModel.toFactoryRemote() = RemoteResultFactoryModel(
     name = name,
     branchList = branchList,
-    paymentsTypes = paymentType.toRemote()
+    paymentsTypes = paymentType.toRemoteMap()
 )
 
 fun Map<String, Map<String, Any>>.toPaymentConditions(): List<PaymentCondition> {
@@ -33,13 +33,11 @@ fun Map<String, Map<String, Any>>.toPaymentConditions(): List<PaymentCondition> 
             expiration = paymentInfo["vencimiento"]?.toString()?.toIntOrNull() ?: 0,
             date = paymentInfo["plazo"]?.toString()?.toIntOrNull() ?: 0,
             quantity = paymentInfo["pagos"]?.toString()?.toIntOrNull() ?: 0
-
         )
     }
 }
 
-
-fun List<PaymentCondition>.toRemote(): Map<String, Map<String, String>> {
+fun List<PaymentCondition>.toRemoteMap(): Map<String, Map<String, String>> {
     return this.mapIndexed { index, paymentCondition ->
         "condicion${index + 1}" to mapOf(
             "condicion" to paymentCondition.paymentName,

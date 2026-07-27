@@ -4,11 +4,11 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.BuyOrderModel
-import com.mdcapp.data.model.PaymentCondition
-import com.mdcapp.data.model.PaymentRegisterModel
-import com.mdcapp.data.model.recalculate
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.BuyOrderModel
+import com.mdcapp.domain.entities.PaymentCondition
+import com.mdcapp.domain.entities.PaymentRegisterModel
+import com.mdcapp.domain.entities.recalculate
 import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.async
@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@RequiresApi(26)
 class BuyOrdersViewModel(
     private val getBuyOrder: BuyOrderUseCase.GetBuyOrderById,
     private val getBillings: BuyOrderUseCase.GetBillings,
@@ -214,6 +215,7 @@ class BuyOrdersViewModel(
     }
 
     // Seleccionar condición de pago
+    @RequiresApi(26)
     fun onSelectedPaymentCondition(paymentCondition: PaymentCondition, billingNumber: String) {
         _tempState.value = _tempState.value.copy(
             billings = _tempState.value.billings.map { billing ->

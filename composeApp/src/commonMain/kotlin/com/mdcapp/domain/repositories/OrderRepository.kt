@@ -1,40 +1,46 @@
 package com.mdcapp.domain.repositories
 
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.BuyOrderModel
-import com.mdcapp.data.model.FactoryModel
-import com.mdcapp.data.model.OrderModel
-import com.mdcapp.data.model.PaymentCondition
-import com.mdcapp.data.model.PaymentRegisterModel
-import com.mdcapp.data.model.toDomain
-import com.mdcapp.data.model.toRemote
-import com.mdcapp.data.remote.toDomain
+import com.mdcapp.data.remote.toBillingDomain
+import com.mdcapp.data.remote.toBillingRemote
+import com.mdcapp.data.remote.toBuyOrderDomain
+import com.mdcapp.data.remote.toBuyOrderRemote
+import com.mdcapp.data.remote.toFactoryDomain
+import com.mdcapp.data.remote.toFactoryRemote
+import com.mdcapp.data.remote.toOrderDomain
 import com.mdcapp.data.remote.toPaymentConditions
-import com.mdcapp.data.remote.toRemote
+import com.mdcapp.data.remote.toPaymentDomain
+import com.mdcapp.data.remote.toPaymentRemote
 import com.mdcapp.data.service.OrderService
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.BuyOrderModel
+import com.mdcapp.domain.entities.FactoryModel
+import com.mdcapp.domain.entities.OrderModel
+import com.mdcapp.domain.entities.PaymentCondition
+import com.mdcapp.domain.entities.PaymentRegisterModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class OrderRepository(private val service: OrderService) {
-    suspend fun getAllOrders(): List<OrderModel> = service.fetchAllOrders().map { it.toDomain() }
+    suspend fun getAllOrders(): List<OrderModel> =
+        service.fetchAllOrders().map { it.toOrderDomain() }
 
     suspend fun getBuyOrderById(clientId: String, orderId: String) =
-        service.fetchBuyOrder(clientId, orderId).toDomain()
+        service.fetchBuyOrder(clientId, orderId).toBuyOrderDomain()
 
     suspend fun getBuyOrdersByClient(clientId: String) =
-        service.fetchBuyOrdersByClient(clientId).map { it.toDomain() }
+        service.fetchBuyOrdersByClient(clientId).map { it.toBuyOrderDomain() }
 
     suspend fun getBillingsByOrder(clientId: String, orderId: String) =
-        service.fetchBillings(clientId, orderId).map { it.toDomain() }
+        service.fetchBillings(clientId, orderId).map { it.toBillingDomain() }
 
     suspend fun getBillingsByClientID(clientId: String) =
-        service.fetchBillingsByClient(clientId).map { it.toDomain() }
+        service.fetchBillingsByClient(clientId).map { it.toBillingDomain() }
 
     suspend fun getBillingsByBrand(brand: String, clientId: String) =
-        service.fetchBillingsByBrand(brand, clientId).map { it.toDomain() }
+        service.fetchBillingsByBrand(brand, clientId).map { it.toBillingDomain() }
 
     suspend fun getOrdersByFactory(name: String) =
-        service.fetchOrdersByFactory(name).map { it.toDomain() }
+        service.fetchOrdersByFactory(name).map { it.toOrderDomain() }
 
     suspend fun getPaymentsConditionFactory(factoryName: String) =
         service.fetchPaymentsTypesFactory(factoryName).toPaymentConditions()
@@ -48,7 +54,7 @@ class OrderRepository(private val service: OrderService) {
     ) = service.setPaymentsConditionsFactory(factoryName, data)
 
     suspend fun addPaymentToRegister(data: PaymentRegisterModel) =
-        service.addPaymentToRegister(data.toDomain())
+        service.addPaymentToRegister(data.toPaymentRemote())
 
     suspend fun getLastId() = service.fetchLastIdFromPayments()
 
@@ -58,13 +64,13 @@ class OrderRepository(private val service: OrderService) {
         documentId: String,
         data: BillingModel
     ) =
-        service.updateBilling(clientId, orderId, documentId, data.toRemote())
+        service.updateBilling(clientId, orderId, documentId, data.toBillingRemote())
 
     suspend fun saveBilling(clientId: String, orderId: String, data: BillingModel) =
-        service.saveBilling(clientId, orderId, data.toRemote())
+        service.saveBilling(clientId, orderId, data.toBillingRemote())
 
     suspend fun getPaymentsRegisterByNumberDocument(documentList: List<String>) =
-        service.fetchPaymentRegisterByNumberList(documentList).map { it.toDomain() }
+        service.fetchPaymentRegisterByNumberList(documentList).map { it.toPaymentDomain() }
 
     suspend fun getOrderBranch(clientId: String, orderId: String) =
         service.fetchOrderBranch(clientId, orderId)
@@ -72,36 +78,38 @@ class OrderRepository(private val service: OrderService) {
     suspend fun getFactoriesList() = service.fetchFactoriesLisName()
 
     suspend fun getInvoiceByNumber(invoiceNumber: String): BillingModel {
-        return service.fetchInvoiceByNumber(invoiceNumber).toDomain()
+        return service.fetchInvoiceByNumber(invoiceNumber).toBillingDomain()
     }
 
     fun observeInvoiceByNumber(invoiceNumber: String): Flow<BillingModel> =
-        service.observeInvoiceByNumber(invoiceNumber).map { it.toDomain() }
+        service.observeInvoiceByNumber(invoiceNumber).map { it.toBillingDomain() }
 
     fun observeBillingsByClient(clientId: String): Flow<List<BillingModel>> =
-        service.observeBillingsByClient(clientId).map { list -> list.map { it.toDomain() } }
+        service.observeBillingsByClient(clientId).map { list -> list.map { it.toBillingDomain() } }
 
     fun observePaymentsByInvoice(invoiceNumber: String): Flow<List<PaymentRegisterModel>> =
-        service.observePaymentsByInvoice(invoiceNumber).map { list -> list.map { it.toDomain() } }
+        service.observePaymentsByInvoice(invoiceNumber)
+            .map { list -> list.map { it.toPaymentDomain() } }
 
     fun observeAllBillings(): Flow<List<BillingModel>> =
-        service.observeAllBillings().map { list -> list.map { it.toDomain() } }
+        service.observeAllBillings().map { list -> list.map { it.toBillingDomain() } }
 
     fun observeBuyOrdersByClient(clientId: String): Flow<List<BuyOrderModel>> =
-        service.observeBuyOrdersByClient(clientId).map { list -> list.map { it.toDomain() } }
+        service.observeBuyOrdersByClient(clientId)
+            .map { list -> list.map { it.toBuyOrderDomain() } }
 
     fun observeAllOrders(): Flow<List<OrderModel>> =
-        service.observeAllOrders().map { list -> list.map { it.toDomain() } }
+        service.observeAllOrders().map { list -> list.map { it.toOrderDomain() } }
 
     fun observeOrdersByFactory(name: String): Flow<List<OrderModel>> =
-        service.observeOrdersByFactory(name).map { list -> list.map { it.toDomain() } }
+        service.observeOrdersByFactory(name).map { list -> list.map { it.toOrderDomain() } }
 
     suspend fun saveOrder(clientId: String, order: BuyOrderModel): Boolean {
-        return service.saveOrder(clientId, order.toRemote())
+        return service.saveOrder(clientId, order.toBuyOrderRemote())
     }
 
     suspend fun saveFactory(factory: FactoryModel): Boolean {
-        return service.saveFactory(factory.toRemote())
+        return service.saveFactory(factory.toFactoryRemote())
     }
 
     suspend fun deleteFactory(factoryName: String): Boolean {
@@ -109,6 +117,6 @@ class OrderRepository(private val service: OrderService) {
     }
 
     suspend fun getFactories(): List<FactoryModel> {
-        return service.fetchAllFactories().map { it.toDomain() }
+        return service.fetchAllFactories().map { it.toFactoryDomain() }
     }
 }

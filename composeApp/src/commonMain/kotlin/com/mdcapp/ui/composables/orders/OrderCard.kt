@@ -19,8 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.ArticleOrderModel
-import com.mdcapp.data.model.BuyOrderModel
+import com.mdcapp.domain.entities.ArticleOrderModel
+import com.mdcapp.domain.entities.BuyOrderModel
 import com.mdcapp.ui.composables.common.infotables.TableCell
 import com.mdcapp.ui.composables.common.infotables.TableHeader
 

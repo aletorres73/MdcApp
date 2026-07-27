@@ -3,13 +3,13 @@
 package com.mdcapp.data.service
 
 import android.util.Log
-import com.mdcapp.data.model.PaymentCondition
-import com.mdcapp.data.model.RemotePaymentRegisterResult
 import com.mdcapp.data.remote.RemoteBranchOrder
+import com.mdcapp.data.remote.RemotePaymentRegisterResult
 import com.mdcapp.data.remote.RemoteResultBillingModel
 import com.mdcapp.data.remote.RemoteResultBuyOrder
 import com.mdcapp.data.remote.RemoteResultFactoryModel
 import com.mdcapp.data.remote.RemoteResultOrder
+import com.mdcapp.domain.entities.PaymentCondition
 import dev.gitlive.firebase.firestore.FieldPath
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow

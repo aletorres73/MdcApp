@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.model.FactoryModel
+import com.mdcapp.domain.entities.FactoryModel
 import com.mdcapp.domain.usescases.homeusescases.HomeUseCase
 import kotlinx.coroutines.launch
 

@@ -3,8 +3,9 @@ package com.mdcapp.ui.viewmodels.invoices
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.ClientModel
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.ClientModel
+import com.mdcapp.domain.entities.recalculate
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,10 +17,12 @@ import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@androidx.annotation.RequiresApi(26)
 class InvoicesViewModel(
     clientId: String,
     private val observeDocumentsUseCase: InvoiceUseCase.ObserveBillingsByClient,
-    private val getClientNameUseCase: InvoiceUseCase.GetClientName
+    private val getClientNameUseCase: InvoiceUseCase.GetClientName,
+    private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(clientId = clientId))
@@ -109,7 +112,21 @@ class InvoicesViewModel(
                 documents.filter { it.brand == activeBrand }
             } else documents
 
-            val sorted = sortDocuments(filteredDocs)
+            val recalculatedDocs = filteredDocs.map { billing ->
+                val updated = billing.recalculate()
+                if (updated.stateBilling != billing.stateBilling) {
+                    viewModelScope.launch {
+                        updateInvoiceUseCase(
+                            updated.clientId,
+                            updated.orderId,
+                            updated.billingNumber,
+                            updated
+                        )
+                    }
+                }
+                updated
+            }
+            val sorted = sortDocuments(recalculatedDocs)
             val balance = calculateBalance(sorted)
 
             _state.update {

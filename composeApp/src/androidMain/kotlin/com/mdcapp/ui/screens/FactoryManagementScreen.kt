@@ -44,8 +44,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.FactoryModel
-import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.domain.entities.FactoryModel
+import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.ui.viewmodels.FactoryViewModel
 import org.koin.compose.viewmodel.koinViewModel
 

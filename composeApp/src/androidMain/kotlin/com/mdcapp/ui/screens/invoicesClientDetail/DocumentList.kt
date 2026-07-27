@@ -19,8 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.toPrint
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.toPrint
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

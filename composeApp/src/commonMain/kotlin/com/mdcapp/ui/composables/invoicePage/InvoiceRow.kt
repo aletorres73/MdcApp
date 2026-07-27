@@ -22,8 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.toPrint
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.toPrint
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 

@@ -10,9 +10,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.mdcapp.data.model.OrderModel
 import com.mdcapp.data.remote.RemoteResultBillingModel
 import com.mdcapp.data.remote.toDomain
+import com.mdcapp.domain.entities.OrderModel
 import com.mdcapp.ui.composables.billings.BillingItem
 import com.mdcapp.ui.screens.common.OpenWindow
 import com.mdcapp.ui.screens.orders.orderdetail.DesktopOrderDetailScreen

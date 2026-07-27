@@ -2,7 +2,7 @@ package com.mdcapp.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.model.ClientModel
+import com.mdcapp.domain.entities.ClientModel
 import com.mdcapp.domain.usescases.clientsusecase.GetClientsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

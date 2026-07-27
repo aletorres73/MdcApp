@@ -39,7 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.ui.composables.common.DatePicker
 import com.mdcapp.ui.viewmodels.invoices.AddInvoiceViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -196,10 +196,9 @@ fun AddInvoiceScreen(
 
             Button(
                 onClick = {
-                    val payDate = if (deliveryDate.isNotBlank()) addDate(
-                        deliveryDate,
-                        selectedCondition?.quantity
-                    ) else ""
+                    val payDate = if (deliveryDate.isNotBlank() && selectedCondition != null) {
+                        addDate(deliveryDate, selectedCondition?.expiration)
+                    } else ""
                     viewModel.saveInvoice(
                         number = number,
                         amount = amount.toDoubleOrNull() ?: 0.0,

@@ -39,7 +39,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.formatter
+import com.mdcapp.domain.entities.BillingComments
+import com.mdcapp.domain.entities.PaymentRegisterModel
+import com.mdcapp.domain.entities.formatter
 import com.mdcapp.ui.composables.common.DatePicker
 import com.mdcapp.ui.screens.orders.OrderCard
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
@@ -265,7 +267,7 @@ fun DetailInvoiceScreen(
 
 @Composable
 fun PaymentsSection(
-    payments: List<com.mdcapp.data.model.PaymentRegisterModel>,
+    payments: List<PaymentRegisterModel>,
     onAddPayment: () -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -312,7 +314,7 @@ fun PaymentsSection(
 
 @Composable
 fun CommentsSection(
-    comments: List<com.mdcapp.data.model.BillingComments>,
+    comments: List<BillingComments>,
     onAddComment: () -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {

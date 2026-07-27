@@ -1,9 +1,9 @@
 package com.mdcapp.data.remote
 
-import com.mdcapp.data.model.ArticleModel
-import com.mdcapp.data.model.BillingComments
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.toMoneyDouble
+import com.mdcapp.domain.entities.ArticleModel
+import com.mdcapp.domain.entities.BillingComments
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.toMoneyDouble
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -44,15 +44,21 @@ data class RemoteBillingComments(
     val date: String = ""
 )
 
-fun RemoteArticle.toDomain() = ArticleModel(
+fun RemoteArticle.toArticleDomain() = ArticleModel(
     name = name,
     color = color,
     value = value.toMoneyDouble(),
     pairs = pairs.toIntOrNull() ?: 0
 )
 
+fun ArticleModel.toArticleRemote() = RemoteArticle(
+    name = name,
+    color = color,
+    value = value.toString(),
+    pairs = pairs.toString()
+)
 
-fun RemoteResultBillingModel.toDomain(): BillingModel {
+fun RemoteResultBillingModel.toBillingDomain(): BillingModel {
     return BillingModel(
         billingNumber = billingNumber,
         orderId = orderId,
@@ -61,7 +67,7 @@ fun RemoteResultBillingModel.toDomain(): BillingModel {
         loadDate = loadDate,
         deliveryDate = deliveryDate,
         payDate = payDate,
-        articles = articles.map { it.toDomain() },
+        articles = articles.map { it.toArticleDomain() },
         paymentCondition = paymentCondition,
         discount = discount,
         toPay = toPay,
@@ -75,3 +81,25 @@ fun RemoteResultBillingModel.toDomain(): BillingModel {
         timeStamp = timeStamp
     )
 }
+
+fun BillingModel.toBillingRemote() = RemoteResultBillingModel(
+    billingNumber,
+    orderId,
+    type,
+    total.toString(),
+    loadDate,
+    deliveryDate,
+    payDate,
+    articles.map { it.toArticleRemote() },
+    paymentCondition,
+    discount,
+    toPay,
+    payed.toString(),
+    rest.toString(),
+    stateBilling,
+    clientId,
+    brand,
+    comments.map { RemoteBillingComments(it.comments, it.date) },
+    clientName,
+    timeStamp
+)

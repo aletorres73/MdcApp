@@ -1,8 +1,8 @@
 package com.mdcapp.domain.usescases.ordersusescases
 
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.BuyOrderModel
-import com.mdcapp.data.model.PaymentRegisterModel
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.BuyOrderModel
+import com.mdcapp.domain.entities.PaymentRegisterModel
 import com.mdcapp.domain.repositories.OrderRepository
 import kotlinx.coroutines.flow.Flow
 

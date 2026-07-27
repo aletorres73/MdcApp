@@ -1,9 +1,9 @@
 package com.mdcapp.domain.usescases.clientsusecase
 
-import com.mdcapp.data.model.ClientModel
-import com.mdcapp.data.model.toDomain
-import com.mdcapp.data.model.toRemote
+import com.mdcapp.data.remote.toClientDomain
+import com.mdcapp.data.remote.toClientRemote
 import com.mdcapp.data.service.ClientService
+import com.mdcapp.domain.entities.ClientModel
 
 class GetClientsUseCase(private val service: ClientService) {
     private var currentPage = 0
@@ -13,7 +13,7 @@ class GetClientsUseCase(private val service: ClientService) {
         val (items, result) = service.fetchClientsPaged(pageSize.toLong())
         currentPage++
         val hasMore = items.size == pageSize
-        return items.map { it.toDomain() } to hasMore
+        return items.map { it.toClientDomain() } to hasMore
 
     }
 
@@ -27,11 +27,11 @@ class GetClientsUseCase(private val service: ClientService) {
     }
 
     suspend fun search(clientName: String): List<ClientModel> {
-        return service.searchClientsByName(clientName).map { it.toDomain() }
+        return service.searchClientsByName(clientName).map { it.toClientDomain() }
     }
 
     suspend fun save(client: ClientModel): Boolean {
-        return service.saveClient(client.toRemote())
+        return service.saveClient(client.toClientRemote())
     }
 
     suspend fun delete(clientId: String): Boolean {
@@ -39,6 +39,6 @@ class GetClientsUseCase(private val service: ClientService) {
     }
 
     suspend fun getAll(): List<ClientModel> {
-        return service.fetchAllClientsName().map { it.toDomain() }
+        return service.fetchAllClientsName().map { it.toClientDomain() }
     }
 }

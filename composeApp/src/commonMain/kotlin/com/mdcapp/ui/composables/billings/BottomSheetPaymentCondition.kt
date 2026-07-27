@@ -20,7 +20,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.domain.entities.PaymentCondition
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

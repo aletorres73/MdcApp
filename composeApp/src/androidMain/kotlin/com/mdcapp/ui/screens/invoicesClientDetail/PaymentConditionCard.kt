@@ -10,8 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.discountToPrint
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.discountToPrint
 import com.mdcapp.ui.screens.invoicesClientDetail.common.CardHeader
 import com.mdcapp.ui.screens.invoicesClientDetail.common.SectionCard
 

@@ -18,7 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.domain.entities.PaymentCondition
 
 @Composable
 fun PaymentConditionListSheet(

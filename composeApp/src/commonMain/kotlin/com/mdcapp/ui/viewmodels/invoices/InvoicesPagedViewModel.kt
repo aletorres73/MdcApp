@@ -5,11 +5,12 @@ import android.util.Log
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.ClientModel
-import com.mdcapp.data.remote.toDomain
+import com.mdcapp.data.remote.toBillingDomain
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.ClientModel
 import com.mdcapp.domain.entities.TypeSearch
 import com.mdcapp.domain.entities.UpdateState
+import com.mdcapp.domain.entities.recalculate
 import com.mdcapp.domain.usescases.InitConfigUseCase
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,11 +20,13 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@androidx.annotation.RequiresApi(26)
 class InvoicesPagedViewModel(
     private val getInvoicePaged: InvoiceUseCase.GetInvoicePaged,
     private val getClients: InvoiceUseCase.GetAllClients,
     private val initConfigUseCase: InitConfigUseCase,
-    private val observeAllBillingsUseCase: InvoiceUseCase.ObserveAllBillings
+    private val observeAllBillingsUseCase: InvoiceUseCase.ObserveAllBillings,
+    private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InvoiceUiState())
@@ -71,7 +74,24 @@ class InvoicesPagedViewModel(
     private fun observeAllBillings() {
         observeAllBillingsUseCase()
             .onEach { billings ->
-                val counts = billings.groupBy { it.stateBilling }
+                val recalculated = billings.map { it.recalculate() }
+
+                // Silent Sync: Actualizar en Firestore si el estado calculado difiere del guardado
+                recalculated.forEach { billing ->
+                    val original = billings.find { it.billingNumber == billing.billingNumber }
+                    if (original != null && original.stateBilling != billing.stateBilling) {
+                        viewModelScope.launch {
+                            updateInvoiceUseCase(
+                                billing.clientId,
+                                billing.orderId,
+                                billing.billingNumber,
+                                billing
+                            )
+                        }
+                    }
+                }
+
+                val counts = recalculated.groupBy { it.stateBilling }
                     .mapValues { it.value.size }
                 _uiState.update { it.copy(stateCounts = counts) }
             }.launchIn(viewModelScope)
@@ -145,7 +165,9 @@ class InvoicesPagedViewModel(
 
             _uiState.update {
                 it.copy(
-                    invoices = it.invoices + page.items.map { item -> item.toDomain() },
+                    invoices = it.invoices + page.items.map { item ->
+                        item.toBillingDomain().recalculate()
+                    },
                     cursor = cursor,
                     isLoading = false,
                     endReached = page.items.isEmpty()
@@ -191,7 +213,9 @@ class InvoicesPagedViewModel(
 
             _uiState.update {
                 it.copy(
-                    invoices = page.items.map { invoice -> invoice.toDomain() },
+                    invoices = page.items.map { invoice ->
+                        invoice.toBillingDomain().recalculate()
+                    },
                     cursor = cursor,
                     isLoading = false,
                     endReached = page.items.isEmpty()

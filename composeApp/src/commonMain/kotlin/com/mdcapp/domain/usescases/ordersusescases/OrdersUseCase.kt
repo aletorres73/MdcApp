@@ -1,6 +1,6 @@
 package com.mdcapp.domain.usescases.ordersusescases
 
-import com.mdcapp.data.model.OrderModel
+import com.mdcapp.domain.entities.OrderModel
 import com.mdcapp.domain.repositories.OrderRepository
 import kotlinx.coroutines.flow.Flow
 

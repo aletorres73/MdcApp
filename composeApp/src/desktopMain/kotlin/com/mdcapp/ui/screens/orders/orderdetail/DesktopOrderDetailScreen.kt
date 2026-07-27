@@ -10,8 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.OrderModel
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.OrderModel
 import com.mdcapp.ui.Screen
 import com.mdcapp.ui.composables.detailorders.OrderDetailInfo
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel

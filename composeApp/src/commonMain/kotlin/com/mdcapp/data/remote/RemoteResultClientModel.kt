@@ -1,27 +1,8 @@
-package com.mdcapp.data.model
+package com.mdcapp.data.remote
 
+import com.mdcapp.domain.entities.ClientModel
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
-data class InfoClientModel(
-    val clientId: Int,
-    var clientName: String,
-    var fantasyName: String,
-    var cuit: String,
-    var address: String,
-    var taxAddress: String,
-    var city: String,
-    var taxCity: String,
-    var deliveryTime: String,
-    var email: String,
-    var phone: String,
-    var contactName: String
-)
-
-data class ClientModel(
-    val clientId: String,
-    val clientName: String,
-)
 
 @Serializable
 data class RemoteResultClientModel(
@@ -29,18 +10,17 @@ data class RemoteResultClientModel(
     @SerialName("Razón Social") val clientName: String = "",
 )
 
-fun RemoteResultClientModel.toDomain() =
+fun RemoteResultClientModel.toClientDomain() =
     ClientModel(
         clientId = clientId,
         clientName = clientName,
     )
 
-fun ClientModel.toRemote() =
+fun ClientModel.toClientRemote() =
     RemoteResultClientModel(
         clientId = clientId,
         clientName = clientName,
     )
-
 
 @Serializable
 data class RemoteResultInfoClientModel(

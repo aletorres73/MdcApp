@@ -34,8 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.PaymentRegisterModel
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.PaymentRegisterModel
 import com.mdcapp.ui.composables.billings.BillingInputChip
 import com.mdcapp.ui.composables.billings.BillingList
 import com.mdcapp.ui.composables.billings.BottomSheetPaymentCondition

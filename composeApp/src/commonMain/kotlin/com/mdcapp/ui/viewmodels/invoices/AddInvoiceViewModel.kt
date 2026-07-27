@@ -2,10 +2,11 @@ package com.mdcapp.ui.viewmodels.invoices
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.BuyOrderModel
-import com.mdcapp.data.model.PaymentCondition
-import com.mdcapp.data.model.recalculate
+import com.mdcapp.domain.entities.BillingComments
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.BuyOrderModel
+import com.mdcapp.domain.entities.PaymentCondition
+import com.mdcapp.domain.entities.recalculate
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +39,7 @@ class AddInvoiceViewModel(
             _state.update { it.copy(isLoading = true) }
             try {
                 val buyOrder = getBuyOrderUseCase(clientId, orderId)
-                val conditions = getPaymentConditionUseCase(buyOrder.branch)
+                val conditions = getPaymentConditionUseCase(buyOrder.branch, buyOrder.factory)
 
                 val inheritedCondition = if (buyOrder.paymentCondition.isNotEmpty()) {
                     PaymentCondition(
@@ -84,7 +85,7 @@ class AddInvoiceViewModel(
                 }
 
                 val comments = if (notes.isNotBlank()) {
-                    listOf(com.mdcapp.data.model.BillingComments(notes, now))
+                    listOf(BillingComments(notes, now))
                 } else emptyList()
 
                 val baseInvoice = BillingModel(

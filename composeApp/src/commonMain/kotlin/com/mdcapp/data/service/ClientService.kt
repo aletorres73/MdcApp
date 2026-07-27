@@ -1,6 +1,6 @@
 package com.mdcapp.data.service
 
-import com.mdcapp.data.model.RemoteResultClientModel
+import com.mdcapp.data.remote.RemoteResultClientModel
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 
 class ClientService(

@@ -91,7 +91,7 @@ fun ClientOrdersScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(state.orders) { order ->
+                this.items(items = state.orders) { order ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { onOrderClick(order.id, order.factory) }

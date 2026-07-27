@@ -125,7 +125,7 @@ val viewModelModule = module {
     viewModelOf(::SignUpViewModel)
     viewModelOf(::AddClientViewModel)
 //    viewModelOf(::InvoicesViewModel)
-    viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get()) }
+    viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get(), get()) }
     viewModel { (orderId: String) ->
         AddInvoiceViewModel(
             orderId,
@@ -148,6 +148,7 @@ val viewModelModule = module {
     }
     viewModel {
         InvoicesPagedViewModel(
+            get(),
             get(),
             get(),
             get(),

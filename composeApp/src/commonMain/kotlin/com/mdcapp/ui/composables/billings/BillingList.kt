@@ -19,7 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.BillingModel
+import com.mdcapp.domain.entities.BillingModel
 
 @Composable
 fun BillingList(

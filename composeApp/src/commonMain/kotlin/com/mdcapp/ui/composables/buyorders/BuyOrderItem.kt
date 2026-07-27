@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mdcapp.data.model.BuyOrderModel
+import com.mdcapp.domain.entities.BuyOrderModel
 
 @Composable
 fun BuyOrderItem(buyOrder: BuyOrderModel) {

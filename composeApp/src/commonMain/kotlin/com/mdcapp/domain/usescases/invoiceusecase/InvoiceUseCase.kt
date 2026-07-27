@@ -1,13 +1,13 @@
 package com.mdcapp.domain.usescases.invoiceusecase
 
-import com.mdcapp.data.model.BillingModel
-import com.mdcapp.data.model.ClientModel
-import com.mdcapp.data.model.PaymentCondition
-import com.mdcapp.data.model.PaymentRegisterModel
-import com.mdcapp.data.model.toDomain
+import com.mdcapp.data.remote.toClientDomain
 import com.mdcapp.data.service.BillingPaginationService
 import com.mdcapp.data.service.ClientService
+import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.ClientModel
 import com.mdcapp.domain.entities.InvoicePage
+import com.mdcapp.domain.entities.PaymentCondition
+import com.mdcapp.domain.entities.PaymentRegisterModel
 import com.mdcapp.domain.repositories.OrderRepository
 import kotlinx.coroutines.flow.Flow
 
@@ -26,7 +26,7 @@ class InvoiceUseCase(
 
     inner class GetClientName {
         suspend operator fun invoke(clientId: String): ClientModel {
-            return service.fetchClientName(clientId).toDomain()
+            return service.fetchClientName(clientId).toClientDomain()
         }
     }
 
@@ -87,8 +87,12 @@ class InvoiceUseCase(
     }
 
     inner class GetPaymentCondition {
-        suspend operator fun invoke(brand: String): List<PaymentCondition> {
-            return repository.getPaymentConditionByBrand(brand)
+        suspend operator fun invoke(brand: String, factory: String = ""): List<PaymentCondition> {
+            val byBrand =
+                if (brand.isNotEmpty()) repository.getPaymentConditionByBrand(brand) else emptyList()
+            if (byBrand.isNotEmpty()) return byBrand
+
+            return if (factory.isNotEmpty()) repository.getPaymentsConditionFactory(factory) else emptyList()
         }
     }
 
@@ -118,7 +122,7 @@ class InvoiceUseCase(
 
     inner class GetAllClients {
         suspend operator fun invoke(): List<ClientModel> {
-            return clientService.fetchAllClientsName().map { it.toDomain() }
+            return clientService.fetchAllClientsName().map { it.toClientDomain() }
         }
     }
 }

@@ -2,11 +2,11 @@ package com.mdcapp.ui.viewmodels.orders
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.model.ArticleOrderModel
-import com.mdcapp.data.model.BuyOrderModel
-import com.mdcapp.data.model.ClientModel
-import com.mdcapp.data.model.FactoryModel
-import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.domain.entities.ArticleOrderModel
+import com.mdcapp.domain.entities.BuyOrderModel
+import com.mdcapp.domain.entities.ClientModel
+import com.mdcapp.domain.entities.FactoryModel
+import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.usescases.clientsusecase.GetClientsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase

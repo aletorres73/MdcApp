@@ -1,7 +1,7 @@
 package com.mdcapp.data.remote
 
-import com.mdcapp.data.model.ArticleOrderModel
-import com.mdcapp.data.model.BuyOrderModel
+import com.mdcapp.domain.entities.ArticleOrderModel
+import com.mdcapp.domain.entities.BuyOrderModel
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -24,7 +24,7 @@ data class RemoteResultBuyOrder(
     @SerialName("Días Vencimiento") var expirationDays: Int = 0
 )
 
-fun RemoteResultBuyOrder.toDomain() = BuyOrderModel(
+fun RemoteResultBuyOrder.toBuyOrderDomain() = BuyOrderModel(
     id = id,
     clientId = clientId,
     order = order,
@@ -35,14 +35,14 @@ fun RemoteResultBuyOrder.toDomain() = BuyOrderModel(
     type = type,
     billing = billing,
     comments = comments,
-    articles = articles.map { it.toDomain() },
+    articles = articles.map { it.toArticleOrderDomain() },
     loadedDate = loadedDate,
     paymentCondition = paymentCondition,
     discount = discount,
     expirationDays = expirationDays
 )
 
-fun BuyOrderModel.toRemote() = RemoteResultBuyOrder(
+fun BuyOrderModel.toBuyOrderRemote() = RemoteResultBuyOrder(
     id = id,
     clientId = clientId,
     order = order,
@@ -53,7 +53,7 @@ fun BuyOrderModel.toRemote() = RemoteResultBuyOrder(
     type = type,
     billing = billing,
     comments = comments,
-    articles = articles.map { it.toRemote() },
+    articles = articles.map { it.toArticleOrderRemote() },
     loadedDate = loadedDate,
     paymentCondition = paymentCondition,
     discount = discount,
@@ -68,14 +68,14 @@ data class RemoteArticleOrderModel(
     @SerialName("Pares") val pairs: String = ""
 )
 
-fun RemoteArticleOrderModel.toDomain() = ArticleOrderModel(
+fun RemoteArticleOrderModel.toArticleOrderDomain() = ArticleOrderModel(
     name,
     color,
     delivered.toIntOrNull() ?: 0,
     pairs.toIntOrNull() ?: 0
 )
 
-fun ArticleOrderModel.toRemote() = RemoteArticleOrderModel(
+fun ArticleOrderModel.toArticleOrderRemote() = RemoteArticleOrderModel(
     name = name,
     color = color,
     delivered = delivered.toString(),

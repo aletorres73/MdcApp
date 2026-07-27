@@ -2,8 +2,8 @@ package com.mdcapp.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mdcapp.data.model.FactoryModel
-import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.domain.entities.FactoryModel
+import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.repositories.OrderRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
