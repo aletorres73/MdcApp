@@ -4,6 +4,7 @@ import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.BuyOrderModel
 import com.mdcapp.data.model.PaymentRegisterModel
 import com.mdcapp.domain.repositories.OrderRepository
+import kotlinx.coroutines.flow.Flow
 
 class BuyOrderUseCase(private val repository: OrderRepository) {
     inner class GetBuyOrderById {
@@ -15,6 +16,12 @@ class BuyOrderUseCase(private val repository: OrderRepository) {
     inner class GetBuyOrdersByClient {
         suspend operator fun invoke(clientId: String): List<BuyOrderModel> {
             return repository.getBuyOrdersByClient(clientId)
+        }
+    }
+
+    inner class ObserveBuyOrdersByClient {
+        operator fun invoke(clientId: String): Flow<List<BuyOrderModel>> {
+            return repository.observeBuyOrdersByClient(clientId)
         }
     }
 

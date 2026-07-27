@@ -8,6 +8,8 @@ import com.mdcapp.data.model.ClientModel
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.RoundingMode
@@ -16,9 +18,8 @@ import java.time.format.DateTimeFormatter
 
 class InvoicesViewModel(
     clientId: String,
-    private val getDocumentsUseCase: InvoiceUseCase.GetBillingsByClient,
-    private val getClientNameUseCase: InvoiceUseCase.GetClientName,
-    private val filterByBrandUseCase: InvoiceUseCase.FilterByBrand
+    private val observeDocumentsUseCase: InvoiceUseCase.ObserveBillingsByClient,
+    private val getClientNameUseCase: InvoiceUseCase.GetClientName
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(clientId = clientId))
@@ -36,6 +37,7 @@ class InvoicesViewModel(
         val isLoading: Boolean = false,
         val client: ClientModel = ClientModel("", ""),
         val documents: List<BillingModel> = emptyList(),
+        val allDocuments: List<BillingModel> = emptyList(),
         val brandList: List<String> = emptyList(),
         val balance: Double = 0.0,
         val error: String? = null
@@ -87,18 +89,26 @@ class InvoicesViewModel(
     // LOAD DOCUMENTS + AUTO-FILTER BY FIRST BRAND
     //----------------------------------------------
 
-    private fun getDocuments(clientId: String) = launchWithState {
-        val documents = getDocumentsUseCase(clientId)
+    private fun getDocuments(clientId: String) {
+        combine(
+            observeDocumentsUseCase(clientId),
+            _selectedBrand
+        ) { documents, selectedBrand ->
+            val brands = documents.asSequence()
+                .map { it.brand }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .toList()
 
-        val brands = documents.asSequence()
-            .map { it.brand }
-            .filter { it.isNotBlank() }
-            .distinct()
-            .toList()
+            val activeBrand = if (selectedBrand.isEmpty() && brands.isNotEmpty()) {
+                setBrand(brands.first())
+                brands.first()
+            } else selectedBrand
 
-        if (brands.isNotEmpty()) {
-            val firstBrand = brands.first()
-            val filteredDocs = filterByBrandUseCase(firstBrand, clientId)
+            val filteredDocs = if (activeBrand.isNotEmpty()) {
+                documents.filter { it.brand == activeBrand }
+            } else documents
+
             val sorted = sortDocuments(filteredDocs)
             val balance = calculateBalance(sorted)
 
@@ -106,44 +116,20 @@ class InvoicesViewModel(
                 it.copy(
                     isLoading = false,
                     documents = sorted,
+                    allDocuments = documents,
                     brandList = brands,
                     balance = balance
                 )
             }
-            setBrand(firstBrand)
-
-        } else {
-            val sorted = sortDocuments(documents)
-            val balance = calculateBalance(sorted)
-
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    documents = sorted,
-                    brandList = emptyList(),
-                    balance = balance
-                )
-            }
-        }
+        }.launchIn(viewModelScope)
     }
 
     //----------------------------------------------
     // FILTER BY BRAND
     //----------------------------------------------
 
-    fun filterByMarca() = launchWithState {
-        val docs = filterByBrandUseCase(_selectedBrand.value, _state.value.clientId)
-        val sorted = sortDocuments(docs)
-        val balance = calculateBalance(sorted)
-
-        _state.update {
-            it.copy(
-                isLoading = false,
-                documents = sorted,
-                balance = balance,
-            )
-        }
-        setBrand(_selectedBrand.value)
+    fun filterByMarca() {
+        // Al usar combine, esto se actualiza automáticamente al llamar a setBrand
     }
 }
 

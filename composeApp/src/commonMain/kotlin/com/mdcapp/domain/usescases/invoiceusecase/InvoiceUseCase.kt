@@ -3,11 +3,13 @@ package com.mdcapp.domain.usescases.invoiceusecase
 import com.mdcapp.data.model.BillingModel
 import com.mdcapp.data.model.ClientModel
 import com.mdcapp.data.model.PaymentCondition
+import com.mdcapp.data.model.PaymentRegisterModel
 import com.mdcapp.data.model.toDomain
 import com.mdcapp.data.service.BillingPaginationService
 import com.mdcapp.data.service.ClientService
 import com.mdcapp.domain.entities.InvoicePage
 import com.mdcapp.domain.repositories.OrderRepository
+import kotlinx.coroutines.flow.Flow
 
 class InvoiceUseCase(
     private val repository: OrderRepository,
@@ -36,6 +38,30 @@ class InvoiceUseCase(
     inner class GetInvoiceByNumber {
         suspend operator fun invoke(invoiceNumber: String): BillingModel {
             return repository.getInvoiceByNumber(invoiceNumber)
+        }
+    }
+
+    inner class ObserveInvoice {
+        operator fun invoke(invoiceNumber: String): Flow<BillingModel> {
+            return repository.observeInvoiceByNumber(invoiceNumber)
+        }
+    }
+
+    inner class ObserveBillingsByClient {
+        operator fun invoke(clientId: String): Flow<List<BillingModel>> {
+            return repository.observeBillingsByClient(clientId)
+        }
+    }
+
+    inner class ObservePaymentsByInvoice {
+        operator fun invoke(invoiceNumber: String): Flow<List<PaymentRegisterModel>> {
+            return repository.observePaymentsByInvoice(invoiceNumber)
+        }
+    }
+
+    inner class ObserveAllBillings {
+        operator fun invoke(): Flow<List<BillingModel>> {
+            return repository.observeAllBillings()
         }
     }
 

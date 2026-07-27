@@ -12,6 +12,8 @@ import com.mdcapp.data.remote.toDomain
 import com.mdcapp.data.remote.toPaymentConditions
 import com.mdcapp.data.remote.toRemote
 import com.mdcapp.data.service.OrderService
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class OrderRepository(private val service: OrderService) {
     suspend fun getAllOrders(): List<OrderModel> = service.fetchAllOrders().map { it.toDomain() }
@@ -72,6 +74,27 @@ class OrderRepository(private val service: OrderService) {
     suspend fun getInvoiceByNumber(invoiceNumber: String): BillingModel {
         return service.fetchInvoiceByNumber(invoiceNumber).toDomain()
     }
+
+    fun observeInvoiceByNumber(invoiceNumber: String): Flow<BillingModel> =
+        service.observeInvoiceByNumber(invoiceNumber).map { it.toDomain() }
+
+    fun observeBillingsByClient(clientId: String): Flow<List<BillingModel>> =
+        service.observeBillingsByClient(clientId).map { list -> list.map { it.toDomain() } }
+
+    fun observePaymentsByInvoice(invoiceNumber: String): Flow<List<PaymentRegisterModel>> =
+        service.observePaymentsByInvoice(invoiceNumber).map { list -> list.map { it.toDomain() } }
+
+    fun observeAllBillings(): Flow<List<BillingModel>> =
+        service.observeAllBillings().map { list -> list.map { it.toDomain() } }
+
+    fun observeBuyOrdersByClient(clientId: String): Flow<List<BuyOrderModel>> =
+        service.observeBuyOrdersByClient(clientId).map { list -> list.map { it.toDomain() } }
+
+    fun observeAllOrders(): Flow<List<OrderModel>> =
+        service.observeAllOrders().map { list -> list.map { it.toDomain() } }
+
+    fun observeOrdersByFactory(name: String): Flow<List<OrderModel>> =
+        service.observeOrdersByFactory(name).map { list -> list.map { it.toDomain() } }
 
     suspend fun saveOrder(clientId: String, order: BuyOrderModel): Boolean {
         return service.saveOrder(clientId, order.toRemote())

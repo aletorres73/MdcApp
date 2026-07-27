@@ -14,13 +14,16 @@ import com.mdcapp.domain.usescases.InitConfigUseCase
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class InvoicesPagedViewModel(
     private val getInvoicePaged: InvoiceUseCase.GetInvoicePaged,
     private val getClients: InvoiceUseCase.GetAllClients,
-    private val initConfigUseCase: InitConfigUseCase
+    private val initConfigUseCase: InitConfigUseCase,
+    private val observeAllBillingsUseCase: InvoiceUseCase.ObserveAllBillings
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InvoiceUiState())
@@ -49,7 +52,8 @@ class InvoicesPagedViewModel(
         val typeSearch: TypeSearch? = TypeSearch.Client,
         val selectedSuggestion: String? = null,
         val updateState: UpdateState = UpdateState.OK,
-        val message: String? = null
+        val message: String? = null,
+        val stateCounts: Map<String, Int> = emptyMap()
     )
 
     sealed interface Overlay {
@@ -61,6 +65,16 @@ class InvoicesPagedViewModel(
         initConfig()
         loadAllClients()
         loadNextPage()
+        observeAllBillings()
+    }
+
+    private fun observeAllBillings() {
+        observeAllBillingsUseCase()
+            .onEach { billings ->
+                val counts = billings.groupBy { it.stateBilling }
+                    .mapValues { it.value.size }
+                _uiState.update { it.copy(stateCounts = counts) }
+            }.launchIn(viewModelScope)
     }
 
     private fun initConfig() {

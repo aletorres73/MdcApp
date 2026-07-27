@@ -76,6 +76,7 @@ fun InvoicesPageScreen(
             StateFilter(
                 states = state.availableStates,
                 selected = state.selectedState,
+                counts = state.stateCounts,
                 onSelected = {
                     viewModel.stateSelected(it)
                 }

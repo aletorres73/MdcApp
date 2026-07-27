@@ -11,10 +11,12 @@ import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.model.OrderModel
 import com.mdcapp.domain.usescases.ordersusescases.GetFactoriesListUseCase
 import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class OrdersViewModel(
-    private val getOrdersByFactory: OrdersUseCase.GetOrdersByFactory,
+    private val observeOrdersByFactory: OrdersUseCase.ObserveOrdersByFactory,
     private val getBranchUseCase: OrdersUseCase.GetOrderBranch,
     private val getFactoriesList: GetFactoriesListUseCase
 ) : ViewModel() {
@@ -43,14 +45,45 @@ class OrdersViewModel(
     )
 
     fun init(factoryName: String) {
+        state = state.copy(factoryName = factoryName)
+        observeOrders(factoryName)
+
         viewModelScope.launch {
-            state = state.copy(factoryName = factoryName)
-            fetchFromRepository()
             if (state.query.text.isNotEmpty()) {
                 searchOrders(state.query)
                 setSearchBar(true)
             }
         }
+    }
+
+    private fun observeOrders(factoryName: String) {
+        state = state.copy(loading = true)
+        observeOrdersByFactory(factoryName)
+            .onEach { remoteList ->
+                val sorted = remoteList.sortedByDescending { it.orderNumber }
+                val factoriesList =
+                    if (state.factoriesList.isEmpty()) getFactoriesList() else state.factoriesList
+
+                if (state.factoriesList.isEmpty() && factoriesList.isNotEmpty()) {
+                    factoriesList.forEach { factory ->
+                        state.filterFactory[factory] = false
+                    }
+                }
+
+                state = state.copy(
+                    loading = false,
+                    orderList = sorted,
+                    backupList = sorted,
+                    factoriesList = factoriesList
+                )
+
+                // Re-apply filters if needed? 
+                // searchOrders(state.query, isAnyFilterActive() || isAnyFilterFactoryActive())
+                // For now let's just update the lists.
+                if (state.query.text.isNotEmpty()) {
+                    searchOrders(state.query, isAnyFilterActive() || isAnyFilterFactoryActive())
+                }
+            }.launchIn(viewModelScope)
     }
 
     fun setSearchBar(value: Boolean) {
@@ -66,21 +99,7 @@ class OrdersViewModel(
         }
     }
 
-    suspend fun fetchFromRepository() {
-        state = state.copy(loading = true)
-        val remoteList =
-            getOrdersByFactory(state.factoryName).sortedByDescending { it.orderNumber }
-        val factoriesList = getFactoriesList()
-        if (factoriesList.isNotEmpty()) factoriesList.forEach { factory ->
-            state.filterFactory[factory] = false
-        }
-        state = state.copy(
-            loading = false,
-            orderList = remoteList,
-            backupList = remoteList,
-            factoriesList = factoriesList
-        )
-    }
+
 
     private fun applyFilters(
         list: List<OrderModel>,
@@ -299,7 +318,7 @@ class OrdersViewModel(
 
     fun cleanSearchQuery() {
         fun reset() {
-            val resetFilters = state.filters.mapValues { false } as MutableMap
+            val resetFilters = state.filters.mapValues { false }.toMutableMap()
             state = state.copy(
                 loading = false,
                 filteredOrderList = emptyList(),

@@ -12,6 +12,8 @@ import com.mdcapp.data.remote.RemoteResultFactoryModel
 import com.mdcapp.data.remote.RemoteResultOrder
 import dev.gitlive.firebase.firestore.FieldPath
 import dev.gitlive.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class OrderService(
     private val db: FirebaseFirestore,
@@ -362,6 +364,69 @@ class OrderService(
             println("OrderService: on fetchInvoiceByNumber $e")
             RemoteResultBillingModel()
         }
+    }
+
+    fun observeInvoiceByNumber(invoiceNumber: String): Flow<RemoteResultBillingModel> {
+        return allBillingsCollection
+            .where { FieldPath("Numero").equalTo(invoiceNumber) }
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.firstOrNull()?.data<RemoteResultBillingModel>()
+                    ?: RemoteResultBillingModel()
+            }
+    }
+
+    fun observeBillingsByClient(clientId: String): Flow<List<RemoteResultBillingModel>> {
+        return allBillingsCollection
+            .where { FieldPath("Cliente Id").equalTo(clientId) }
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.data<RemoteResultBillingModel>() }
+            }
+    }
+
+    fun observePaymentsByInvoice(invoiceNumber: String): Flow<List<RemotePaymentRegisterResult>> {
+        return paymentsRegisterCollection
+            .where { FieldPath("Remito").equalTo(invoiceNumber) }
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.data<RemotePaymentRegisterResult>() }
+            }
+    }
+
+    fun observeAllBillings(): Flow<List<RemoteResultBillingModel>> {
+        return allBillingsCollection
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.data<RemoteResultBillingModel>() }
+            }
+    }
+
+    fun observeBuyOrdersByClient(clientId: String): Flow<List<RemoteResultBuyOrder>> {
+        return clientOrdersCollection(clientId)
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.data<RemoteResultBuyOrder>() }
+            }
+    }
+
+    fun observeAllOrders(): Flow<List<RemoteResultOrder>> {
+        return ordersCollection
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.data<RemoteResultOrder>() }
+            }
+    }
+
+    fun observeOrdersByFactory(name: String): Flow<List<RemoteResultOrder>> {
+        val query = if (name == "all") ordersCollection else ordersCollection.where {
+            FieldPath("Marca").equalTo(name)
+        }
+        return query
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.data<RemoteResultOrder>() }
+            }
     }
 
     suspend fun saveOrder(clientId: String, order: RemoteResultBuyOrder): Boolean {

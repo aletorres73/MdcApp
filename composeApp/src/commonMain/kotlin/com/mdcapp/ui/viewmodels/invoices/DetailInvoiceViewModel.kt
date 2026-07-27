@@ -12,16 +12,18 @@ import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class DetailInvoiceViewModel(
     invoiceNumber: String,
-    private val getInvoiceUseCase: InvoiceUseCase.GetInvoiceByNumber,
+    private val observeInvoiceUseCase: InvoiceUseCase.ObserveInvoice,
     private val getBuyOrderUseCase: BuyOrderUseCase.GetBuyOrderById,
     private val getPaymentConditionUseCase: InvoiceUseCase.GetPaymentCondition,
     private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
-    private val getPaymentsRegisterUseCase: BuyOrderUseCase.GetPaymentsRegister,
+    private val observePaymentsRegisterUseCase: InvoiceUseCase.ObservePaymentsByInvoice,
     private val addPaymentToRegisterUseCase: BuyOrderUseCase.AddPaymentToRegister,
     private val getLastIdPaymentUseCase: BuyOrderUseCase.GetLastIdPaymentFromRegister
 ) : ViewModel() {
@@ -46,11 +48,8 @@ class DetailInvoiceViewModel(
 
     /** SECUENCIA: Billing → BuyOrder */
     private fun loadData(invoiceNumber: String) {
-        viewModelScope.launch {
-            try {
-                _state.update { it.copy(isLoading = true) }
-
-                val billing = getInvoiceUseCase(invoiceNumber)
+        observeInvoiceUseCase(invoiceNumber)
+            .onEach { billing ->
                 if (billing.orderId.isEmpty()) {
                     _state.update {
                         it.copy(
@@ -58,38 +57,46 @@ class DetailInvoiceViewModel(
                             error = "No se encontró la factura"
                         )
                     }
-                    return@launch
+                    return@onEach
                 }
 
-                val buyOrder = if (billing.orderId.isNotEmpty()) {
-                    getBuyOrderUseCase(billing.clientId, billing.orderId)
-                } else BuyOrderModel()
-// ...
+                // Cargar BuyOrder solo si cambia o si aún no se tiene
+                if (_state.value.buyOrder.id != billing.orderId) {
+                    viewModelScope.launch {
+                        try {
+                            val buyOrder = getBuyOrderUseCase(billing.clientId, billing.orderId)
+                            _state.update { it.copy(buyOrder = buyOrder) }
+                        } catch (e: Exception) {
+                            Log.e("MdcAppOnly", "Error loading BuyOrder: $e")
+                        }
+                    }
+                }
 
-                val paymentConditions = getPaymentConditionUseCase(billing.brand)
-                val payments = getPaymentsRegisterUseCase(listOf(invoiceNumber))
+                // Cargar condiciones solo una vez
+                if (_state.value.paymentConditionList.isEmpty()) {
+                    viewModelScope.launch {
+                        try {
+                            val paymentConditions = getPaymentConditionUseCase(billing.brand)
+                            _state.update { it.copy(paymentConditionList = paymentConditions) }
+                        } catch (e: Exception) {
+                            Log.e("MdcAppOnly", "Error loading PaymentConditions: $e")
+                        }
+                    }
+                }
 
                 _state.update {
                     it.copy(
                         billing = billing.recalculate(),
-                        buyOrder = buyOrder,
-                        paymentConditionList = paymentConditions,
-                        isLoading = false,
-                        payments = payments
+                        isLoading = false
                     )
                 }
-                Log.i("MdcAppOnly", "DetailInvoiceViewModel --- on loadData: $billing")
+                Log.i("MdcAppOnly", "DetailInvoiceViewModel --- reactive billing update: $billing")
+            }.launchIn(viewModelScope)
 
-            } catch (e: Exception) {
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        error = e.message ?: "Error desconocido"
-                    )
-                }
-                Log.e("MdcAppOnly", "DetailInvoiceViewModel --- on loadData: $e")
-            }
-        }
+        observePaymentsRegisterUseCase(invoiceNumber)
+            .onEach { payments ->
+                _state.update { it.copy(payments = payments) }
+            }.launchIn(viewModelScope)
     }
 
     fun updateSelectedPaymentCondition(condition: PaymentCondition) {

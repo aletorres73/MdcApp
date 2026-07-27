@@ -52,11 +52,14 @@ val appModule = module {
     single<HomeUseCase.GetAllFactories> { get<HomeUseCase>().GetAllFactories() }
 
     single<OrdersUseCase.GetAllOrders> { get<OrdersUseCase>().GetAllOrders() }
+    single<OrdersUseCase.ObserveAllOrders> { get<OrdersUseCase>().ObserveAllOrders() }
     single<OrdersUseCase.GetOrdersByFactory> { get<OrdersUseCase>().GetOrdersByFactory() }
+    single<OrdersUseCase.ObserveOrdersByFactory> { get<OrdersUseCase>().ObserveOrdersByFactory() }
     single<OrdersUseCase.GetOrderBranch> { get<OrdersUseCase>().GetOrderBranch() }
 
     single<BuyOrderUseCase.GetBuyOrderById> { get<BuyOrderUseCase>().GetBuyOrderById() }
     single<BuyOrderUseCase.GetBuyOrdersByClient> { get<BuyOrderUseCase>().GetBuyOrdersByClient() }
+    single<BuyOrderUseCase.ObserveBuyOrdersByClient> { get<BuyOrderUseCase>().ObserveBuyOrdersByClient() }
     single<BuyOrderUseCase.GetBillings> { get<BuyOrderUseCase>().GetBillings() }
     single<BuyOrderUseCase.AddPaymentToRegister> { get<BuyOrderUseCase>().AddPaymentToRegister() }
     single<BuyOrderUseCase.GetLastIdPaymentFromRegister> { get<BuyOrderUseCase>().GetLastIdPaymentFromRegister() }
@@ -74,6 +77,10 @@ val appModule = module {
     single<InvoiceUseCase.GetClientName> { get<InvoiceUseCase>().GetClientName() }
     single<InvoiceUseCase.FilterByBrand> { get<InvoiceUseCase>().FilterByBrand() }
     single<InvoiceUseCase.GetInvoiceByNumber> { get<InvoiceUseCase>().GetInvoiceByNumber() }
+    single<InvoiceUseCase.ObserveInvoice> { get<InvoiceUseCase>().ObserveInvoice() }
+    single<InvoiceUseCase.ObserveBillingsByClient> { get<InvoiceUseCase>().ObserveBillingsByClient() }
+    single<InvoiceUseCase.ObservePaymentsByInvoice> { get<InvoiceUseCase>().ObservePaymentsByInvoice() }
+    single<InvoiceUseCase.ObserveAllBillings> { get<InvoiceUseCase>().ObserveAllBillings() }
     single<InvoiceUseCase.GetPaymentCondition> { get<InvoiceUseCase>().GetPaymentCondition() }
     single<InvoiceUseCase.GetInvoicePaged> { get<InvoiceUseCase>().GetInvoicePaged() }
     single<InvoiceUseCase.GetAllClients> { get<InvoiceUseCase>().GetAllClients() }
@@ -118,7 +125,7 @@ val viewModelModule = module {
     viewModelOf(::SignUpViewModel)
     viewModelOf(::AddClientViewModel)
 //    viewModelOf(::InvoicesViewModel)
-    viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get(), get()) }
+    viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get()) }
     viewModel { (orderId: String) ->
         AddInvoiceViewModel(
             orderId,
@@ -139,7 +146,14 @@ val viewModelModule = module {
             get()
         )
     }
-    viewModelOf(::InvoicesPagedViewModel)
+    viewModel {
+        InvoicesPagedViewModel(
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
 }
 
 //expect val nativeModule: Module

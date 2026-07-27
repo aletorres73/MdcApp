@@ -6,12 +6,13 @@ import com.mdcapp.data.model.BuyOrderModel
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 class ClientOrdersViewModel(
     clientId: String,
-    private val getBuyOrdersUseCase: BuyOrderUseCase.GetBuyOrdersByClient
+    private val observeBuyOrdersUseCase: BuyOrderUseCase.ObserveBuyOrdersByClient
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(clientId = clientId))
@@ -29,14 +30,10 @@ class ClientOrdersViewModel(
     }
 
     fun loadOrders(clientId: String) {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            try {
-                val orders = getBuyOrdersUseCase(clientId)
+        _state.update { it.copy(isLoading = true) }
+        observeBuyOrdersUseCase(clientId)
+            .onEach { orders ->
                 _state.update { it.copy(isLoading = false, orders = orders) }
-            } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.message) }
-            }
-        }
+            }.launchIn(viewModelScope)
     }
 }
