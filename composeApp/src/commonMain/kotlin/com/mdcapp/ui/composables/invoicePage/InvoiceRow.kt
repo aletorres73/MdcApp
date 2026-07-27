@@ -23,8 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.toPrint
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import com.mdcapp.ui.theme.getBillingStatusColor
 
 @Composable
 fun InvoiceRow(
@@ -131,23 +130,8 @@ fun InvoiceRow(
 
 @Composable
 fun rememberStatusColor(invoice: BillingModel): Color {
-    return remember(invoice.rest, invoice.payDate) {
-        if (invoice.rest <= 0) return@remember Color(0xFF2E7D32) // Green (Pagado)
-
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        val date = try {
-            LocalDate.parse(invoice.payDate, formatter)
-        } catch (e: Exception) {
-            null
-        }
-
-        val today = LocalDate.now()
-        when {
-            date == null -> Color.Gray
-            date.isBefore(today) -> Color(0xFFC62828) // Red (Vencido)
-            date.isBefore(today.plusDays(7)) -> Color(0xFFF9A825) // Amber (Próximo)
-            else -> Color(0xFF2E7D32) // Green (Al día)
-        }
+    return remember(invoice.rest, invoice.payDate, invoice.stateBilling) {
+        getBillingStatusColor(invoice.stateBilling)
     }
 }
 

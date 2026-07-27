@@ -126,7 +126,10 @@ fun AndroidNavigation(startRoute: String) {
                 clientId = clientId,
                 orderId = orderId,
                 factoryName = factoryName,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateToInvoice = { invoiceNumber ->
+                    navController.navigateToDetailInvoice(invoiceNumber)
+                }
             )
         }
 
