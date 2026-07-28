@@ -120,11 +120,12 @@ class CreateOrderViewModel(
                 branch = currentState.selectedSegment,
                 articles = currentState.articles,
                 comments = currentState.comments,
-                loadedDate = "",
+                loadedDate = System.currentTimeMillis(),
                 order = "",
                 paymentCondition = currentState.selectedCondition?.paymentName ?: "",
                 discount = currentState.selectedCondition?.discount ?: 0.0,
-                expirationDays = currentState.selectedCondition?.expiration ?: 0
+                expirationDays = currentState.selectedCondition?.expiration ?: 0,
+                timeStamp = System.currentTimeMillis()
             )
             // Note: We need to store paymentCondition in BuyOrderModel too for inheritance
             // Let's assume BuyOrderModel has it or we add it.

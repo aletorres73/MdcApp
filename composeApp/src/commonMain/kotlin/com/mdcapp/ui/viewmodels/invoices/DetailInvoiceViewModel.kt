@@ -141,7 +141,7 @@ class DetailInvoiceViewModel(
     }
 
 
-    fun updateDeliveryDate(newDate: String) {
+    fun updateDeliveryDate(newDate: Long) {
         val current = _state.value
 
         val condition = current.paymentConditionList
@@ -173,13 +173,7 @@ class DetailInvoiceViewModel(
                 val nextId = lastId + 1
 
                 // 2. Create Payment Register
-                val now = try {
-                    val date = java.time.LocalDate.now()
-                    val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                    date.format(formatter)
-                } catch (e: Exception) {
-                    ""
-                }
+                val now = System.currentTimeMillis()
 
                 val paymentRegister = PaymentRegisterModel(
                     id = nextId,
@@ -230,14 +224,64 @@ class DetailInvoiceViewModel(
         }
     }
 
-    fun addComment(text: String) {
-        val now = try {
-            val date = java.time.LocalDate.now()
-            val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
-            date.format(formatter)
-        } catch (e: Exception) {
-            ""
+    fun editPayment(originalPayment: PaymentRegisterModel, newAmount: Double, newNotes: String) {
+        if (_state.value.isProcessingPayment) return
+
+        viewModelScope.launch {
+            _state.update { it.copy(isProcessingPayment = true) }
+            val current = _state.value
+
+            try {
+                val updatedPayment = originalPayment.copy(
+                    total = newAmount,
+                    notes = newNotes
+                )
+
+                // 1. Update Payment in Firestore
+                val registerResult = addPaymentToRegisterUseCase(updatedPayment)
+
+                if (registerResult) {
+                    // 2. Recalculate total payed from ALL payments to ensure precision
+                    val allPayments = current.payments.map {
+                        if (it.id == originalPayment.id) updatedPayment else it
+                    }
+                    val totalPayed = allPayments.sumOf { it.total }
+
+                    // 3. Update Billing
+                    val updatedBilling = current.billing.copy(
+                        payed = totalPayed
+                    ).recalculate()
+
+                    _state.update {
+                        it.copy(
+                            billing = updatedBilling,
+                            message = "Pago actualizado",
+                            isProcessingPayment = false
+                        )
+                    }
+                    saveBilling()
+                } else {
+                    _state.update {
+                        it.copy(
+                            message = "Error al actualizar el pago",
+                            isProcessingPayment = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MdcAppOnly", "Error editing payment: $e")
+                _state.update {
+                    it.copy(
+                        message = "Error: ${e.message}",
+                        isProcessingPayment = false
+                    )
+                }
+            }
         }
+    }
+
+    fun addComment(text: String) {
+        val now = System.currentTimeMillis()
 
         val newComment = BillingComments(text, now)
         val current = _state.value

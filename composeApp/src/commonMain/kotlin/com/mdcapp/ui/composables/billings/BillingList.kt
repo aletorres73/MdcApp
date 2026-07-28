@@ -20,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.toFormattedDate
+import com.mdcapp.domain.entities.toPrint
 
 @Composable
 fun BillingList(
@@ -66,7 +68,7 @@ fun BillingList(
                             )
                             RowInfoBilling(
                                 key = "Importe:",
-                                value = billing.total.toString().ifEmpty { "$0.00" }
+                                value = billing.total.toPrint()
                             )
                             RowInfoBilling(
                                 key = "C.P:",
@@ -79,15 +81,15 @@ fun BillingList(
                         ) {
                             RowInfoBilling(
                                 key = "Facturación:",
-                                value = billing.loadDate.ifEmpty { "-/-/-" }
+                                value = billing.loadDate.toFormattedDate()
                             )
                             RowInfoBilling(
                                 key = "Recepción:",
-                                value = billing.deliveryDate.ifEmpty { "-/-/-" }
+                                value = billing.deliveryDate.toFormattedDate()
                             )
                             RowInfoBilling(
                                 key = "Pago:",
-                                value = billing.payDate.ifEmpty { "-/-/-" }
+                                value = billing.payDate.toFormattedDate()
                             )
                         }
                     }

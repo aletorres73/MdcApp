@@ -15,8 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 class BuyOrdersViewModel(
     private val getBuyOrder: BuyOrderUseCase.GetBuyOrderById,
@@ -228,42 +226,22 @@ class BuyOrdersViewModel(
         )
     }
 
-    // Obtener fecha de pago
     private fun getPayDate(
         billingNumber: String,
         expiration: Int,
-        newDeliveryDate: String = ""
-    ): String {
-        return "" // Simplified or unused now
+        newDeliveryDate: Long = 0L
+    ): Long {
+        return 0L // Simplified or unused now
     }
 
-    // Formatear fecha
-    private fun formatDateString(dateStr: String): String {
-        val parts = dateStr.split("/")
-        if (parts.size == 3 && parts[0].length == 2 && parts[1].length == 2 && parts[2].length == 4) {
-            return dateStr
-        }
-        val day = parts[0].padStart(2, '0')
-        val month = parts[1].padStart(2, '0')
-        val year = parts[2]
-        return "$day/$month/$year"
-    }
-
-    // Obtener fecha actual
-    private fun getCurrentDate(): String {
-        val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        return LocalDate.now().format(dateFormatter)
-    }
-
-    fun saveDateSelected(newDate: String, billingNumber: String) {
+    fun saveDateSelected(newDateMillis: Long, billingNumber: String) {
         try {
-            val formatDate = formatDateString(newDate)
             _tempState.value = _tempState.value.copy(
                 billings = _tempState.value.billings.map { billing ->
                     if (billing.billingNumber == billingNumber) {
                         val condition =
                             _tempState.value.paymentsConditions.find { it.paymentName == billing.paymentCondition }
-                        billing.copy(deliveryDate = formatDate).recalculate(condition)
+                        billing.copy(deliveryDate = newDateMillis).recalculate(condition)
                     } else {
                         billing
                     }
@@ -283,7 +261,7 @@ class BuyOrdersViewModel(
                 val paymentToRegister = PaymentRegisterModel(
                     id = getLastId() + 1,
                     branch = _tempState.value.factoryName,
-                    date = getCurrentDate(),
+                    date = System.currentTimeMillis(),
                     clientName = _tempState.value.buyOrder.client,
                     documentNumber = billingNumber,
                     type = billing?.type ?: "",
@@ -335,8 +313,6 @@ class BuyOrdersViewModel(
 
     // Calcular el monto total de las facturas
     private fun calculateTotalBillingAmount(billings: List<BillingModel>): Double {
-        return billings.sumOf {
-            it.total.toString().replace("$", "").replace(",", "").toDouble()
-        }
+        return billings.sumOf { it.total }
     }
 }

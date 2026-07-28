@@ -445,7 +445,8 @@ class OrderService(
             val finalOrder = order.copy(
                 id = orderId,
                 order = orderId,
-                loadedDate = "" // TODO: set date properly
+                loadedDate = System.currentTimeMillis(),
+                timeStamp = System.currentTimeMillis()
             )
 
             clientOrdersCollection(clientId).document(orderId).set(finalOrder)

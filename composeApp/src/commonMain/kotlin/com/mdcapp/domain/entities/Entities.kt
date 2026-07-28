@@ -1,6 +1,8 @@
 package com.mdcapp.domain.entities
 
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
@@ -11,15 +13,16 @@ data class BuyOrderModel(
     var client: String = "",
     var factory: String = "",
     var branch: String = "",
-    var deliveryDate: String = "",
+    var deliveryDate: Long = 0L,
     var type: String = "",
     var billing: String = "",
     var comments: String = "",
     var articles: List<ArticleOrderModel> = emptyList(),
-    var loadedDate: String = "",
+    var loadedDate: Long = 0L,
     var paymentCondition: String = "",
     var discount: Double = 0.0,
-    var expirationDays: Int = 0
+    var expirationDays: Int = 0,
+    var timeStamp: Long = 0L
 )
 
 data class ArticleOrderModel(
@@ -40,15 +43,15 @@ data class OrderModel(
     var nameClient: String = "",
     var branch: String = "",
     var type: String = "",
-    var documentDate: String = "",
+    var documentDate: Long = 0L,
     var numberDocument: String = "",
     var trackingState: String = "",
     var documentComments: String = "",
     var sellOut: String = "",
-    var inputDate: String = "",
+    var inputDate: Long = 0L,
     var payState: String = "",
-    var receptionDate: String = "",
-    var payDate: String = "",
+    var receptionDate: Long = 0L,
+    var payDate: Long = 0L,
     var valueDocument: String = "",
     var discount: String = "",
     var payAmount: String = "",
@@ -58,14 +61,14 @@ data class OrderModel(
     var documents: String? = "",
     var checked: String? = "",
     var calendar: String? = "",
-    var date: String? = ""
+    var date: Long = 0L
 )
 
 data class PaymentRegisterModel(
     val id: Int,
     val clientId: String,
     val branch: String,
-    val date: String,
+    val date: Long = 0L,
     val clientName: String,
     val documentNumber: String,
     val type: String,
@@ -98,9 +101,9 @@ data class BillingModel(
     val orderId: String = "",
     val type: String = "",
     val total: Double = 0.0,
-    val loadDate: String = "",
-    val deliveryDate: String = "",
-    val payDate: String = "",
+    val loadDate: Long = 0L,
+    val deliveryDate: Long = 0L,
+    val payDate: Long = 0L,
     val articles: List<ArticleModel> = emptyList(),
     val paymentCondition: String = "",
     val discount: Double = 0.0,
@@ -113,12 +116,12 @@ data class BillingModel(
     val branch: String = "",
     val comments: List<BillingComments> = emptyList(),
     val clientName: String = "",
-    val timeStamp: Long = 0
+    val timeStamp: Long = 0L
 )
 
 data class BillingComments(
     val comments: String = "",
-    val date: String = ""
+    val date: Long = 0L
 )
 
 data class ArticleModel(
@@ -158,6 +161,19 @@ fun Double.discountToPrint(): String {
 
 val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
+fun Long.toLocalDate(): LocalDate {
+    return Instant.ofEpochMilli(this).atZone(ZoneId.of("UTC")).toLocalDate()
+}
+
+fun LocalDate.toEpochMillis(): Long {
+    return this.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+}
+
+fun Long.toFormattedDate(): String {
+    if (this == 0L) return "---"
+    return this.toLocalDate().formatter()
+}
+
 fun BillingModel.recalculate(
     condition: PaymentCondition? = null
 ): BillingModel {
@@ -165,29 +181,19 @@ fun BillingModel.recalculate(
     val toPayValue = total - discount * total
     val restValue = toPayValue - payed
 
-    val reception = try {
-        if (deliveryDate.isNotEmpty())
-            LocalDate.parse(deliveryDate, formatter)
-        else null
-    } catch (e: Exception) {
-        null
-    }
+    val reception = if (deliveryDate != 0L) deliveryDate.toLocalDate() else null
 
     // 1. Determinar Fecha de Pago
     val newPayDate = if (reception != null && condition != null) {
-        reception.plusDays(condition.expiration.toLong()).format(formatter)
+        reception.plusDays(condition.expiration.toLong()).toEpochMillis()
     } else if (paymentCondition.isEmpty() && condition == null) {
-        ""
+        0L
     } else {
         payDate // Preservar si ya existe
     }
 
     val today = LocalDate.now()
-    val parsedPayDate = try {
-        if (newPayDate.isNotEmpty()) LocalDate.parse(newPayDate, formatter) else null
-    } catch (e: Exception) {
-        null
-    }
+    val parsedPayDate = if (newPayDate != 0L) newPayDate.toLocalDate() else null
 
     // 2. Determinar Estado (Reglas de Negocio)
     val newState = when {

@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.domain.entities.toPrint
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -69,7 +70,7 @@ fun DocumentList(documents: List<BillingModel>, onInvoiceClick: (String) -> Unit
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val styleText = MaterialTheme.typography.bodySmall
-                    DataCell(doc.loadDate, styleText, colFecha)
+                    DataCell(doc.loadDate.toFormattedDate(), styleText, colFecha)
                     DataCell(doc.billingNumber, styleText, colNumero)
                     DataCell(doc.branch, styleText, colSegmento)
                     DataCell(doc.toPay.toPrint(), styleText, colImporte, TextAlign.End)

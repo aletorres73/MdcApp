@@ -13,15 +13,16 @@ data class RemoteResultBuyOrder(
     @SerialName("Razón Social") var client: String = "",
     @SerialName("Fábrica") var factory: String = "",
     @SerialName("Marca") var branch: String = "",
-    @SerialName("Plazo de entrega") var deliveryDate: String = "",
+    @SerialName("Plazo de entrega") var deliveryDate: Long = 0L,
     @SerialName("Tipo") var type: String = "",
     @SerialName("Facturación") var billing: String = "",
     @SerialName("Comentarios") var comments: String = "",
     @SerialName("Articulos") var articles: List<RemoteArticleOrderModel> = emptyList(),
-    @SerialName("Fecha de carga") var loadedDate: String = "",
+    @SerialName("Fecha de carga") var loadedDate: Long = 0L,
     @SerialName("Condición de Pago") var paymentCondition: String = "",
     @SerialName("Descuento") var discount: Double = 0.0,
-    @SerialName("Días Vencimiento") var expirationDays: Int = 0
+    @SerialName("Días Vencimiento") var expirationDays: Int = 0,
+    @SerialName("Timestamp") var timeStamp: Long = 0L
 )
 
 fun RemoteResultBuyOrder.toBuyOrderDomain() = BuyOrderModel(
@@ -39,7 +40,8 @@ fun RemoteResultBuyOrder.toBuyOrderDomain() = BuyOrderModel(
     loadedDate = loadedDate,
     paymentCondition = paymentCondition,
     discount = discount,
-    expirationDays = expirationDays
+    expirationDays = expirationDays,
+    timeStamp = timeStamp
 )
 
 fun BuyOrderModel.toBuyOrderRemote() = RemoteResultBuyOrder(
@@ -57,7 +59,8 @@ fun BuyOrderModel.toBuyOrderRemote() = RemoteResultBuyOrder(
     loadedDate = loadedDate,
     paymentCondition = paymentCondition,
     discount = discount,
-    expirationDays = expirationDays
+    expirationDays = expirationDays,
+    timeStamp = timeStamp
 )
 
 @Serializable

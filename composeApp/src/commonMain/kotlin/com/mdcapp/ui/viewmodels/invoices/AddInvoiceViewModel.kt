@@ -67,21 +67,15 @@ class AddInvoiceViewModel(
         number: String,
         amount: Double,
         condition: PaymentCondition?,
-        deliveryDate: String,
-        payDate: String,
+        deliveryDate: Long,
+        payDate: Long,
         type: String,
         notes: String
     ) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                val now = try {
-                    val date = java.time.LocalDate.now()
-                    val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                    date.format(formatter)
-                } catch (e: Exception) {
-                    ""
-                }
+                val now = System.currentTimeMillis()
 
                 val comments = if (notes.isNotBlank()) {
                     listOf(BillingComments(notes, now))

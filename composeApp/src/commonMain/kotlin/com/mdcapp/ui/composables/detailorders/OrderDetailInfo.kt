@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.PaymentRegisterModel
+import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.ui.composables.billings.BillingInputChip
 import com.mdcapp.ui.composables.billings.BillingList
 import com.mdcapp.ui.composables.billings.BottomSheetPaymentCondition
@@ -113,7 +114,10 @@ fun OrderDetailInfo(
                 }
                 OrderInfoRow(label = "Condición", value = state.buyOrder.paymentCondition)
                 OrderInfoRow(label = "Comentarios", value = state.buyOrder.comments)
-                OrderInfoRow(label = "Fecha de Carga", value = state.buyOrder.loadedDate)
+                OrderInfoRow(
+                    label = "Fecha de Carga",
+                    value = state.buyOrder.loadedDate.toFormattedDate()
+                )
             }
         )
         AnimatedVisibility(visible = isBuyOrderClicked) {
@@ -209,8 +213,8 @@ fun OrderDetailInfo(
                 enable = isDateSelect,
                 onDismissButton = { isDateSelect = false },
                 onDismissRequest = { isDateSelect = false },
-                onConfirmButton = { newDate ->
-                    vm.saveDateSelected(newDate, billingNumber)
+                onDateSelected = { newDateMillis ->
+                    vm.saveDateSelected(newDateMillis, billingNumber)
                     isDateSelect = false
                 }
             )
@@ -285,6 +289,7 @@ fun BottomSheetPaymentRegister(
         }
     }
 }
+
 @Composable
 fun PaymentHeaderRow() {
     val styleText = MaterialTheme.typography.titleSmall
@@ -310,7 +315,7 @@ fun PaymentRow(payment: PaymentRegisterModel) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = payment.date,
+            text = payment.date.toFormattedDate(),
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyMedium
         )

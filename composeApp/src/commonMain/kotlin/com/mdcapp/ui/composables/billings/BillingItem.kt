@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.toFormattedDate
 
 @Composable
 fun BillingItem(billing: BillingModel) {
@@ -39,9 +40,9 @@ fun DetailBilling(
     order: String,
     type: String,
     total: String,
-    loadDate: String,
-    deliveryDate: String,
-    payDate: String
+    loadDate: Long,
+    deliveryDate: Long,
+    payDate: Long
 ) {
     Column(
         modifier = modifier
@@ -67,17 +68,17 @@ fun DetailBilling(
         RowInfoBilling(
             modifier = modifier.fillMaxWidth(),
             key = "Fecha facturación",
-            value = loadDate
+            value = loadDate.toFormattedDate()
         )
         RowInfoBilling(
             modifier = modifier.fillMaxWidth(),
             key = "Fecha recepción",
-            value = deliveryDate
+            value = deliveryDate.toFormattedDate()
         )
         RowInfoBilling(
             modifier = modifier.fillMaxWidth(),
             key = "Fecha pago:",
-            value = payDate
+            value = payDate.toFormattedDate()
         )
 
     }

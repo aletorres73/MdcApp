@@ -15,7 +15,7 @@ data class RemoteResultOrder(
     @SerialName("Tipo")
     var type: String = "", //tipo de facturación
     @SerialName("Fecha Remito/Factura")
-    var documentDate: String = "", // fecha de facturación
+    var documentDate: Long = 0L, // fecha de facturación
     @SerialName("N° Factura/Remito")
     var numberDocument: String = "", // número de factura
     @SerialName("Estado de despacho")
@@ -25,13 +25,13 @@ data class RemoteResultOrder(
     @SerialName("Descuentos")
     var sellOut: String = "", // descuento financiero
     @SerialName("Fecha de carga")
-    var inputDate: String = "", //fecha de carga
+    var inputDate: Long = 0L, //fecha de carga
     @SerialName("Estado de cobranza")
     var payState: String = "", // estado de cobranza
     @SerialName("Fecha recepción")
-    var receptionDate: String = "", // fecha de recepción
+    var receptionDate: Long = 0L, // fecha de recepción
     @SerialName("Fecha de pago")
-    var payDate: String = "", // fecha de pago
+    var payDate: Long = 0L, // fecha de pago
     @SerialName("Importe fc/rt")
     var valueDocument: String = "", // importe de facturación
     @SerialName("Desc / Dev")
@@ -51,7 +51,7 @@ data class RemoteResultOrder(
     @SerialName("Calendario")
     var calendar: String? = "", // verificación
     @SerialName("Plazo")
-    var date: String? = ""
+    var date: Long = 0L
 )
 
 fun RemoteResultOrder.toOrderDomain() = OrderModel(

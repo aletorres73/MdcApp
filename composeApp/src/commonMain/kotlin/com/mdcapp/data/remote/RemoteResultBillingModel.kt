@@ -13,9 +13,9 @@ data class RemoteResultBillingModel(
     @SerialName("Orden") var orderId: String = "",
     @SerialName("Tipo Facturacion") var type: String = "",
     @SerialName("Total") var total: String = "",
-    @SerialName("Fecha") var loadDate: String = "",
-    @SerialName("Fecha recepción") var deliveryDate: String = "",
-    @SerialName("Fecha Pago") var payDate: String = "",
+    @SerialName("Fecha") var loadDate: Long = 0L,
+    @SerialName("Fecha recepción") var deliveryDate: Long = 0L,
+    @SerialName("Fecha Pago") var payDate: Long = 0L,
     @SerialName("Articulos") var articles: List<RemoteArticle> = emptyList(),
     @SerialName("Condicion de pago") var paymentCondition: String = "",
     @SerialName("Dto") var discount: Double = 0.0,
@@ -28,7 +28,7 @@ data class RemoteResultBillingModel(
     @SerialName("Segmento") var branch: String = "",
     @SerialName("Comentarios") var comments: List<RemoteBillingComments> = emptyList(),
     @SerialName("Razon Social") var clientName: String = "",
-    @SerialName("Timestamp") var timeStamp: Long = 0
+    @SerialName("Timestamp") var timeStamp: Long = 0L
 )
 
 @Serializable
@@ -42,7 +42,7 @@ data class RemoteArticle(
 @Serializable
 data class RemoteBillingComments(
     val comments: String = "",
-    val date: String = ""
+    val date: Long = 0L
 )
 
 fun RemoteArticle.toArticleDomain() = ArticleModel(
@@ -85,25 +85,25 @@ fun RemoteResultBillingModel.toBillingDomain(): BillingModel {
 }
 
 fun BillingModel.toBillingRemote() = RemoteResultBillingModel(
-    billingNumber,
-    orderId,
-    type,
-    total.toString(),
-    loadDate,
-    deliveryDate,
-    payDate,
-    articles.map { it.toArticleRemote() },
-    paymentCondition,
-    discount,
-    toPay,
-    payed.toString(),
-    rest.toString(),
-    stateBilling,
-    clientId,
-    brand,
-    branch,
-    comments.map { RemoteBillingComments(it.comments, it.date) },
-    clientName,
-    timeStamp
+    billingNumber = billingNumber,
+    orderId = orderId,
+    type = type,
+    total = total.toString(),
+    loadDate = loadDate,
+    deliveryDate = deliveryDate,
+    payDate = payDate,
+    articles = articles.map { it.toArticleRemote() },
+    paymentCondition = paymentCondition,
+    discount = discount,
+    toPay = toPay,
+    payed = payed.toString(),
+    rest = rest.toString(),
+    stateBilling = stateBilling,
+    clientId = clientId,
+    brand = brand,
+    branch = branch,
+    comments = comments.map { RemoteBillingComments(it.comments, it.date) },
+    clientName = clientName,
+    timeStamp = timeStamp
 )
 

@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.ArticleOrderModel
 import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.domain.entities.toPrint
 import com.mdcapp.ui.theme.getBillingStatusColor
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
@@ -113,7 +114,7 @@ fun OrderDetailScreen(
 }
 
 @Composable
-fun OrderSummaryCard(client: String, factory: String, branch: String, date: String) {
+fun OrderSummaryCard(client: String, factory: String, branch: String, dateMillis: Long) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -127,7 +128,7 @@ fun OrderSummaryCard(client: String, factory: String, branch: String, date: Stri
                 InfoRow(Icons.Default.Info, "Segmento", branch)
             }
             Spacer(Modifier.height(8.dp))
-            InfoRow(Icons.Default.List, "Fecha Carga", date.ifEmpty { "No definida" })
+            InfoRow(Icons.Default.List, "Fecha Carga", dateMillis.toFormattedDate())
         }
     }
 }

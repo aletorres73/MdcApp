@@ -39,12 +39,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.PaymentCondition
+import com.mdcapp.domain.entities.toEpochMillis
+import com.mdcapp.domain.entities.toFormattedDate
+import com.mdcapp.domain.entities.toLocalDate
 import com.mdcapp.ui.composables.common.DatePicker
 import com.mdcapp.ui.viewmodels.invoices.AddInvoiceViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +62,7 @@ fun AddInvoiceScreen(
     }
     var number by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
-    var deliveryDate by remember { mutableStateOf("") }
+    var deliveryDate by remember { mutableStateOf(0L) }
     var selectedCondition by remember { mutableStateOf<PaymentCondition?>(null) }
     var selectedType by remember { mutableStateOf("Factura") }
 
@@ -81,8 +82,8 @@ fun AddInvoiceScreen(
     if (showDatePicker) {
         DatePicker(
             onDismissRequest = { showDatePicker = false },
-            onConfirmButton = { date ->
-                deliveryDate = date
+            onDateSelected = { millis ->
+                deliveryDate = millis
                 showDatePicker = false
             },
             onDismissButton = { showDatePicker = false },
@@ -152,7 +153,7 @@ fun AddInvoiceScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = deliveryDate,
+                value = deliveryDate.toFormattedDate(),
                 onValueChange = {},
                 readOnly = true,
                 enabled = false,
@@ -194,9 +195,11 @@ fun AddInvoiceScreen(
 
             Button(
                 onClick = {
-                    val payDate = if (deliveryDate.isNotBlank() && selectedCondition != null) {
-                        addDate(deliveryDate, selectedCondition?.expiration)
-                    } else ""
+                    val payDate = if (deliveryDate != 0L && selectedCondition != null) {
+                        deliveryDate.toLocalDate()
+                            .plusDays(selectedCondition?.expiration?.toLong() ?: 0)
+                            .toEpochMillis()
+                    } else 0L
                     viewModel.saveInvoice(
                         number = number,
                         amount = amount.toDoubleOrNull() ?: 0.0,
@@ -254,16 +257,3 @@ fun ConditionSelector(
     }
 }
 
-fun addDate(date: String, quantity: Int?): String {
-    // Definir el formato de entrada y salida "dd/MM/yyyy"
-    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-
-    // Convertir el String a un objeto LocalDate
-    val fecha = LocalDate.parse(date, formatter)
-
-    // Sumar los días indicados
-    val nuevaFecha = fecha.plusDays(quantity?.toLong() ?: 0)
-
-    // Devolver la nueva fecha convertida de nuevo a String
-    return nuevaFecha.format(formatter)
-}

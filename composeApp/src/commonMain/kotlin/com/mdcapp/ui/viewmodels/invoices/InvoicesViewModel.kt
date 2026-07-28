@@ -14,8 +14,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.RoundingMode
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 class InvoicesViewModel(
     clientId: String,
@@ -62,8 +60,6 @@ class InvoicesViewModel(
         val error: String? = null
     )
 
-    private val dateFormatter = DateTimeFormatter.ofPattern("d/MM/yyyy")
-
     init {
         Log.i("InvoicesViewModel", "clientId: $clientId")
         getClientName(clientId)
@@ -83,7 +79,7 @@ class InvoicesViewModel(
 
 
     private fun sortDocuments(docs: List<BillingModel>) =
-        docs.sortedBy { LocalDate.parse(it.loadDate, dateFormatter) }
+        docs.sortedBy { it.loadDate }
 
     private fun launchWithState(block: suspend () -> Unit) = viewModelScope.launch {
         _state.update { it.copy(isLoading = true, error = null) }
@@ -199,6 +195,3 @@ class InvoicesViewModel(
         // Al usar combine, esto se actualiza automáticamente al llamar a setBrand
     }
 }
-
-
-

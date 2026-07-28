@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.domain.entities.toPrint
 import com.mdcapp.ui.theme.getBillingStatusColor
 
@@ -109,11 +110,22 @@ fun InvoiceRow(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                 // Fechas
-                Text(
-                    text = "Venc: ${invoice.payDate} • Entrega: ${invoice.deliveryDate}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    val dates = mutableListOf<String>()
+                    dates.add("Carga: ${invoice.loadDate.toFormattedDate()}")
+                    if (invoice.deliveryDate != 0L) {
+                        dates.add("Entrega: ${invoice.deliveryDate.toFormattedDate()}")
+                    }
+                    if (invoice.payDate != 0L) {
+                        dates.add("Venc: ${invoice.payDate.toFormattedDate()}")
+                    }
+
+                    Text(
+                        text = dates.joinToString(" • "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 // Marca
                 if (invoice.brand.isNotBlank()) {

@@ -12,16 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePicker(
     onDismissRequest: () -> Unit,
-    onConfirmButton: (String) -> Unit = {},
-    onDateSelected: (LocalDate) -> Unit = {},
+    onDateSelected: (Long) -> Unit = {},
     onDismissButton: () -> Unit,
     enable: Boolean
 ) {
@@ -37,12 +33,7 @@ fun DatePicker(
                     onClick = {
                         val date = datePickerState.selectedDateMillis
                         date?.let {
-                            val localDate =
-                                Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
-                            val day = localDate.dayOfMonth.toString().padStart(2, '0')
-                            val month = localDate.monthValue.toString().padStart(2, '0')
-                            onConfirmButton("$day/$month/${localDate.year}")
-                            onDateSelected(localDate)
+                            onDateSelected(it)
                         }
                     },
                     enabled = confirmEnabled.value

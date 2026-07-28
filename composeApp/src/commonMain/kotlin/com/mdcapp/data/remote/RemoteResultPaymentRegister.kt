@@ -9,7 +9,7 @@ data class RemotePaymentRegisterResult(
     @SerialName("Pago Id") val id: Int = 0,
     @SerialName("Cliente ID") val clientId: String = "",
     @SerialName("Marca") val branch: String = "",
-    @SerialName("Fecha") val date: String = "",
+    @SerialName("Fecha") val date: Long = 0L,
     @SerialName("Razón Social") val clientName: String = "",
     @SerialName("Remito") val documentNumber: String = "",
     @SerialName("Tipo") val type: String = "",

@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.ArticleOrderModel
 import com.mdcapp.domain.entities.BuyOrderModel
+import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.ui.composables.common.infotables.TableCell
 import com.mdcapp.ui.composables.common.infotables.TableHeader
 
@@ -95,9 +96,9 @@ fun OrderInfoSection(order: BuyOrderModel) {
         InfoRow("Pedido Nº", order.order)
         InfoRow("Cliente", order.client)
         InfoRow("Marca", order.branch)
-        /*        InfoRow("Tipo", order.type)
-                InfoRow("Entrega", order.deliveryDate)
-                InfoRow("Cargado", order.loadedDate)*/
+        InfoRow("Tipo", order.type)
+        InfoRow("Entrega", order.deliveryDate.toFormattedDate())
+        InfoRow("Cargado", order.loadedDate.toFormattedDate())
     }
 }
 

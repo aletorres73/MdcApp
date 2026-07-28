@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.ui.viewmodels.orders.ClientOrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -111,6 +112,10 @@ fun ClientOrdersScreen(
                                     }
                                     Text(
                                         "Artículos: ${order.articles.size}",
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                    Text(
+                                        "Fecha: ${order.loadedDate.toFormattedDate()}",
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 }

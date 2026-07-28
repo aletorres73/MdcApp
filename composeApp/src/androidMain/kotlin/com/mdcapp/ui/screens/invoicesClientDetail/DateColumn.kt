@@ -9,10 +9,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+import com.mdcapp.domain.entities.toFormattedDate
+
 @Composable
 fun DateColumn(
     title: String,
-    value: String,
+    value: Long,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
@@ -28,7 +30,7 @@ fun DateColumn(
         )
 
         Text(
-            text = value,
+            text = value.toFormattedDate(),
             style = MaterialTheme.typography.titleSmall
         )
     }
