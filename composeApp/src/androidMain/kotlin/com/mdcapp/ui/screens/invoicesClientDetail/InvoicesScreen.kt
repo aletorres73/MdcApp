@@ -16,7 +16,6 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,11 +47,12 @@ fun InvoicesScreen(
 
     val state by vm.state.collectAsState()
     val brandSelected by vm.selectedBrand.collectAsState()
-
-    var expanded by remember { mutableStateOf(false) }
-//    var brandSelected by remember { mutableStateOf(String()) }
+    val branchSelected by vm.selectedBranch.collectAsState()
+    val typeSelected by vm.selectedType.collectAsState()
 
     val brands = state.brandList
+    val branches = state.branchList
+    val types = state.typeList
     /*    LaunchedEffect(brands) {
             if (brands.isNotEmpty()) brandSelected = brands.first()
         }*/
@@ -74,35 +74,6 @@ fun InvoicesScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
-                    }
-                },
-                actions = {
-                    Box {
-                        AssistChip(
-                            onClick = { expanded = true },
-                            label = { Text(text = brandSelected) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = "Marcas"
-                                )
-                            }
-                        )
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            brands.forEach { brand ->
-                                DropdownMenuItem(
-                                    text = { Text(brand) },
-                                    onClick = {
-                                        vm.setBrand(brand)
-                                        expanded = false
-                                        vm.filterByMarca()
-                                    }
-                                )
-                            }
-                        }
                     }
                 }
             )
@@ -132,10 +103,21 @@ fun InvoicesScreen(
             }
 
             else -> {
-                DetailClientBalance(paddingValues, state.documents, state.balance) {
-                    onInvoiceClick(
-                        it
-                    )
+                DetailClientBalance(
+                    paddingValues = paddingValues,
+                    documents = state.documents,
+                    balance = state.balance,
+                    brandSelected = brandSelected,
+                    branchSelected = branchSelected,
+                    typeSelected = typeSelected,
+                    brands = brands,
+                    branches = branches,
+                    types = types,
+                    onBrandSelect = { vm.setBrand(it) },
+                    onBranchSelect = { vm.setBranch(it) },
+                    onTypeSelect = { vm.setType(it) }
+                ) {
+                    onInvoiceClick(it)
                 }
             }
         }
@@ -148,8 +130,21 @@ fun DetailClientBalance(
     paddingValues: PaddingValues,
     documents: List<BillingModel>,
     balance: Double,
+    brandSelected: String,
+    branchSelected: String,
+    typeSelected: String,
+    brands: List<String>,
+    branches: List<String>,
+    types: List<String>,
+    onBrandSelect: (String) -> Unit,
+    onBranchSelect: (String) -> Unit,
+    onTypeSelect: (String) -> Unit,
     onInvoiceClick: (String) -> Unit
 ) {
+    var expandedBrand by remember { mutableStateOf(false) }
+    var expandedBranch by remember { mutableStateOf(false) }
+    var expandedType by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -158,20 +153,175 @@ fun DetailClientBalance(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Section: Filters
             Row(
                 modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Saldo total de cuenta:", style = MaterialTheme.typography.titleMedium)
-                Text("$$balance", style = MaterialTheme.typography.bodyMedium)
+                // Filter: Factory
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Fábrica",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Box {
+                        AssistChip(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { expandedBrand = true },
+                            label = {
+                                Text(
+                                    text = brandSelected.ifEmpty { "Todas" },
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                        DropdownMenu(
+                            expanded = expandedBrand,
+                            onDismissRequest = { expandedBrand = false }
+                        ) {
+                            brands.forEach { brand ->
+                                DropdownMenuItem(
+                                    text = { Text(brand) },
+                                    onClick = {
+                                        onBrandSelect(brand)
+                                        expandedBrand = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Filter: Segment
+                val isBranchEnabled = brandSelected != "Todas" && brandSelected.isNotEmpty()
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Segmento",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isBranchEnabled) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Box {
+                        AssistChip(
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = isBranchEnabled,
+                            onClick = { expandedBranch = true },
+                            label = {
+                                Text(
+                                    text = if (isBranchEnabled) branchSelected.ifEmpty { "Todas" } else "---",
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                        DropdownMenu(
+                            expanded = expandedBranch,
+                            onDismissRequest = { expandedBranch = false }
+                        ) {
+                            branches.forEach { branch ->
+                                DropdownMenuItem(
+                                    text = { Text(branch) },
+                                    onClick = {
+                                        onBranchSelect(branch)
+                                        expandedBranch = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Filter: Type (Factura/Remito)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Tipo",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Box {
+                        AssistChip(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { expandedType = true },
+                            label = {
+                                Text(
+                                    text = typeSelected.ifEmpty { "Todos" },
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                        DropdownMenu(
+                            expanded = expandedType,
+                            onDismissRequest = { expandedType = false }
+                        ) {
+                            types.forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(type) },
+                                    onClick = {
+                                        onTypeSelect(type)
+                                        expandedType = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
-            HorizontalDivider()
-            Text("Documentos en cuenta", style = MaterialTheme.typography.titleMedium)
+            androidx.compose.material3.ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Saldo total de cuenta",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        "$$balance",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = if (balance > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            Text(
+                "Documentos en cuenta",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+            )
 
             DocumentList(documents) { onInvoiceClick(it) }
         }

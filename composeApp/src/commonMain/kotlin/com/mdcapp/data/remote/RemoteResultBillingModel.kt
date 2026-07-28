@@ -25,6 +25,7 @@ data class RemoteResultBillingModel(
     @SerialName("Estado") var stateBilling: String = "",
     @SerialName("Cliente Id") var clientId: String = "",
     @SerialName("Marca") var brand: String = "",
+    @SerialName("Segmento") var branch: String = "",
     @SerialName("Comentarios") var comments: List<RemoteBillingComments> = emptyList(),
     @SerialName("Razon Social") var clientName: String = "",
     @SerialName("Timestamp") var timeStamp: Long = 0
@@ -76,6 +77,7 @@ fun RemoteResultBillingModel.toBillingDomain(): BillingModel {
         stateBilling = stateBilling,
         clientId = clientId,
         brand = brand,
+        branch = branch,
         comments = comments.map { BillingComments(it.comments, it.date) },
         clientName = clientName,
         timeStamp = timeStamp
@@ -99,6 +101,7 @@ fun BillingModel.toBillingRemote() = RemoteResultBillingModel(
     stateBilling,
     clientId,
     brand,
+    branch,
     comments.map { RemoteBillingComments(it.comments, it.date) },
     clientName,
     timeStamp

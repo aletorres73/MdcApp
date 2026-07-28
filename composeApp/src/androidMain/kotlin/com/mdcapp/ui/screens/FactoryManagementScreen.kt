@@ -48,8 +48,9 @@ import com.mdcapp.domain.entities.FactoryModel
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.ui.viewmodels.FactoryViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
 fun FactoryManagementScreen(
     onBack: () -> Unit,
@@ -57,7 +58,9 @@ fun FactoryManagementScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     var selectedFactory by remember { mutableStateOf<FactoryModel?>(null) }
+    var factoryToDelete by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -99,7 +102,10 @@ fun FactoryManagementScreen(
                                 }) {
                                     Icon(Icons.Default.Edit, contentDescription = "Editar")
                                 }
-                                IconButton(onClick = { viewModel.deleteFactory(factory.name) }) {
+                                IconButton(onClick = {
+                                    factoryToDelete = factory.name
+                                    showDeleteDialog = true
+                                }) {
                                     Icon(
                                         Icons.Default.Delete,
                                         contentDescription = "Eliminar",
@@ -121,6 +127,29 @@ fun FactoryManagementScreen(
             onConfirm = { name, segments, conditions ->
                 viewModel.saveFactory(name, segments, conditions)
                 showAddDialog = false
+            }
+        )
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Eliminar Fábrica") },
+            text = { Text("¿Estás seguro de que deseas eliminar la fábrica \"$factoryToDelete\"? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        factoryToDelete?.let { viewModel.deleteFactory(it) }
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancelar")
+                }
             }
         )
     }
@@ -307,4 +336,3 @@ fun AddEditConditionDialog(
         }
     )
 }
-

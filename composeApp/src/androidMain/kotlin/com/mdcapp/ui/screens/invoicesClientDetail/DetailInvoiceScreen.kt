@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -36,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingComments
 import com.mdcapp.domain.entities.PaymentRegisterModel
@@ -62,6 +64,7 @@ fun DetailInvoiceScreen(
     var showPaymentDialog by remember { mutableStateOf(false) }
     var showCommentDialog by remember { mutableStateOf(false) }
     var paymentAmount by remember { mutableStateOf("") }
+    var paymentNotes by remember { mutableStateOf("") }
     var commentText by remember { mutableStateOf("") }
     var showStateDialog by remember { mutableStateOf(false) }
 
@@ -225,7 +228,9 @@ fun DetailInvoiceScreen(
 
     if (showPaymentDialog) {
         AlertDialog(
-            onDismissRequest = { showPaymentDialog = false },
+            onDismissRequest = {
+                if (!state.isProcessingPayment) showPaymentDialog = false
+            },
             title = { Text("Registrar Pago") },
             text = {
                 Column {
@@ -235,7 +240,21 @@ fun DetailInvoiceScreen(
                         value = paymentAmount,
                         onValueChange = { paymentAmount = it },
                         label = { Text("Monto a pagar") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isProcessingPayment,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        prefix = { Text("$ ") }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = paymentNotes,
+                        onValueChange = { paymentNotes = it },
+                        label = { Text("Notas / Referencia") },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isProcessingPayment,
+                        placeholder = { Text("Ej: Efectivo, Transf #1234, Recibo #55") },
+                        singleLine = true
                     )
                 }
             },
@@ -244,21 +263,35 @@ fun DetailInvoiceScreen(
                     onClick = {
                         val amount = paymentAmount.toDoubleOrNull() ?: 0.0
                         if (amount > 0) {
-                            vm.registerPayment(amount)
-                            showPaymentDialog = false
-                            paymentAmount = ""
+                            vm.registerPayment(amount, paymentNotes)
+                            if (!state.isProcessingPayment) {
+                                showPaymentDialog = false
+                                paymentAmount = ""
+                                paymentNotes = ""
+                            }
                         }
-                    }
+                    },
+                    enabled = !state.isProcessingPayment
                 ) {
-                    Text("Confirmar")
+                    Text(if (state.isProcessingPayment) "Procesando..." else "Confirmar")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showPaymentDialog = false }) {
+                TextButton(
+                    onClick = { showPaymentDialog = false },
+                    enabled = !state.isProcessingPayment
+                ) {
                     Text("Cancelar")
                 }
             }
         )
+    }
+
+    // Cerrar el diálogo cuando el pago se registra con éxito
+    LaunchedEffect(state.isProcessingPayment) {
+        if (!state.isProcessingPayment && paymentAmount.isEmpty()) {
+            showPaymentDialog = false
+        }
     }
 }
 
@@ -287,11 +320,20 @@ fun PaymentsSection(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(
-                                payment.date,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Column {
+                                Text(
+                                    "ID: ${payment.id} - ${payment.date}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                if (payment.notes.isNotBlank()) {
+                                    Text(
+                                        payment.notes,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                             Text(
                                 "$ ${payment.total}",
                                 style = MaterialTheme.typography.bodyMedium,

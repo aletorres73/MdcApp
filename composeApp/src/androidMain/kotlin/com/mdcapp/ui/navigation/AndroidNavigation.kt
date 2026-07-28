@@ -138,8 +138,11 @@ fun AndroidNavigation(startRoute: String) {
                 onNavigateToInvoice = { invoiceNumber ->
                     navController.navigateToDetailInvoice(invoiceNumber)
                 },
-                onNavigateToClientInvoices = { clientId ->
+                onNavigateToClientOrders = { clientId ->
                     navController.navigate(AppRoute.ClientOrders.createRoute(clientId))
+                },
+                onNavigateToCurrentAccount = { clientId ->
+                    navController.navigateToInvoices(clientId)
                 },
                 onNavigateToAddClient = {
                     navController.navigate(AppRoute.AddClient.createRoute())

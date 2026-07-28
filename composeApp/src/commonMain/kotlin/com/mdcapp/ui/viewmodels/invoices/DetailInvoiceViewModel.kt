@@ -35,6 +35,7 @@ class DetailInvoiceViewModel(
     data class UiState(
         val invoiceNumber: String = "",
         val isLoading: Boolean = false,
+        val isProcessingPayment: Boolean = false,
         val billing: BillingModel = BillingModel(),
         val buyOrder: BuyOrderModel = BuyOrderModel(),
         val error: String? = null,
@@ -159,53 +160,72 @@ class DetailInvoiceViewModel(
         Log.i("MdcAppOnly", "DetailInvoiceViewModel --- on updateDeliveryDate: $updated")
     }
 
-    fun registerPayment(amount: Double) {
+    fun registerPayment(amount: Double, notes: String) {
+        if (_state.value.isProcessingPayment) return
+
         viewModelScope.launch {
+            _state.update { it.copy(isProcessingPayment = true) }
             val current = _state.value
 
-            // 1. Get Last ID
-            val lastId = getLastIdPaymentUseCase()
-            val nextId = lastId + 1
+            try {
+                // 1. Get Last ID
+                val lastId = getLastIdPaymentUseCase()
+                val nextId = lastId + 1
 
-            // 2. Create Payment Register
-            val now = try {
-                val date = java.time.LocalDate.now()
-                val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                date.format(formatter)
+                // 2. Create Payment Register
+                val now = try {
+                    val date = java.time.LocalDate.now()
+                    val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                    date.format(formatter)
+                } catch (e: Exception) {
+                    ""
+                }
+
+                val paymentRegister = PaymentRegisterModel(
+                    id = nextId,
+                    clientId = current.billing.clientId,
+                    branch = current.billing.brand,
+                    date = now,
+                    clientName = current.billing.clientName,
+                    documentNumber = current.billing.billingNumber,
+                    type = current.billing.type.ifEmpty { "Factura" },
+                    total = amount,
+                    notes = notes
+                )
+
+                // 3. Save Payment
+                val registerResult = addPaymentToRegisterUseCase(paymentRegister)
+
+                if (registerResult) {
+                    // 4. Update Billing payed total
+                    val updatedBilling = current.billing.copy(
+                        payed = current.billing.payed + amount
+                    ).recalculate()
+
+                    _state.update {
+                        it.copy(
+                            billing = updatedBilling,
+                            message = "Pago registrado",
+                            isProcessingPayment = false
+                        )
+                    }
+                    saveBilling()
+                } else {
+                    _state.update {
+                        it.copy(
+                            message = "Error al registrar el pago",
+                            isProcessingPayment = false
+                        )
+                    }
+                }
             } catch (e: Exception) {
-                ""
-            }
-
-            val paymentRegister = PaymentRegisterModel(
-                id = nextId,
-                clientId = current.billing.clientId,
-                branch = current.billing.brand,
-                date = now,
-                clientName = current.billing.clientName,
-                documentNumber = current.billing.billingNumber,
-                type = current.billing.type.ifEmpty { "Factura" },
-                total = amount
-            )
-
-            // 3. Save Payment
-            val registerResult = addPaymentToRegisterUseCase(paymentRegister)
-
-            if (registerResult) {
-                // 4. Update Billing payed total
-                val updatedBilling = current.billing.copy(
-                    payed = current.billing.payed + amount
-                ).recalculate()
-
+                Log.e("MdcAppOnly", "Error registering payment: $e")
                 _state.update {
                     it.copy(
-                        billing = updatedBilling,
-                        payments = it.payments + paymentRegister,
-                        message = "Pago registrado"
+                        message = "Error: ${e.message}",
+                        isProcessingPayment = false
                     )
                 }
-                saveBilling()
-            } else {
-                _state.update { it.copy(message = "Error al registrar el pago") }
             }
         }
     }

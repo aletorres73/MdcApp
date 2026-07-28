@@ -2,10 +2,13 @@ package com.mdcapp.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -14,11 +17,13 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -28,11 +33,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
 fun ClientsListScreen(
-    onClientClick: (String) -> Unit,
+    onOrdersClick: (String) -> Unit,
+    onCurrentAccountClick: (String) -> Unit,
     onEditClientClick: (String, String) -> Unit,
     viewModel: ClientsViewModel = koinViewModel()
 ) {
@@ -60,38 +67,58 @@ fun ClientsListScreen(
             ) {
                 items(state.clients) { client ->
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = { onClientClick(client.clientId) }
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    text = client.clientName,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            supportingContent = { Text("ID: ${client.clientId}") },
-                            trailingContent = {
-                                Row {
-                                    IconButton(onClick = {
-                                        onEditClientClick(
-                                            client.clientId,
-                                            client.clientName
-                                        )
-                                    }) {
-                                        Icon(Icons.Default.Edit, contentDescription = "Editar")
-                                    }
-                                    IconButton(onClick = { viewModel.deleteClient(client.clientId) }) {
-                                        Icon(
-                                            Icons.Default.Delete,
-                                            contentDescription = "Eliminar",
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
+                        Column {
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        text = client.clientName,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                },
+                                supportingContent = { Text("ID: ${client.clientId}") },
+                                trailingContent = {
+                                    Row {
+                                        IconButton(onClick = {
+                                            onEditClientClick(
+                                                client.clientId,
+                                                client.clientName
+                                            )
+                                        }) {
+                                            Icon(Icons.Default.Edit, contentDescription = "Editar")
+                                        }
+                                        IconButton(onClick = { viewModel.deleteClient(client.clientId) }) {
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = "Eliminar",
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                        }
                                     }
                                 }
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                thickness = 0.5.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                TextButton(onClick = { onOrdersClick(client.clientId) }) {
+                                    Text("PEDIDOS")
+                                }
+                                Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                                TextButton(onClick = { onCurrentAccountClick(client.clientId) }) {
+                                    Text("CTA. CTE.")
+                                }
                             }
-                        )
+                        }
                     }
                 }
             }

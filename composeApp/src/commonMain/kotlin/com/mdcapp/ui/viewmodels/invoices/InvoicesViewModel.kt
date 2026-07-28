@@ -27,11 +27,26 @@ class InvoicesViewModel(
     private val _state = MutableStateFlow(UiState(clientId = clientId))
     val state = _state.asStateFlow()
 
-    private val _selectedBrand = MutableStateFlow("")
+    private val _selectedBrand = MutableStateFlow("Todas")
     val selectedBrand = _selectedBrand.asStateFlow()
+
+    private val _selectedBranch = MutableStateFlow("Todas")
+    val selectedBranch = _selectedBranch.asStateFlow()
+
+    private val _selectedType = MutableStateFlow("Todos")
+    val selectedType = _selectedType.asStateFlow()
 
     fun setBrand(brand: String) {
         _selectedBrand.value = brand
+        _selectedBranch.value = "Todas" // Reset branch when brand changes
+    }
+
+    fun setBranch(branch: String) {
+        _selectedBranch.value = branch
+    }
+
+    fun setType(type: String) {
+        _selectedType.value = type
     }
 
     data class UiState(
@@ -41,6 +56,8 @@ class InvoicesViewModel(
         val documents: List<BillingModel> = emptyList(),
         val allDocuments: List<BillingModel> = emptyList(),
         val brandList: List<String> = emptyList(),
+        val branchList: List<String> = emptyList(),
+        val typeList: List<String> = emptyList(),
         val balance: Double = 0.0,
         val error: String? = null
     )
@@ -94,22 +111,54 @@ class InvoicesViewModel(
     private fun getDocuments(clientId: String) {
         combine(
             observeDocumentsUseCase(clientId),
-            _selectedBrand
-        ) { documents, selectedBrand ->
-            val brands = documents.asSequence()
+            _selectedBrand,
+            _selectedBranch,
+            _selectedType
+        ) { documents, selectedBrand, selectedBranch, selectedType ->
+            // Extract available brands
+            val brands = (listOf("Todas") + documents.asSequence()
                 .map { it.brand }
                 .filter { it.isNotBlank() }
                 .distinct()
-                .toList()
+                .sorted()
+                .toList())
 
-            val activeBrand = if (selectedBrand.isEmpty() && brands.isNotEmpty()) {
-                setBrand(brands.first())
-                brands.first()
-            } else selectedBrand
+            // Filter by Brand
+            val filteredByBrand = if (selectedBrand != "Todas" && selectedBrand.isNotEmpty()) {
+                documents.filter { it.brand == selectedBrand }
+            } else {
+                documents
+            }
 
-            val filteredDocs = if (activeBrand.isNotEmpty()) {
-                documents.filter { it.brand == activeBrand }
-            } else documents
+            // Extract available branches for the currently filtered set
+            val branches = (listOf("Todas") + filteredByBrand.asSequence()
+                .map { it.branch }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sorted()
+                .toList())
+
+            // Filter by Branch
+            val filteredByBranch = if (selectedBranch != "Todas" && selectedBranch.isNotEmpty()) {
+                filteredByBrand.filter { it.branch == selectedBranch }
+            } else {
+                filteredByBrand
+            }
+
+            // Extract available types
+            val types = (listOf("Todos") + documents.asSequence()
+                .map { it.type }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .sorted()
+                .toList())
+
+            // Filter by Type
+            val filteredDocs = if (selectedType != "Todos" && selectedType.isNotEmpty()) {
+                filteredByBranch.filter { it.type == selectedType }
+            } else {
+                filteredByBranch
+            }
 
             val recalculatedDocs = filteredDocs.map { billing ->
                 val updated = billing.recalculate()
@@ -134,6 +183,8 @@ class InvoicesViewModel(
                     documents = sorted,
                     allDocuments = documents,
                     brandList = brands,
+                    branchList = if (selectedBrand != "Todas" && selectedBrand.isNotEmpty()) branches else emptyList(),
+                    typeList = types,
                     balance = balance
                 )
             }

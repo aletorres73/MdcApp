@@ -69,7 +69,8 @@ data class PaymentRegisterModel(
     val clientName: String,
     val documentNumber: String,
     val type: String,
-    val total: Double
+    val total: Double,
+    val notes: String = ""
 )
 
 data class ClientModel(
@@ -109,6 +110,7 @@ data class BillingModel(
     val stateBilling: String = "",
     val clientId: String = "",
     val brand: String = "",
+    val branch: String = "",
     val comments: List<BillingComments> = emptyList(),
     val clientName: String = "",
     val timeStamp: Long = 0

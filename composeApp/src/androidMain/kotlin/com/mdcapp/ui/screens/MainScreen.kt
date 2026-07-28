@@ -37,7 +37,8 @@ import com.mdcapp.ui.screens.invoicesPage.InvoicesPageScreen
 @Composable
 fun MainScreen(
     onNavigateToInvoice: (String) -> Unit,
-    onNavigateToClientInvoices: (String) -> Unit,
+    onNavigateToClientOrders: (String) -> Unit,
+    onNavigateToCurrentAccount: (String) -> Unit,
     onNavigateToAddClient: () -> Unit,
     onNavigateToEditClient: (String, String) -> Unit,
     onNavigateToCreateOrder: () -> Unit,
@@ -115,7 +116,8 @@ fun MainScreen(
             }
             composable(AppRoute.Clients.route) {
                 ClientsListScreen(
-                    onClientClick = onNavigateToClientInvoices,
+                    onOrdersClick = onNavigateToClientOrders,
+                    onCurrentAccountClick = onNavigateToCurrentAccount,
                     onEditClientClick = onNavigateToEditClient
                 )
             }

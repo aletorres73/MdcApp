@@ -27,12 +27,13 @@ import com.mdcapp.domain.entities.toPrint
 fun DocumentList(documents: List<BillingModel>, onInvoiceClick: (String) -> Unit) {
     val horizontalScroll = rememberScrollState()
 
-    // 🔹 Ancho fijo por columna (ajústalos según tu diseño o proporciones reales)
-    val colFecha = 95.dp
-    val colNumero = 95.dp
-    val colImporte = 120.dp
-    val colPagado = 120.dp
-    val colSaldo = 120.dp
+    // 🔹 Ancho fijo por columna
+    val colFecha = 85.dp
+    val colNumero = 85.dp
+    val colSegmento = 85.dp
+    val colImporte = 100.dp
+    val colPagado = 100.dp
+    val colSaldo = 100.dp
 
     Column(
         modifier = Modifier
@@ -52,7 +53,8 @@ fun DocumentList(documents: List<BillingModel>, onInvoiceClick: (String) -> Unit
                     val style = MaterialTheme.typography.labelMedium
                     HeaderCell("Fecha", style, colFecha)
                     HeaderCell("Número", style, colNumero)
-                    HeaderCell("Importe", style, colImporte, TextAlign.End)
+                    HeaderCell("Seg", style, colSegmento)
+                    HeaderCell("Neto", style, colImporte, TextAlign.End)
                     HeaderCell("Pagado", style, colPagado, TextAlign.End)
                     HeaderCell("Saldo", style, colSaldo, TextAlign.End)
                 }
@@ -69,7 +71,8 @@ fun DocumentList(documents: List<BillingModel>, onInvoiceClick: (String) -> Unit
                     val styleText = MaterialTheme.typography.bodySmall
                     DataCell(doc.loadDate, styleText, colFecha)
                     DataCell(doc.billingNumber, styleText, colNumero)
-                    DataCell(doc.total.toPrint(), styleText, colImporte, TextAlign.End)
+                    DataCell(doc.branch, styleText, colSegmento)
+                    DataCell(doc.toPay.toPrint(), styleText, colImporte, TextAlign.End)
                     DataCell(doc.payed.toPrint(), styleText, colPagado, TextAlign.End)
                     DataCell(doc.rest.toPrint(), styleText, colSaldo, TextAlign.End)
                 }
