@@ -79,30 +79,3 @@ fun RemoteResultOrder.toOrderDomain() = OrderModel(
     calendar = calendar,
     date = date
 )
-
-fun OrderModel.toOrderRemote() = RemoteResultOrder(
-    orderNumber = orderNumber,
-    nameClient = nameClient,
-    branch = branch,
-    type = type,
-    documentDate = documentDate,
-    numberDocument = numberDocument,
-    trackingState = trackingState,
-    documentComments = documentComments,
-    sellOut = sellOut,
-    inputDate = inputDate,
-    payState = payState,
-    receptionDate = receptionDate,
-    payDate = payDate,
-    valueDocument = valueDocument,
-    discount = discount,
-    payAmount = payAmount,
-    payedAmount = payedAmount,
-    payDifference = payDifference,
-    orders = orders,
-    documents = documents,
-    checked = checked,
-    calendar = calendar,
-    date = date
-)
-

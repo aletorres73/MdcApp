@@ -1,5 +1,3 @@
-@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
-
 package com.mdcapp.data.service
 
 import android.util.Log
@@ -34,7 +32,6 @@ class OrderService(
         get() = db.collection("users").document(userId)
 
     private val ordersCollection get() = userDoc.collection(ORDERS)
-    private val buyOrdersCollection get() = userDoc.collection(BUY_ORDERS)
     private val factoriesCollection get() = userDoc.collection(FACTORIES)
     private val paymentsRegisterCollection get() = userDoc.collection(PAYMENTS_REGISTER)
 
@@ -249,7 +246,7 @@ class OrderService(
             orderBillingsCollection(clientId, orderId)
                 .document(document)
                 .update(data)
-            
+
             Log.i("MdcAppOnly", "firestore --- on updateBilling success $data")
             true
         } catch (e: Exception) {

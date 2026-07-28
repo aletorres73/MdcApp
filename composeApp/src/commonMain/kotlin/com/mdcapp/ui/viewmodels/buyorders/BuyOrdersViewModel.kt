@@ -226,14 +226,6 @@ class BuyOrdersViewModel(
         )
     }
 
-    private fun getPayDate(
-        billingNumber: String,
-        expiration: Int,
-        newDeliveryDate: Long = 0L
-    ): Long {
-        return 0L // Simplified or unused now
-    }
-
     fun saveDateSelected(newDateMillis: Long, billingNumber: String) {
         try {
             _tempState.value = _tempState.value.copy(
@@ -294,21 +286,6 @@ class BuyOrdersViewModel(
                 }
             }
         )
-        setRest(billingNumber)
-    }
-
-    private fun setRest(billingNumber: String) {
-        /*        _tempState.value = _tempState.value.copy(
-                    billings = _tempState.value.billings.map { billing ->
-                        if (billing.billingNumber == billingNumber) {
-                            billing.copy(
-                                rest = "%.2f".format(Locale.US, billing.toPay - billing.payed).toDouble()
-                            )
-                        } else {
-                            billing
-                        }
-                    }
-                )*/
     }
 
     // Calcular el monto total de las facturas

@@ -186,12 +186,4 @@ class InvoicesViewModel(
             }
         }.launchIn(viewModelScope)
     }
-
-    //----------------------------------------------
-    // FILTER BY BRAND
-    //----------------------------------------------
-
-    fun filterByMarca() {
-        // Al usar combine, esto se actualiza automáticamente al llamar a setBrand
-    }
 }

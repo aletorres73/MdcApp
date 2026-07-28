@@ -50,7 +50,7 @@ class CreateOrderViewModel(
                 val clients = getClientsUseCase.getAll()
                 val selectedClient =
                     if (clientId != null) clients.find { it.clientId == clientId } else null
-                
+
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -136,10 +136,6 @@ class CreateOrderViewModel(
                 _state.update { it.copy(isLoading = false, error = "Error al guardar el pedido") }
             }
         }
-    }
-
-    fun resetState() {
-        _state.update { UiState() }
     }
 }
 

@@ -81,21 +81,6 @@ data class ClientModel(
     val clientName: String,
 )
 
-data class InfoClientModel(
-    val clientId: Int,
-    var clientName: String,
-    var fantasyName: String,
-    var cuit: String,
-    var address: String,
-    var taxAddress: String,
-    var city: String,
-    var taxCity: String,
-    var deliveryTime: String,
-    var email: String,
-    var phone: String,
-    var contactName: String
-)
-
 data class BillingModel(
     val billingNumber: String = "",
     val orderId: String = "",
@@ -158,8 +143,6 @@ fun Double.toPrint(): String {
 fun Double.discountToPrint(): String {
     return "%,.0f".format(this * 100)
 }
-
-val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
 fun Long.toLocalDate(): LocalDate {
     return Instant.ofEpochMilli(this).atZone(ZoneId.of("UTC")).toLocalDate()

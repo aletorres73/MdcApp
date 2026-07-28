@@ -16,8 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Badge
@@ -128,7 +128,7 @@ fun OrderSummaryCard(client: String, factory: String, branch: String, dateMillis
                 InfoRow(Icons.Default.Info, "Segmento", branch)
             }
             Spacer(Modifier.height(8.dp))
-            InfoRow(Icons.Default.List, "Fecha Carga", dateMillis.toFormattedDate())
+            InfoRow(Icons.AutoMirrored.Filled.List, "Fecha Carga", dateMillis.toFormattedDate())
         }
     }
 }

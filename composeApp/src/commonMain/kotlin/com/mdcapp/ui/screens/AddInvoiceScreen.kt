@@ -15,10 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,9 +42,10 @@ import com.mdcapp.domain.entities.toLocalDate
 import com.mdcapp.ui.composables.common.DatePicker
 import com.mdcapp.ui.viewmodels.invoices.AddInvoiceViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.parameter.parametersOf
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
 fun AddInvoiceScreen(
     clientId: String,
@@ -218,42 +216,3 @@ fun AddInvoiceScreen(
         }
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ConditionSelector(
-    conditions: List<PaymentCondition>,
-    selected: PaymentCondition?,
-    onSelected: (PaymentCondition) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it }
-    ) {
-        OutlinedTextField(
-            value = selected?.paymentName ?: "Seleccionar Condición de Pago",
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Condición de Pago") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth()
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            conditions.forEach { condition ->
-                DropdownMenuItem(
-                    text = { Text("${condition.paymentName} (-${(condition.discount * 100).toInt()}%)") },
-                    onClick = {
-                        onSelected(condition)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
