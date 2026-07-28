@@ -92,7 +92,7 @@ class AddInvoiceViewModel(
                     payDate = payDate,
                     deliveryDate = deliveryDate,
                     paymentCondition = condition?.paymentName ?: "",
-                    discount = condition?.discount ?: 0.0,
+                    expectedDiscount = condition?.discount ?: 0.0,
                     type = type,
                     comments = comments,
                     stateBilling = "Pendiente",

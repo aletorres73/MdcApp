@@ -73,7 +73,11 @@ data class PaymentRegisterModel(
     val documentNumber: String,
     val type: String,
     val total: Double,
-    val notes: String = ""
+    val notes: String = "",
+    val method: String = "PAGO", // EFECTIVO, TRANSFERENCIA, PRONTO_PAGO, NOTA_CREDITO, DESCUENTO_EXTRA
+    val status: String = "PENDIENTE_FABRICA", // PENDIENTE_FABRICA, IMPUTADO_FABRICA
+    val reconciliationDate: Long = 0L,
+    val isVirtual: Boolean = false
 )
 
 data class ClientModel(
@@ -91,7 +95,7 @@ data class BillingModel(
     val payDate: Long = 0L,
     val articles: List<ArticleModel> = emptyList(),
     val paymentCondition: String = "",
-    val discount: Double = 0.0,
+    val expectedDiscount: Double = 0.0,
     val toPay: Double = 0.0,
     val payed: Double = 0.0,
     val rest: Double = 0.0,
@@ -161,7 +165,9 @@ fun BillingModel.recalculate(
     condition: PaymentCondition? = null
 ): BillingModel {
 
-    val toPayValue = total - discount * total
+    // El monto a cobrar (toPay) ahora es siempre el total bruto.
+    // Los descuentos se manejan como movimientos en el historial.
+    val toPayValue = total 
     val restValue = toPayValue - payed
 
     val reception = if (deliveryDate != 0L) deliveryDate.toLocalDate() else null

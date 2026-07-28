@@ -113,7 +113,7 @@ fun BillingList(
                         ) {
                             RowInfoBilling(
                                 key = "Dtos:",
-                                value = "$${billing.discount}"
+                                value = "$${billing.expectedDiscount}"
                             )
                             RowInfoBilling(
                                 key = "A cobrar:",

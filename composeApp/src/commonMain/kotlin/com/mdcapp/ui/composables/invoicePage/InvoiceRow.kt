@@ -75,9 +75,9 @@ fun InvoiceRow(
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        if (invoice.discount > 0)
+                        if (invoice.expectedDiscount > 0)
                             Text(
-                                text = "Dto: ${(invoice.discount * 100).toInt()}%",
+                                text = "Dto: ${(invoice.expectedDiscount * 100).toInt()}%",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )

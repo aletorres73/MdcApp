@@ -217,7 +217,7 @@ class BuyOrdersViewModel(
                 if (billing.billingNumber == billingNumber) {
                     billing.copy(
                         paymentCondition = paymentCondition.paymentName,
-                        discount = paymentCondition.discount
+                        expectedDiscount = paymentCondition.discount
                     ).recalculate(paymentCondition)
                 } else {
                     billing

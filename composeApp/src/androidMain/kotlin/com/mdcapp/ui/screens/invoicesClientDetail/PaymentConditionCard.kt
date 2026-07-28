@@ -43,9 +43,9 @@ fun PaymentConditionCard(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            if (billing.discount != 0.0)
+            if (billing.expectedDiscount != 0.0)
                 Text(
-                    text = "%${billing.discount.discountToPrint()}",
+                    text = "%${billing.expectedDiscount.discountToPrint()}",
                     style = MaterialTheme.typography.bodyMedium
                 )
         }

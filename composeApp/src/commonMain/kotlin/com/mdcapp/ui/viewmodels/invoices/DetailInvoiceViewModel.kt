@@ -128,7 +128,7 @@ class DetailInvoiceViewModel(
             val current = _state.value.billing
 
             val updated = current.copy(
-                discount = condition.discount,
+                expectedDiscount = condition.discount,
                 paymentCondition = condition.paymentName
             ).recalculate(condition)
 
@@ -160,7 +160,12 @@ class DetailInvoiceViewModel(
         Log.i("MdcAppOnly", "DetailInvoiceViewModel --- on updateDeliveryDate: $updated")
     }
 
-    fun registerPayment(amount: Double, notes: String) {
+    fun registerMovement(
+        amount: Double,
+        notes: String,
+        method: String,
+        isVirtual: Boolean = false
+    ) {
         if (_state.value.isProcessingPayment) return
 
         viewModelScope.launch {
@@ -184,22 +189,26 @@ class DetailInvoiceViewModel(
                     documentNumber = current.billing.billingNumber,
                     type = current.billing.type.ifEmpty { "Factura" },
                     total = amount,
-                    notes = notes
+                    notes = notes,
+                    method = method,
+                    status = "PENDIENTE_FABRICA",
+                    isVirtual = isVirtual
                 )
 
-                // 3. Save Payment
+                // 3. Save Movement
                 val registerResult = addPaymentToRegisterUseCase(paymentRegister)
 
                 if (registerResult) {
-                    // 4. Update Billing payed total
+                    // 4. Update Billing payed total (sum all existing + new)
+                    val totalPayed = (current.payments + paymentRegister).sumOf { it.total }
                     val updatedBilling = current.billing.copy(
-                        payed = current.billing.payed + amount
+                        payed = totalPayed
                     ).recalculate()
 
                     _state.update {
                         it.copy(
                             billing = updatedBilling,
-                            message = "Pago registrado",
+                            message = "Movimiento registrado",
                             isProcessingPayment = false
                         )
                     }
@@ -207,13 +216,50 @@ class DetailInvoiceViewModel(
                 } else {
                     _state.update {
                         it.copy(
-                            message = "Error al registrar el pago",
+                            message = "Error al registrar el movimiento",
                             isProcessingPayment = false
                         )
                     }
                 }
             } catch (e: Exception) {
-                Log.e("MdcAppOnly", "Error registering payment: $e")
+                Log.e("MdcAppOnly", "Error registering movement: $e")
+                _state.update {
+                    it.copy(
+                        message = "Error: ${e.message}",
+                        isProcessingPayment = false
+                    )
+                }
+            }
+        }
+    }
+
+    fun reconcileMovement(payment: PaymentRegisterModel) {
+        if (_state.value.isProcessingPayment) return
+
+        viewModelScope.launch {
+            _state.update { it.copy(isProcessingPayment = true) }
+            try {
+                val updated = payment.copy(
+                    status = "IMPUTADO_FABRICA",
+                    reconciliationDate = System.currentTimeMillis()
+                )
+                val result = addPaymentToRegisterUseCase(updated)
+                if (result) {
+                    _state.update {
+                        it.copy(
+                            message = "Movimiento conciliado",
+                            isProcessingPayment = false
+                        )
+                    }
+                } else {
+                    _state.update {
+                        it.copy(
+                            message = "Error al conciliar",
+                            isProcessingPayment = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
                 _state.update {
                     it.copy(
                         message = "Error: ${e.message}",
@@ -255,7 +301,7 @@ class DetailInvoiceViewModel(
                     _state.update {
                         it.copy(
                             billing = updatedBilling,
-                            message = "Pago actualizado",
+                            message = "Movimiento actualizado",
                             isProcessingPayment = false
                         )
                     }
@@ -263,13 +309,13 @@ class DetailInvoiceViewModel(
                 } else {
                     _state.update {
                         it.copy(
-                            message = "Error al actualizar el pago",
+                            message = "Error al actualizar el movimiento",
                             isProcessingPayment = false
                         )
                     }
                 }
             } catch (e: Exception) {
-                Log.e("MdcAppOnly", "Error editing payment: $e")
+                Log.e("MdcAppOnly", "Error editing movement: $e")
                 _state.update {
                     it.copy(
                         message = "Error: ${e.message}",
