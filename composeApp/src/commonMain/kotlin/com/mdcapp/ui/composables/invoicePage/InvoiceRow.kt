@@ -5,13 +5,18 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,6 +34,7 @@ import com.mdcapp.ui.theme.getBillingStatusColor
 @Composable
 fun InvoiceRow(
     invoice: BillingModel,
+    hasPendingReconciliation: Boolean = false,
     onNavigationInvoice: (String) -> Unit = {}
 ) {
     val statusColor = rememberStatusColor(invoice)
@@ -59,10 +65,21 @@ fun InvoiceRow(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(
-                            text = "Doc #${invoice.billingNumber} • ${invoice.type}",
-                            style = MaterialTheme.typography.titleSmall,
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Doc #${invoice.billingNumber} • ${invoice.type}",
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            if (hasPendingReconciliation) {
+                                Spacer(Modifier.width(8.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Pendiente Imputar",
+                                    tint = Color(0xFFF9A825),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
                         Text(
                             text = invoice.clientName,
                             style = MaterialTheme.typography.bodySmall,

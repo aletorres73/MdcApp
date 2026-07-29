@@ -19,7 +19,8 @@ fun InvoiceList(
     invoices: List<BillingModel>,
     isLoading: Boolean,
     onLoadMore: () -> Unit,
-    onNavigationInvoice: (String) -> Unit
+    onNavigationInvoice: (String) -> Unit,
+    invoicesWithPending: Set<String> = emptySet()
 ) {
     LazyColumn(
         modifier = Modifier
@@ -30,7 +31,11 @@ fun InvoiceList(
     ) {
         itemsIndexed(invoices) { index, invoice ->
 
-            InvoiceRow(invoice) { onNavigationInvoice(it) }
+            InvoiceRow(
+                invoice = invoice,
+                onNavigationInvoice = { onNavigationInvoice(it) },
+                hasPendingReconciliation = invoicesWithPending.contains(invoice.billingNumber)
+            )
 
             if (index == invoices.lastIndex && !isLoading) {
                 LaunchedEffect(Unit) {

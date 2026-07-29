@@ -59,9 +59,21 @@ class InvoiceUseCase(
         }
     }
 
+    inner class ObservePaymentsByClient {
+        operator fun invoke(clientId: String): Flow<List<PaymentRegisterModel>> {
+            return repository.observePaymentsByClient(clientId)
+        }
+    }
+
     inner class ObserveAllBillings {
         operator fun invoke(): Flow<List<BillingModel>> {
             return repository.observeAllBillings()
+        }
+    }
+
+    inner class ObserveAllPayments {
+        operator fun invoke(): Flow<List<PaymentRegisterModel>> {
+            return repository.observeAllPayments()
         }
     }
 

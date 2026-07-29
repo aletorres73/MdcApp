@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingComments
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.BuyOrderModel
+import com.mdcapp.domain.entities.MovementMethod
+import com.mdcapp.domain.entities.MovementStatus
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.entities.PaymentRegisterModel
 import com.mdcapp.domain.entities.recalculate
@@ -163,8 +165,7 @@ class DetailInvoiceViewModel(
     fun registerMovement(
         amount: Double,
         notes: String,
-        method: String,
-        isVirtual: Boolean = false
+        method: MovementMethod
     ) {
         if (_state.value.isProcessingPayment) return
 
@@ -190,9 +191,9 @@ class DetailInvoiceViewModel(
                     type = current.billing.type.ifEmpty { "Factura" },
                     total = amount,
                     notes = notes,
-                    method = method,
-                    status = "PENDIENTE_FABRICA",
-                    isVirtual = isVirtual
+                    method = method.name,
+                    status = MovementStatus.PENDIENTE.name,
+                    isVirtual = method.isVirtual
                 )
 
                 // 3. Save Movement
@@ -240,7 +241,7 @@ class DetailInvoiceViewModel(
             _state.update { it.copy(isProcessingPayment = true) }
             try {
                 val updated = payment.copy(
-                    status = "IMPUTADO_FABRICA",
+                    status = MovementStatus.IMPUTADO.name,
                     reconciliationDate = System.currentTimeMillis()
                 )
                 val result = addPaymentToRegisterUseCase(updated)
@@ -270,7 +271,12 @@ class DetailInvoiceViewModel(
         }
     }
 
-    fun editPayment(originalPayment: PaymentRegisterModel, newAmount: Double, newNotes: String) {
+    fun editPayment(
+        originalPayment: PaymentRegisterModel,
+        newAmount: Double,
+        newNotes: String,
+        newMethod: MovementMethod
+    ) {
         if (_state.value.isProcessingPayment) return
 
         viewModelScope.launch {
@@ -280,7 +286,9 @@ class DetailInvoiceViewModel(
             try {
                 val updatedPayment = originalPayment.copy(
                     total = newAmount,
-                    notes = newNotes
+                    notes = newNotes,
+                    method = newMethod.name,
+                    isVirtual = newMethod.isVirtual
                 )
 
                 // 1. Update Payment in Firestore

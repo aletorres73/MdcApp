@@ -1,5 +1,7 @@
 package com.mdcapp.data.remote
 
+import com.mdcapp.domain.entities.MovementMethod
+import com.mdcapp.domain.entities.MovementStatus
 import com.mdcapp.domain.entities.PaymentRegisterModel
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,8 +17,8 @@ data class RemotePaymentRegisterResult(
     @SerialName("Tipo") val type: String = "",
     @SerialName("Monto pagado") val total: Double = 0.0,
     @SerialName("Notas") val notes: String = "",
-    @SerialName("Metodo") val method: String = "PAGO",
-    @SerialName("Estado") val status: String = "PENDIENTE_FABRICA",
+    @SerialName("Metodo") val method: String = MovementMethod.PAGO.name,
+    @SerialName("Estado") val status: String = MovementStatus.PENDIENTE.name,
     @SerialName("Fecha Conciliacion") val reconciliationDate: Long = 0L,
     @SerialName("Es Virtual") val isVirtual: Boolean = false
 )

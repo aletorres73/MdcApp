@@ -91,8 +91,15 @@ class OrderRepository(private val service: OrderService) {
         service.observePaymentsByInvoice(invoiceNumber)
             .map { list -> list.map { it.toPaymentDomain() } }
 
+    fun observePaymentsByClient(clientId: String): Flow<List<PaymentRegisterModel>> =
+        service.observePaymentsByClient(clientId)
+            .map { list -> list.map { it.toPaymentDomain() } }
+
     fun observeAllBillings(): Flow<List<BillingModel>> =
         service.observeAllBillings().map { list -> list.map { it.toBillingDomain() } }
+
+    fun observeAllPayments(): Flow<List<PaymentRegisterModel>> =
+        service.observeAllPayments().map { list -> list.map { it.toPaymentDomain() } }
 
     fun observeBuyOrdersByClient(clientId: String): Flow<List<BuyOrderModel>> =
         service.observeBuyOrdersByClient(clientId)

@@ -54,6 +54,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mdcapp.domain.entities.BillingComments
+import com.mdcapp.domain.entities.MovementMethod
+import com.mdcapp.domain.entities.MovementStatus
 import com.mdcapp.domain.entities.PaymentRegisterModel
 import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.domain.entities.toPrint
@@ -80,7 +82,7 @@ fun DetailInvoiceScreen(
     var editingPayment by remember { mutableStateOf<PaymentRegisterModel?>(null) }
     var paymentAmount by remember { mutableStateOf("") }
     var paymentNotes by remember { mutableStateOf("") }
-    var paymentMethod by remember { mutableStateOf("EFECTIVO") }
+    var paymentMethod by remember { mutableStateOf(MovementMethod.EFECTIVO) }
     var commentText by remember { mutableStateOf("") }
     var showStateDialog by remember { mutableStateOf(false) }
 
@@ -156,7 +158,7 @@ fun DetailInvoiceScreen(
             PaymentConditionCard(billing = state.billing) { showSheet = true }
 
             // Sugerencia de Descuento
-            val hasProntoPago = state.payments.any { it.method == "PRONTO_PAGO" }
+            val hasProntoPago = state.payments.any { it.method == MovementMethod.PRONTO_PAGO.name }
             if (state.billing.expectedDiscount > 0 && !hasProntoPago) {
                 val discountValue = state.billing.total * state.billing.expectedDiscount
                 Card(
@@ -178,8 +180,7 @@ fun DetailInvoiceScreen(
                             vm.registerMovement(
                                 amount = discountValue,
                                 notes = "Aplicado según condición: ${state.billing.paymentCondition}",
-                                method = "PRONTO_PAGO",
-                                isVirtual = true
+                                method = MovementMethod.PRONTO_PAGO
                             )
                         }) {
                             Text("APLICAR")
@@ -201,14 +202,14 @@ fun DetailInvoiceScreen(
                     editingPayment = null
                     paymentAmount = ""
                     paymentNotes = ""
-                    paymentMethod = "EFECTIVO"
+                    paymentMethod = MovementMethod.EFECTIVO
                     showPaymentDialog = true
                 },
                 onEditPayment = { payment ->
                     editingPayment = payment
                     paymentAmount = payment.total.toString()
                     paymentNotes = payment.notes
-                    paymentMethod = payment.method
+                    paymentMethod = MovementMethod.fromName(payment.method)
                     showPaymentDialog = true
                 },
                 onReconcile = { vm.reconcileMovement(it) }
@@ -290,8 +291,7 @@ fun DetailInvoiceScreen(
     }
 
     if (showPaymentDialog) {
-        val methods =
-            listOf("EFECTIVO", "TRANSFERENCIA", "PRONTO_PAGO", "NOTA_CREDITO", "DESCUENTO_EXTRA")
+        val methods = MovementMethod.values()
 
         AlertDialog(
             onDismissRequest = {
@@ -319,7 +319,12 @@ fun DetailInvoiceScreen(
                             FilterChip(
                                 selected = paymentMethod == m,
                                 onClick = { paymentMethod = m },
-                                label = { Text(m, style = MaterialTheme.typography.labelSmall) }
+                                label = {
+                                    Text(
+                                        m.displayName,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
                             )
                         }
                     }
@@ -351,11 +356,14 @@ fun DetailInvoiceScreen(
                         val amount = paymentAmount.toDoubleOrNull() ?: 0.0
                         if (amount > 0) {
                             if (editingPayment == null) {
-                                val isVirtual =
-                                    paymentMethod != "EFECTIVO" && paymentMethod != "TRANSFERENCIA"
-                                vm.registerMovement(amount, paymentNotes, paymentMethod, isVirtual)
+                                vm.registerMovement(amount, paymentNotes, paymentMethod)
                             } else {
-                                vm.editPayment(editingPayment!!, amount, paymentNotes)
+                                vm.editPayment(
+                                    editingPayment!!,
+                                    amount,
+                                    paymentNotes,
+                                    paymentMethod
+                                )
                             }
 
                             if (!state.isProcessingPayment) {
@@ -432,8 +440,9 @@ fun PaymentsSection(
                                     Spacer(Modifier.width(8.dp))
                                     StatusBadge(payment.status)
                                 }
+                                val methodEnum = MovementMethod.fromName(payment.method)
                                 Text(
-                                    "${payment.method}${if (payment.notes.isNotBlank()) " - ${payment.notes}" else ""}",
+                                    "${methodEnum.displayName}${if (payment.notes.isNotBlank()) " - ${payment.notes}" else ""}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = if (payment.isVirtual) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -445,7 +454,7 @@ fun PaymentsSection(
                                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                                     color = if (payment.isVirtual) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface
                                 )
-                                if (payment.status == "PENDIENTE_FABRICA") {
+                                if (payment.status == MovementStatus.PENDIENTE.name) {
                                     IconButton(onClick = { onReconcile(payment) }) {
                                         Icon(
                                             Icons.Default.CheckCircle,
@@ -478,25 +487,8 @@ fun PaymentsSection(
 
 @Composable
 fun StatusBadge(status: String) {
-    val text: String
-    val color: Color
-
-    when (status) {
-        "PENDIENTE_FABRICA" -> {
-            text = "Pendiente Fábrica"
-            color = Color(0xFFF9A825)
-        }
-
-        "IMPUTADO_FABRICA" -> {
-            text = "Imputado"
-            color = Color(0xFF2E7D32)
-        }
-
-        else -> {
-            text = status
-            color = Color.Gray
-        }
-    }
+    val statusEnum = MovementStatus.fromName(status)
+    val color = Color(android.graphics.Color.parseColor(statusEnum.colorHex))
 
     Surface(
         color = color.copy(alpha = 0.1f),
@@ -504,7 +496,7 @@ fun StatusBadge(status: String) {
         border = androidx.compose.foundation.BorderStroke(0.5.dp, color.copy(alpha = 0.5f))
     ) {
         Text(
-            text = text,
+            text = statusEnum.displayName,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
             style = MaterialTheme.typography.labelSmall,
             color = color,

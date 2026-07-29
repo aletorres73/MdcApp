@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.ClientModel
+import com.mdcapp.domain.entities.MovementStatus
 import com.mdcapp.domain.entities.TypeSearch
 import com.mdcapp.domain.entities.UpdateState
 import com.mdcapp.domain.entities.recalculate
@@ -14,8 +15,8 @@ import com.mdcapp.domain.usescases.InitConfigUseCase
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -23,7 +24,8 @@ class InvoicesPagedViewModel(
     private val getClients: InvoiceUseCase.GetAllClients,
     private val initConfigUseCase: InitConfigUseCase,
     private val observeAllBillingsUseCase: InvoiceUseCase.ObserveAllBillings,
-    private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice
+    private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
+    private val observeAllPaymentsUseCase: InvoiceUseCase.ObserveAllPayments
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InvoiceUiState())
@@ -56,6 +58,7 @@ class InvoicesPagedViewModel(
         val message: String? = null,
         val stateCounts: Map<String, Int> = emptyMap(),
         val allInvoices: List<BillingModel> = emptyList(),
+        val invoicesWithPending: Set<String> = emptySet(),
         val displayInvoices: List<BillingModel> = emptyList(),
         val isSearchMode: Boolean = false
     )
@@ -72,40 +75,48 @@ class InvoicesPagedViewModel(
     }
 
     private fun observeAllBillings() {
-        observeAllBillingsUseCase()
-            .onEach { billings ->
-                val recalculated = billings.map { it.recalculate() }
+        combine(
+            observeAllBillingsUseCase(),
+            observeAllPaymentsUseCase()
+        ) { billings, payments ->
+            val recalculated = billings.map { it.recalculate() }
 
-                // Silent Sync: Actualizar en Firestore si el estado calculado difiere del guardado
-                recalculated.forEach { billing ->
-                    val original = billings.find { it.billingNumber == billing.billingNumber }
-                    if (original != null && original.stateBilling != billing.stateBilling) {
-                        viewModelScope.launch {
-                            updateInvoiceUseCase(
-                                billing.clientId,
-                                billing.orderId,
-                                billing.billingNumber,
-                                billing
-                            )
-                        }
+            // Silent Sync
+            recalculated.forEach { billing ->
+                val original = billings.find { it.billingNumber == billing.billingNumber }
+                if (original != null && original.stateBilling != billing.stateBilling) {
+                    viewModelScope.launch {
+                        updateInvoiceUseCase(
+                            billing.clientId,
+                            billing.orderId,
+                            billing.billingNumber,
+                            billing
+                        )
                     }
                 }
+            }
 
-                val counts = recalculated.groupBy { it.stateBilling }
-                    .mapValues { it.value.size }
-                    .toMutableMap()
+            val pendingInvoices = payments
+                .filter { it.status == MovementStatus.PENDIENTE.name }
+                .map { it.documentNumber }
+                .toSet()
 
-                counts["Todas"] = recalculated.size
+            val counts = recalculated.groupBy { it.stateBilling }
+                .mapValues { it.value.size }
+                .toMutableMap()
 
-                _uiState.update {
-                    it.copy(
-                        stateCounts = counts,
-                        allInvoices = recalculated
-                    )
-                }
+            counts["Todas"] = recalculated.size
 
-                applyFilters()
-            }.launchIn(viewModelScope)
+            _uiState.update {
+                it.copy(
+                    stateCounts = counts,
+                    allInvoices = recalculated,
+                    invoicesWithPending = pendingInvoices
+                )
+            }
+
+            applyFilters()
+        }.launchIn(viewModelScope)
     }
 
     private fun initConfig() {

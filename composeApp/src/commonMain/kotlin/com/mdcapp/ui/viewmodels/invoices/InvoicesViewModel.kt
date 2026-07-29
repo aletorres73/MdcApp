@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.ClientModel
+import com.mdcapp.domain.entities.MovementStatus
 import com.mdcapp.domain.entities.recalculate
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,8 @@ class InvoicesViewModel(
     clientId: String,
     private val observeDocumentsUseCase: InvoiceUseCase.ObserveBillingsByClient,
     private val getClientNameUseCase: InvoiceUseCase.GetClientName,
-    private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice
+    private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
+    private val observePaymentsByClientUseCase: InvoiceUseCase.ObservePaymentsByClient
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(clientId = clientId))
@@ -57,6 +59,8 @@ class InvoicesViewModel(
         val branchList: List<String> = emptyList(),
         val typeList: List<String> = emptyList(),
         val balance: Double = 0.0,
+        val pendingReconciliationAmount: Double = 0.0,
+        val invoicesWithPendingReconciliation: Set<String> = emptySet(),
         val error: String? = null
     )
 
@@ -107,11 +111,17 @@ class InvoicesViewModel(
     private fun getDocuments(clientId: String) {
         combine(
             observeDocumentsUseCase(clientId),
+            observePaymentsByClientUseCase(clientId),
             _selectedBrand,
             _selectedBranch,
             _selectedType
-        ) { documents, selectedBrand, selectedBranch, selectedType ->
-            // Extract available brands
+        ) { documents, payments, selectedBrand, selectedBranch, selectedType ->
+            // 1. Calculate pending reconciliation data
+            val pendingPayments = payments.filter { it.status == MovementStatus.PENDIENTE.name }
+            val pendingReconciliationAmount = pendingPayments.sumOf { it.total }
+            val pendingInvoicesSet = pendingPayments.map { it.documentNumber }.toSet()
+
+            // 2. Extract available brands
             val brands = (listOf("Todas") + documents.asSequence()
                 .map { it.brand }
                 .filter { it.isNotBlank() }
@@ -119,14 +129,14 @@ class InvoicesViewModel(
                 .sorted()
                 .toList())
 
-            // Filter by Brand
+            // 3. Filter by Brand
             val filteredByBrand = if (selectedBrand != "Todas" && selectedBrand.isNotEmpty()) {
                 documents.filter { it.brand == selectedBrand }
             } else {
                 documents
             }
 
-            // Extract available branches for the currently filtered set
+            // 4. Extract available branches for the currently filtered set
             val branches = (listOf("Todas") + filteredByBrand.asSequence()
                 .map { it.branch }
                 .filter { it.isNotBlank() }
@@ -134,14 +144,14 @@ class InvoicesViewModel(
                 .sorted()
                 .toList())
 
-            // Filter by Branch
+            // 5. Filter by Branch
             val filteredByBranch = if (selectedBranch != "Todas" && selectedBranch.isNotEmpty()) {
                 filteredByBrand.filter { it.branch == selectedBranch }
             } else {
                 filteredByBrand
             }
 
-            // Extract available types
+            // 6. Extract available types
             val types = (listOf("Todos") + documents.asSequence()
                 .map { it.type }
                 .filter { it.isNotBlank() }
@@ -149,7 +159,7 @@ class InvoicesViewModel(
                 .sorted()
                 .toList())
 
-            // Filter by Type
+            // 7. Filter by Type
             val filteredDocs = if (selectedType != "Todos" && selectedType.isNotEmpty()) {
                 filteredByBranch.filter { it.type == selectedType }
             } else {
@@ -181,7 +191,9 @@ class InvoicesViewModel(
                     brandList = brands,
                     branchList = if (selectedBrand != "Todas" && selectedBrand.isNotEmpty()) branches else emptyList(),
                     typeList = types,
-                    balance = balance
+                    balance = balance,
+                    pendingReconciliationAmount = pendingReconciliationAmount,
+                    invoicesWithPendingReconciliation = pendingInvoicesSet
                 )
             }
         }.launchIn(viewModelScope)

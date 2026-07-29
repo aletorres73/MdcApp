@@ -95,7 +95,8 @@ fun InvoicesPageScreen(
             invoices = state.displayInvoices,
             isLoading = state.isLoading,
             onLoadMore = { /* No longer needed with full memory sync */ },
-            onNavigationInvoice = onNavigationInvoice
+            onNavigationInvoice = onNavigationInvoice,
+            invoicesWithPending = state.invoicesWithPending
         )
 // ...
 

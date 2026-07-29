@@ -391,6 +391,15 @@ class OrderService(
             }
     }
 
+    fun observePaymentsByClient(clientId: String): Flow<List<RemotePaymentRegisterResult>> {
+        return paymentsRegisterCollection
+            .where { FieldPath("Cliente ID").equalTo(clientId) }
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.data<RemotePaymentRegisterResult>() }
+            }
+    }
+
     /**
      * SCALABILITY NOTE:
      * Currently observing the entire 'allBillings' collection to support real-time state counts
@@ -404,6 +413,14 @@ class OrderService(
             .snapshots()
             .map { snapshot ->
                 snapshot.documents.map { it.data<RemoteResultBillingModel>() }
+            }
+    }
+
+    fun observeAllPayments(): Flow<List<RemotePaymentRegisterResult>> {
+        return paymentsRegisterCollection
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.data<RemotePaymentRegisterResult>() }
             }
     }
 

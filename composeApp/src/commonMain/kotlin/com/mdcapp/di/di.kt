@@ -80,7 +80,9 @@ val appModule = module {
     single<InvoiceUseCase.ObserveInvoice> { get<InvoiceUseCase>().ObserveInvoice() }
     single<InvoiceUseCase.ObserveBillingsByClient> { get<InvoiceUseCase>().ObserveBillingsByClient() }
     single<InvoiceUseCase.ObservePaymentsByInvoice> { get<InvoiceUseCase>().ObservePaymentsByInvoice() }
+    single<InvoiceUseCase.ObservePaymentsByClient> { get<InvoiceUseCase>().ObservePaymentsByClient() }
     single<InvoiceUseCase.ObserveAllBillings> { get<InvoiceUseCase>().ObserveAllBillings() }
+    single<InvoiceUseCase.ObserveAllPayments> { get<InvoiceUseCase>().ObserveAllPayments() }
     single<InvoiceUseCase.GetPaymentCondition> { get<InvoiceUseCase>().GetPaymentCondition() }
     single<InvoiceUseCase.GetInvoicePaged> { get<InvoiceUseCase>().GetInvoicePaged() }
     single<InvoiceUseCase.GetAllClients> { get<InvoiceUseCase>().GetAllClients() }
@@ -125,7 +127,7 @@ val viewModelModule = module {
     viewModelOf(::SignUpViewModel)
     viewModelOf(::AddClientViewModel)
 //    viewModelOf(::InvoicesViewModel)
-    viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get(), get()) }
+    viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get(), get(), get()) }
     viewModel { (orderId: String) ->
         AddInvoiceViewModel(
             orderId,
@@ -148,6 +150,7 @@ val viewModelModule = module {
     }
     viewModel {
         InvoicesPagedViewModel(
+            get(),
             get(),
             get(),
             get(),

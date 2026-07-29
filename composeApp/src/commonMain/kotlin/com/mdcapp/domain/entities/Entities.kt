@@ -74,11 +74,36 @@ data class PaymentRegisterModel(
     val type: String,
     val total: Double,
     val notes: String = "",
-    val method: String = "PAGO", // EFECTIVO, TRANSFERENCIA, PRONTO_PAGO, NOTA_CREDITO, DESCUENTO_EXTRA
-    val status: String = "PENDIENTE_FABRICA", // PENDIENTE_FABRICA, IMPUTADO_FABRICA
+    val method: String = MovementMethod.PAGO.name,
+    val status: String = MovementStatus.PENDIENTE.name,
     val reconciliationDate: Long = 0L,
     val isVirtual: Boolean = false
 )
+
+enum class MovementMethod(val displayName: String, val isVirtual: Boolean) {
+    PAGO("Pago", false),
+    EFECTIVO("Efectivo", false),
+    TRANSFERENCIA("Transferencia", false),
+    CHEQUE("Cheque", false),
+    PRONTO_PAGO("Pronto Pago", true),
+    NOTA_CREDITO("Nota de Crédito", true),
+    DESCUENTO_EXTRA("Descuento Extra", true);
+
+    companion object {
+        fun fromName(name: String): MovementMethod =
+            MovementMethod.entries.find { it.name == name } ?: PAGO
+    }
+}
+
+enum class MovementStatus(val displayName: String, val colorHex: String) {
+    PENDIENTE("Pendiente Fábrica", "#F9A825"),
+    IMPUTADO("Imputado", "#2E7D32");
+
+    companion object {
+        fun fromName(name: String): MovementStatus =
+            MovementStatus.entries.find { it.name == name } ?: PENDIENTE
+    }
+}
 
 data class ClientModel(
     val clientId: String,
@@ -167,7 +192,7 @@ fun BillingModel.recalculate(
 
     // El monto a cobrar (toPay) ahora es siempre el total bruto.
     // Los descuentos se manejan como movimientos en el historial.
-    val toPayValue = total 
+    val toPayValue = total
     val restValue = toPayValue - payed
 
     val reception = if (deliveryDate != 0L) deliveryDate.toLocalDate() else null

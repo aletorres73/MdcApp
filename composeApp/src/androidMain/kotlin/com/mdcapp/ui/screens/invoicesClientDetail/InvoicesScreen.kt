@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.ui.composables.common.LoadingIndicator
@@ -107,6 +108,8 @@ fun InvoicesScreen(
                     paddingValues = paddingValues,
                     documents = state.documents,
                     balance = state.balance,
+                    pendingAmount = state.pendingReconciliationAmount,
+                    invoicesWithPending = state.invoicesWithPendingReconciliation,
                     brandSelected = brandSelected,
                     branchSelected = branchSelected,
                     typeSelected = typeSelected,
@@ -130,6 +133,8 @@ fun DetailClientBalance(
     paddingValues: PaddingValues,
     documents: List<BillingModel>,
     balance: Double,
+    pendingAmount: Double,
+    invoicesWithPending: Set<String>,
     brandSelected: String,
     branchSelected: String,
     typeSelected: String,
@@ -300,20 +305,41 @@ fun DetailClientBalance(
                     .fillMaxWidth()
                     .padding(vertical = 4.dp)
             ) {
-                Column(
+                Row(
                     modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        "Saldo total de cuenta",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        "$$balance",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = if (balance > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                    )
+                    Column(horizontalAlignment = Alignment.Start, modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Saldo Real",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            "$$balance",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = if (balance > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    if (pendingAmount > 0) {
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                "Pendiente Imputar",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFFF9A825)
+                            )
+                            Text(
+                                "$$pendingAmount",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Color(0xFFF9A825)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -323,7 +349,10 @@ fun DetailClientBalance(
                 modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
             )
 
-            DocumentList(documents) { onInvoiceClick(it) }
+            DocumentList(
+                documents = documents,
+                invoicesWithPending = invoicesWithPending
+            ) { onInvoiceClick(it) }
         }
     }
 }
