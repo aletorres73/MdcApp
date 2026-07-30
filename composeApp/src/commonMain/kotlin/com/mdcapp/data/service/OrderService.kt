@@ -20,7 +20,6 @@ class OrderService(
     companion object {
         const val ORDERS = "Orders"
         const val BUY_ORDERS = "buyOrders"
-        const val BILLINGS = "billings"
         const val FACTORIES = "factories"
         const val PAYMENTS_REGISTER = "paymentRegister"
     }
@@ -40,9 +39,6 @@ class OrderService(
 
     private fun clientOrdersCollection(clientId: String) =
         userDoc.collection("clients").document(clientId).collection(BUY_ORDERS)
-
-    private fun orderBillingsCollection(clientId: String, orderId: String) =
-        clientOrdersCollection(clientId).document(orderId).collection(BILLINGS)
 
     suspend fun fetchAllOrders(): List<RemoteResultOrder> {
 // ...
@@ -118,7 +114,9 @@ class OrderService(
 
     suspend fun fetchBillings(clientId: String, orderId: String): List<RemoteResultBillingModel> {
         return try {
-            val document = orderBillingsCollection(clientId, orderId)
+            val document = allBillingsCollection
+                .where { FieldPath("Cliente Id").equalTo(clientId) }
+                .where { FieldPath("Orden").equalTo(orderId) }
                 .get()
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }
@@ -237,13 +235,8 @@ class OrderService(
         data: RemoteResultBillingModel
     ): Boolean {
         return try {
-            // Update in global mirror
+            // Update in global collection
             allBillingsCollection
-                .document(document)
-                .update(data)
-
-            // Update in hierarchy
-            orderBillingsCollection(clientId, orderId)
                 .document(document)
                 .update(data)
 
@@ -261,12 +254,7 @@ class OrderService(
         data: RemoteResultBillingModel
     ): Boolean {
         return try {
-            // Save in hierarchy
-            orderBillingsCollection(clientId, orderId)
-                .document(data.billingNumber)
-                .set(data)
-
-            // Save in global collection for Dashboard
+            // Save in global collection
             allBillingsCollection
                 .document(data.billingNumber)
                 .set(data)
