@@ -440,6 +440,14 @@ class OrderService(
             }
     }
 
+    fun observeAllFactories(): Flow<List<RemoteResultFactoryModel>> {
+        return factoriesCollection
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.data<RemoteResultFactoryModel>() }
+            }
+    }
+
     fun observeOrdersByFactory(name: String): Flow<List<RemoteResultOrder>> {
         val query = if (name == "all") ordersCollection else ordersCollection.where {
             FieldPath("Marca").equalTo(name)

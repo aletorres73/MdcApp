@@ -37,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -124,8 +125,8 @@ fun FactoryManagementScreen(
         AddFactoryDialog(
             initialFactory = selectedFactory,
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, segments, conditions ->
-                viewModel.saveFactory(name, segments, conditions)
+            onConfirm = { name, segments, conditions, defaultComm, segmentComms ->
+                viewModel.saveFactory(name, segments, conditions, defaultComm, segmentComms)
                 showAddDialog = false
             }
         )
@@ -159,15 +160,31 @@ fun FactoryManagementScreen(
 fun AddFactoryDialog(
     initialFactory: FactoryModel? = null,
     onDismiss: () -> Unit,
-    onConfirm: (String, List<String>, List<PaymentCondition>) -> Unit
+    onConfirm: (String, List<String>, List<PaymentCondition>, Double, Map<String, Double>) -> Unit
 ) {
     var name by remember { mutableStateOf(initialFactory?.name ?: "") }
+    var defaultCommission by remember {
+        mutableStateOf(
+            initialFactory?.defaultCommission?.toString() ?: "0.0"
+        )
+    }
+
     var currentSegment by remember { mutableStateOf("") }
     val segments = remember {
         mutableStateListOf<String>().apply {
             initialFactory?.branchList?.let { addAll(it) }
         }
     }
+
+    // Almacena comisiones por segmento
+    val segmentCommissionsMap = remember {
+        mutableStateMapOf<String, String>().apply {
+            initialFactory?.segmentCommissions?.forEach { (key, value) ->
+                put(key, value.toString())
+            }
+        }
+    }
+
     val conditions = remember {
         mutableStateListOf<PaymentCondition>().apply {
             initialFactory?.paymentType?.let { addAll(it) }
@@ -190,6 +207,16 @@ fun AddFactoryDialog(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
+                Text("Comisión General (%)", style = MaterialTheme.typography.titleSmall)
+                OutlinedTextField(
+                    value = defaultCommission,
+                    onValueChange = { defaultCommission = it },
+                    label = { Text("% Comisión") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
                 Text("Segmentos", style = MaterialTheme.typography.titleSmall)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
@@ -208,11 +235,25 @@ fun AddFactoryDialog(
                 }
                 segments.forEachIndexed { index, s ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(s, modifier = Modifier.weight(1f))
-                        IconButton(onClick = { segments.removeAt(index) }) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(s)
+                            OutlinedTextField(
+                                value = segmentCommissionsMap[s] ?: "",
+                                onValueChange = { segmentCommissionsMap[s] = it },
+                                label = { Text("% Comisión Segmento") },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                singleLine = true
+                            )
+                        }
+                        IconButton(onClick = {
+                            segments.removeAt(index)
+                            segmentCommissionsMap.remove(s)
+                        }) {
                             Icon(Icons.Default.Delete, contentDescription = "Del")
                         }
                     }
+                    Spacer(Modifier.height(8.dp))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -247,7 +288,11 @@ fun AddFactoryDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(name, segments.toList(), conditions.toList()) }) {
+            Button(onClick = {
+                val defComm = defaultCommission.toDoubleOrNull() ?: 0.0
+                val segComms = segmentCommissionsMap.mapValues { it.value.toDoubleOrNull() ?: 0.0 }
+                onConfirm(name, segments.toList(), conditions.toList(), defComm, segComms)
+            }) {
                 Text("Guardar")
             }
         },

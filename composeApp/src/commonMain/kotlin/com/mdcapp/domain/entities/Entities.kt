@@ -35,7 +35,14 @@ data class ArticleOrderModel(
 data class FactoryModel(
     val name: String,
     val branchList: List<String>,
-    val paymentType: List<PaymentCondition>
+    val paymentType: List<PaymentCondition>,
+    val defaultCommission: Double = 0.0,
+    val segmentCommissions: Map<String, Double> = emptyMap()
+)
+
+data class CommissionConfig(
+    val deductIVA: Boolean = true,
+    val ivaRate: Double = 0.21
 )
 
 data class OrderModel(

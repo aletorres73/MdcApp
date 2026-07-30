@@ -21,6 +21,7 @@ koin-compose = "1.2.0-Beta4"
 kotlinx-serialization = "1.7.3"
 navigation-compose = "2.8.0-alpha02"
 material-icons-extended = "1.7.6"
+work = "2.9.1"
 compose = "1.7.8"
 compose-jb = "1.7.0"
 desugar-jdk-libs = "2.1.4"
@@ -56,6 +57,7 @@ koin-compose-viewmodel = { group = "io.insert-koin", name = "koin-compose-viewmo
 
 androidx-navigation-compose = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref = "navigation-compose" }
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation-compose" }
+androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 
 material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "material-icons-extended" }
 

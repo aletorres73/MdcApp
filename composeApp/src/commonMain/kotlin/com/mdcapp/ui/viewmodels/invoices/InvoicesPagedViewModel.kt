@@ -36,7 +36,7 @@ class InvoicesPagedViewModel(
         val invoices: List<BillingModel> = emptyList(),
         val clientNameList: List<ClientModel> = emptyList(),
         val isLoading: Boolean = false,
-        val selectedState: String = "Pendiente",
+        val selectedState: String = "Todas",
         val cursor: String? = null,
         val endReached: Boolean = false,
         val availableStates: List<String> = listOf(

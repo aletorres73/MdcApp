@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -31,9 +32,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingModel
+import com.mdcapp.domain.logic.ReportGenerator
 import com.mdcapp.ui.composables.common.LoadingIndicator
+import com.mdcapp.ui.utils.ShareUtils
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,6 +62,8 @@ fun InvoicesScreen(
             if (brands.isNotEmpty()) brandSelected = brands.first()
         }*/
 
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -75,6 +81,26 @@ fun InvoicesScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
+                    }
+                },
+                actions = {
+                    if (!state.isLoading) {
+                        IconButton(onClick = {
+                            val report = ReportGenerator.generateCurrentAccountReport(
+                                state.client.clientName,
+                                state.documents
+                            )
+                            ShareUtils.shareText(
+                                context,
+                                report,
+                                "Estado de Cuenta - ${state.client.clientName}"
+                            )
+                        }) {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = "Compartir Cuenta Corriente"
+                            )
+                        }
                     }
                 }
             )

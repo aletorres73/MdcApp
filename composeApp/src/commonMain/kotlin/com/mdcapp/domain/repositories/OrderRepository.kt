@@ -101,6 +101,9 @@ class OrderRepository(private val service: OrderService) {
     fun observeAllPayments(): Flow<List<PaymentRegisterModel>> =
         service.observeAllPayments().map { list -> list.map { it.toPaymentDomain() } }
 
+    fun observeFactories(): Flow<List<FactoryModel>> =
+        service.observeAllFactories().map { list -> list.map { it.toFactoryDomain() } }
+
     fun observeBuyOrdersByClient(clientId: String): Flow<List<BuyOrderModel>> =
         service.observeBuyOrdersByClient(clientId)
             .map { list -> list.map { it.toBuyOrderDomain() } }

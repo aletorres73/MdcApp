@@ -9,19 +9,25 @@ import kotlinx.serialization.Serializable
 data class RemoteResultFactoryModel(
     @SerialName("Fabrica") val name: String = "",
     @SerialName("Marcas") val branchList: List<String> = emptyList(),
-    @SerialName("Condiciones") val paymentsTypes: Map<String, Map<String, String>> = emptyMap()
+    @SerialName("Condiciones") val paymentsTypes: Map<String, Map<String, String>> = emptyMap(),
+    @SerialName("ComisionBase") val defaultCommission: Double = 0.0,
+    @SerialName("ComisionesSegmento") val segmentCommissions: Map<String, Double> = emptyMap()
 )
 
 fun RemoteResultFactoryModel.toFactoryDomain() = FactoryModel(
     name = name,
     branchList = branchList,
-    paymentType = paymentsTypes.toPaymentConditions()
+    paymentType = paymentsTypes.toPaymentConditions(),
+    defaultCommission = defaultCommission,
+    segmentCommissions = segmentCommissions
 )
 
 fun FactoryModel.toFactoryRemote() = RemoteResultFactoryModel(
     name = name,
     branchList = branchList,
-    paymentsTypes = paymentType.toRemoteMap()
+    paymentsTypes = paymentType.toRemoteMap(),
+    defaultCommission = defaultCommission,
+    segmentCommissions = segmentCommissions
 )
 
 fun Map<String, Map<String, Any>>.toPaymentConditions(): List<PaymentCondition> {

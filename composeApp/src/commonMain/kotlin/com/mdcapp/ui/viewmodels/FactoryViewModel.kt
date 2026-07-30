@@ -38,11 +38,23 @@ class FactoryViewModel(private val repository: OrderRepository) : ViewModel() {
         }
     }
 
-    fun saveFactory(name: String, segments: List<String>, conditions: List<PaymentCondition>) {
+    fun saveFactory(
+        name: String,
+        segments: List<String>,
+        conditions: List<PaymentCondition>,
+        defaultCommission: Double,
+        segmentCommissions: Map<String, Double>
+    ) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
-                val factory = FactoryModel(name, segments, conditions)
+                val factory = FactoryModel(
+                    name = name,
+                    branchList = segments,
+                    paymentType = conditions,
+                    defaultCommission = defaultCommission,
+                    segmentCommissions = segmentCommissions
+                )
                 val success = repository.saveFactory(factory)
                 if (success) {
                     _state.update { it.copy(message = "Fábrica guardada") }

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
@@ -40,13 +41,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.ArticleOrderModel
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.domain.entities.toPrint
+import com.mdcapp.domain.logic.ReportGenerator
 import com.mdcapp.ui.theme.getBillingStatusColor
+import com.mdcapp.ui.utils.ShareUtils
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -63,6 +67,8 @@ fun OrderDetailScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    val context = LocalContext.current
+
     LaunchedEffect(clientId, orderId, factoryName) {
         viewModel.init(clientId, orderId, factoryName)
     }
@@ -74,6 +80,20 @@ fun OrderDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                    }
+                },
+                actions = {
+                    if (!state.loadingOrder) {
+                        IconButton(onClick = {
+                            val report = ReportGenerator.generateOrderReport(state.buyOrder)
+                            ShareUtils.shareText(
+                                context,
+                                report,
+                                "Nota de Pedido #${state.buyOrder.order}"
+                            )
+                        }) {
+                            Icon(Icons.Default.Share, contentDescription = "Compartir")
+                        }
                     }
                 }
             )

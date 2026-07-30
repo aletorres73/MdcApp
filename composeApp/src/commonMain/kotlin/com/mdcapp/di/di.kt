@@ -21,7 +21,9 @@ import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import com.mdcapp.domain.usescases.ordersusescases.GetFactoriesListUseCase
 import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
 import com.mdcapp.ui.viewmodels.AddClientViewModel
+import com.mdcapp.ui.viewmodels.AgendaViewModel
 import com.mdcapp.ui.viewmodels.ClientsViewModel
+import com.mdcapp.ui.viewmodels.CommissionsViewModel
 import com.mdcapp.ui.viewmodels.FactoryViewModel
 import com.mdcapp.ui.viewmodels.HomeViewModel
 import com.mdcapp.ui.viewmodels.LoginViewModel
@@ -123,9 +125,11 @@ val viewModelModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::ClientsViewModel)
     viewModelOf(::FactoryViewModel)
+    viewModelOf(::AgendaViewModel)
     viewModelOf(::LoginViewModel)
     viewModelOf(::SignUpViewModel)
     viewModelOf(::AddClientViewModel)
+    viewModelOf(::CommissionsViewModel)
 //    viewModelOf(::InvoicesViewModel)
     viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get(), get(), get()) }
     viewModel { (orderId: String) ->

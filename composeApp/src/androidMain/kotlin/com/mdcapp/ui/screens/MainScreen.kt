@@ -5,8 +5,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -49,7 +51,9 @@ fun MainScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     val items = listOf(
-        NavigationItem("Facturas", AppRoute.InvoicesPaged.route, Icons.Default.List),
+        NavigationItem("Dashboard", AppRoute.InvoicesPaged.route, Icons.Default.List),
+        NavigationItem("Agenda", AppRoute.Agenda.route, Icons.Default.DateRange),
+        NavigationItem("Comisiones", AppRoute.Commissions.route, Icons.Default.ShoppingCart),
         NavigationItem("Clientes", AppRoute.Clients.route, Icons.Default.AccountBox)
     )
 
@@ -57,13 +61,29 @@ fun MainScreen(
     val currentDestination = navBackStackEntry?.destination
     val currentRoute = currentDestination?.route
 
+    // Estados para acciones dinámicas
+    var showCommissionDatePicker = remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(if (currentRoute == AppRoute.Clients.route) "Mis Clientes" else "Dashboard Facturas")
+                    val title = when (currentRoute) {
+                        AppRoute.Clients.route -> "Mis Clientes"
+                        AppRoute.Agenda.route -> "Agenda de Pagos"
+                        AppRoute.Commissions.route -> "Mis Comisiones"
+                        else -> "Dashboard Facturas"
+                    }
+                    Text(title)
                 },
                 actions = {
+                    // Acciones dinámicas según la ruta
+                    if (currentRoute == AppRoute.Commissions.route) {
+                        IconButton(onClick = { showCommissionDatePicker.value = true }) {
+                            Icon(Icons.Default.DateRange, contentDescription = "Rango de Fechas")
+                        }
+                    }
+
                     IconButton(onClick = onManageFactories) {
                         Icon(Icons.Default.Settings, contentDescription = "Gestionar Fábricas")
                     }
@@ -119,6 +139,14 @@ fun MainScreen(
                     onOrdersClick = onNavigateToClientOrders,
                     onCurrentAccountClick = onNavigateToCurrentAccount,
                     onEditClientClick = onNavigateToEditClient
+                )
+            }
+            composable(AppRoute.Agenda.route) {
+                AgendaScreen()
+            }
+            composable(AppRoute.Commissions.route) {
+                CommissionsScreen(
+                    showDatePickerRequest = showCommissionDatePicker
                 )
             }
         }

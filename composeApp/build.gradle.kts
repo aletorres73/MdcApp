@@ -32,6 +32,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(project.dependencies.platform(libs.android.firebase.bom))
             implementation(libs.koin.android)
+            implementation(libs.androidx.work.runtime)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
