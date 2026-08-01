@@ -199,7 +199,9 @@ fun MainScreen(
                 )
             }
             composable(AppRoute.Agenda.route) {
-                AgendaScreen()
+                AgendaScreen(
+                    onInvoiceClick = onNavigateToInvoice
+                )
             }
             composable(AppRoute.Commissions.route) {
                 CommissionsScreen(

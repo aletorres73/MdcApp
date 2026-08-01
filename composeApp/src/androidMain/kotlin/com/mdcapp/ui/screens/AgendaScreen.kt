@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,10 +19,16 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Badge
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,13 +47,16 @@ import com.mdcapp.domain.entities.toPrint
 import com.mdcapp.ui.theme.getBillingStatusColor
 import com.mdcapp.ui.viewmodels.AgendaViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun AgendaScreen(
-    viewModel: AgendaViewModel = koinViewModel()
+    viewModel: AgendaViewModel = koinViewModel(),
+    onInvoiceClick: (String) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
@@ -57,24 +67,57 @@ fun AgendaScreen(
         WeeklyCalendarView(
             selectedDate = selectedDate,
             onDateSelected = { viewModel.onDateSelected(it) },
-            days = state.days
+            days = state.days,
+            weekRangeText = state.weekRangeText,
+            onPreviousWeek = { viewModel.previousWeek() },
+            onNextWeek = { viewModel.nextWeek() },
+            onTodayClick = { viewModel.goToToday() }
         )
 
         HorizontalDivider()
 
-        Text(
-            text = "Vencimientos del ${
-                selectedDate.format(
-                    java.time.format.DateTimeFormatter.ofPattern(
-                        "dd 'de' MMMM",
-                        Locale("es")
-                    )
+        if (state.urgentBillingsCount > 0) {
+            UrgentBillingsAlert(
+                count = state.urgentBillingsCount,
+                isFiltering = state.isFilteringUrgent,
+                onClick = { viewModel.toggleUrgentFilter() }
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = if (state.isFilteringUrgent) {
+                    "Todos los Vencimientos Urgentes"
+                } else {
+                    "Vencimientos del ${
+                        selectedDate.format(
+                            java.time.format.DateTimeFormatter.ofPattern(
+                                "dd 'de' MMMM",
+                                Locale("es")
+                            )
+                        )
+                    }"
+                },
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f)
+            )
+
+            if (state.isFilteringUrgent) {
+                Text(
+                    "Cerrar",
+                    modifier = Modifier.clickable { viewModel.toggleUrgentFilter() },
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelLarge
                 )
-            }",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(16.dp),
-            color = MaterialTheme.colorScheme.primary
-        )
+            }
+        }
 
         if (state.billingsOnSelectedDate.isEmpty()) {
             Column(
@@ -91,7 +134,7 @@ fun AgendaScreen(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "No hay vencimientos para esta fecha.",
+                    if (state.isFilteringUrgent) "No hay vencimientos urgentes." else "No hay vencimientos para esta fecha.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -99,7 +142,10 @@ fun AgendaScreen(
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(state.billingsOnSelectedDate) { billing ->
-                    AgendaItemRow(billing)
+                    AgendaItemRow(
+                        billing = billing,
+                        onClick = { onInvoiceClick(billing.billingNumber) }
+                    )
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         thickness = 0.5.dp
@@ -114,7 +160,11 @@ fun AgendaScreen(
 fun WeeklyCalendarView(
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
-    days: List<AgendaViewModel.DayState>
+    days: List<AgendaViewModel.DayState>,
+    weekRangeText: String,
+    onPreviousWeek: () -> Unit,
+    onNextWeek: () -> Unit,
+    onTodayClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -122,9 +172,52 @@ fun WeeklyCalendarView(
             .background(MaterialTheme.colorScheme.surface)
             .padding(vertical = 8.dp)
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(onClick = onPreviousWeek) {
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    contentDescription = "Semana anterior"
+                )
+            }
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = weekRangeText,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    "Hoy",
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
+                        .clickable { onTodayClick() }
+                        .padding(horizontal = 12.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+
+            IconButton(onClick = onNextWeek) {
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = "Semana siguiente"
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(days) { dayState ->
@@ -135,6 +228,41 @@ fun WeeklyCalendarView(
                     indicators = dayState.indicators
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun UrgentBillingsAlert(count: Int, isFiltering: Boolean, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isFiltering) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
+            contentColor = if (isFiltering) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                if (isFiltering) Icons.Default.Info else Icons.Default.Warning,
+                contentDescription = null,
+                tint = if (isFiltering) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
+            Text(
+                text = if (isFiltering) {
+                    "Viendo todos los vencimientos urgentes ($count)"
+                } else {
+                    "Atención: Tienes $count vencimientos urgentes o atrasados. Toca para verlos."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -190,10 +318,11 @@ fun DayItem(
 }
 
 @Composable
-fun AgendaItemRow(billing: BillingModel) {
+fun AgendaItemRow(billing: BillingModel, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
