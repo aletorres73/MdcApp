@@ -150,6 +150,7 @@ fun ProfileScreen(
     }
 
     if (state.showPasswordDialog) {
+        var currentPassword by remember { mutableStateOf("") }
         var newPassword by remember { mutableStateOf("") }
         var confirmPassword by remember { mutableStateOf("") }
 
@@ -158,6 +159,14 @@ fun ProfileScreen(
             title = { Text("Cambiar Contraseña") },
             text = {
                 Column {
+                    OutlinedTextField(
+                        value = currentPassword,
+                        onValueChange = { currentPassword = it },
+                        label = { Text("Contraseña Actual") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = newPassword,
                         onValueChange = { newPassword = it },
@@ -178,8 +187,16 @@ fun ProfileScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
+                        if (currentPassword.isBlank()) {
+                            Toast.makeText(
+                                context,
+                                "Ingrese su contraseña actual",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@TextButton
+                        }
                         if (newPassword.isNotBlank() && newPassword == confirmPassword) {
-                            viewModel.updatePassword(newPassword)
+                            viewModel.updatePassword(currentPassword, newPassword)
                         } else {
                             Toast.makeText(
                                 context,

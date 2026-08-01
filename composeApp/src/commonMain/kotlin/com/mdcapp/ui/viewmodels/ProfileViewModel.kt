@@ -75,22 +75,30 @@ class ProfileViewModel(private val authRepository: AuthRepository) : ViewModel()
         }
     }
 
-    fun updatePassword(newPassword: String) {
+    fun updatePassword(currentPassword: String, newPassword: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, showPasswordDialog = false) }
-            val success = authRepository.updatePassword(newPassword)
-            if (success) {
+            try {
+                // 1. Re-autenticar para validar sesión reciente
+                authRepository.reauthenticate(currentPassword)
+
+                // 2. Actualizar contraseña
+                authRepository.updatePassword(newPassword)
+
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        successMessage = "Contraseña actualizada"
+                        successMessage = "Contraseña actualizada correctamente"
                     )
                 }
-            } else {
+            } catch (e: Exception) {
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Error al actualizar contraseña"
+                        errorMessage = when {
+                            e.message?.contains("password") == true -> "Contraseña actual incorrecta"
+                            else -> "Error al actualizar contraseña: ${e.message}"
+                        }
                     )
                 }
             }

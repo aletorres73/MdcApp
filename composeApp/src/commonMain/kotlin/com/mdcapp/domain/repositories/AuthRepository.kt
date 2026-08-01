@@ -17,6 +17,7 @@ class AuthRepository(
 
     suspend fun getUserProfile() = userService.getUserProfile()
     suspend fun saveUserProfile(user: UserModel) = userService.saveUserProfile(user)
+    suspend fun reauthenticate(password: String) = authService.reauthenticate(password)
     suspend fun updatePassword(newPassword: String) = authService.updatePassword(newPassword)
 }
 

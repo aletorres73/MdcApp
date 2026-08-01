@@ -34,14 +34,14 @@ class AuthService(private val auth: FirebaseAuth) {
         return auth.currentUser != null
     }
 
-    suspend fun updatePassword(newPassword: String): Boolean {
-        return try {
-            auth.currentUser?.updatePassword(newPassword)
-            true
-        } catch (e: Exception) {
-            println("Error updating password: ${e.message}")
-            false
-        }
+    suspend fun reauthenticate(password: String) {
+        val email = auth.currentUser?.email ?: throw Exception("Usuario no autenticado")
+        auth.signInWithEmailAndPassword(email, password)
+    }
+
+    suspend fun updatePassword(newPassword: String) {
+        val user = auth.currentUser ?: throw Exception("Usuario no autenticado")
+        user.updatePassword(newPassword)
     }
 }
 
