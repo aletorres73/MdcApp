@@ -93,6 +93,7 @@ val appModule = module {
     single<InitConfigUseCase> { get<InitConfigUseCase>() }
     single<InvoiceUseCase.UpdateInvoice> { get<InvoiceUseCase>().UpdateInvoice() }
     single<InvoiceUseCase.CreateInvoice> { get<InvoiceUseCase>().CreateInvoice() }
+    single<InvoiceUseCase.DeleteInvoice> { get<InvoiceUseCase>().DeleteInvoice() }
 }
 
 
@@ -147,6 +148,7 @@ val viewModelModule = module {
     viewModel { (invoiceNumber: String) ->
         DetailInvoiceViewModel(
             invoiceNumber,
+            get(),
             get(),
             get(),
             get(),

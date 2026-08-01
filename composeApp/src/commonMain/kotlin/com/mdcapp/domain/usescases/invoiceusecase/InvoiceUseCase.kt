@@ -98,6 +98,12 @@ class InvoiceUseCase(
         }
     }
 
+    inner class DeleteInvoice {
+        suspend operator fun invoke(invoiceNumber: String): Boolean {
+            return repository.deleteBilling(invoiceNumber)
+        }
+    }
+
     inner class GetPaymentCondition {
         suspend operator fun invoke(brand: String, factory: String = ""): List<PaymentCondition> {
             val byBrand =

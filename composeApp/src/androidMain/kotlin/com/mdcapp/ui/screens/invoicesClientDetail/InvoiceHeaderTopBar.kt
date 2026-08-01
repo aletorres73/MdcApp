@@ -2,6 +2,7 @@ package com.mdcapp.ui.screens.invoicesClientDetail
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -18,7 +19,8 @@ import com.mdcapp.ui.utils.ShareUtils
 @Composable
 fun InvoiceHeaderTopBar(
     billing: BillingModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onDelete: () -> Unit = {}
 ) {
     val context = LocalContext.current
     TopAppBar(
@@ -35,6 +37,9 @@ fun InvoiceHeaderTopBar(
                 ShareUtils.shareText(context, report, "Factura ${billing.billingNumber}")
             }) {
                 Icon(Icons.Default.Share, contentDescription = "Compartir")
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Eliminar")
             }
         }
     )

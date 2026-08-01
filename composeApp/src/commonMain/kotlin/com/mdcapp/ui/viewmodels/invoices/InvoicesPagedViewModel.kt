@@ -42,7 +42,6 @@ class InvoicesPagedViewModel(
         val availableStates: List<String> = listOf(
             "Todas",
             "Pendiente",
-            "En proceso",
             "Cobrado",
             "Vencido",
             "Por vencer",

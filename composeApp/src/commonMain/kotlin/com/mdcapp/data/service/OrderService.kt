@@ -267,6 +267,17 @@ class OrderService(
         }
     }
 
+    suspend fun deleteBilling(invoiceNumber: String): Boolean {
+        return try {
+            allBillingsCollection.document(invoiceNumber).delete()
+            Log.i("MdcAppOnly", "firestore --- on deleteBilling success: $invoiceNumber")
+            true
+        } catch (e: Exception) {
+            Log.e("MdcAppOnly", "firestore --- on deleteBilling $e")
+            false
+        }
+    }
+
     suspend fun fetchPaymentRegisterByNumberList(documentList: List<String>): List<RemotePaymentRegisterResult> {
         val paymentRegisterResult: MutableList<RemotePaymentRegisterResult> = mutableListOf()
         return try {

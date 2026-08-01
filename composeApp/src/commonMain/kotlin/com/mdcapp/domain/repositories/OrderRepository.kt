@@ -69,6 +69,9 @@ class OrderRepository(private val service: OrderService) {
     suspend fun saveBilling(clientId: String, orderId: String, data: BillingModel) =
         service.saveBilling(clientId, orderId, data.toBillingRemote())
 
+    suspend fun deleteBilling(invoiceNumber: String) =
+        service.deleteBilling(invoiceNumber)
+
     suspend fun getPaymentsRegisterByNumberDocument(documentList: List<String>) =
         service.fetchPaymentRegisterByNumberList(documentList).map { it.toPaymentDomain() }
 

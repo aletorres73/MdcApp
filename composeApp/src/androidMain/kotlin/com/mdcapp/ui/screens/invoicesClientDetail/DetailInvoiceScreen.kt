@@ -85,6 +85,7 @@ fun DetailInvoiceScreen(
     var paymentMethod by remember { mutableStateOf(MovementMethod.EFECTIVO) }
     var commentText by remember { mutableStateOf("") }
     var showStateDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val scope = rememberCoroutineScope()
@@ -128,12 +129,30 @@ fun DetailInvoiceScreen(
         }
     }
 
+    LaunchedEffect(state.isDeleted) {
+        if (state.isDeleted) {
+            onBack()
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = {
             InvoiceHeaderTopBar(
                 billing = state.billing,
-                onBack = onBack
+                onBack = onBack,
+                onDelete = {
+                    if (state.payments.isEmpty()) {
+                        showDeleteDialog = true
+                    } else {
+                        scope.launch {
+                            snackBarHostState.showSnackbar(
+                                "No se puede eliminar: tiene movimientos",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                    }
+                }
             )
         }
     ) { padding ->
@@ -265,7 +284,7 @@ fun DetailInvoiceScreen(
             onDismissRequest = { showStateDialog = false },
             title = { Text("Cambiar Estado") },
             text = {
-                val states = listOf("Pendiente", "En proceso", "Cobrado", "Devuelta", "Cerrada")
+                val states = listOf("Pendiente", "Cobrado", "Devuelta", "Cerrada")
                 Column {
                     states.forEach { s ->
                         TextButton(
@@ -286,6 +305,30 @@ fun DetailInvoiceScreen(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { showStateDialog = false }) { Text("Cerrar") }
+            }
+        )
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Eliminar Factura") },
+            text = { Text("¿Está seguro que desea eliminar la factura ${state.billing.billingNumber}? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        vm.deleteInvoice()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancelar")
+                }
             }
         )
     }

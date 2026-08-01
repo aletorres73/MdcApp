@@ -241,14 +241,14 @@ fun BillingModel.recalculate(
                 today.isAfter(parsedPayDate) -> "Vencido"
                 daysUntilDue <= 1 -> "Por vencer" // Hoy o mañana
                 else -> {
-                    // Si no es por vencer aún, puede ser "En proceso" si hay pagos, o "Pendiente"
-                    if (payed > 0) "En proceso" else "Pendiente"
+                    // Si no es por vencer aún, se mantiene como "Pendiente"
+                    "Pendiente"
                 }
             }
         }
 
-        // Si no hay fecha de pago pero hay movimientos
-        payed > 0 && restValue > 0 -> "En proceso"
+        // Si no hay fecha de pago pero hay movimientos, sigue Pendiente hasta estar Cobrado
+        payed > 0 && restValue > 0 -> "Pendiente"
 
         // Estado por defecto
         else -> if (stateBilling.isEmpty()) "Pendiente" else stateBilling

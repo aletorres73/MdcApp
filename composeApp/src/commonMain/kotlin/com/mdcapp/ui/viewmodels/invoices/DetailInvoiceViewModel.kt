@@ -28,7 +28,8 @@ class DetailInvoiceViewModel(
     private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
     private val observePaymentsRegisterUseCase: InvoiceUseCase.ObservePaymentsByInvoice,
     private val addPaymentToRegisterUseCase: BuyOrderUseCase.AddPaymentToRegister,
-    private val getLastIdPaymentUseCase: BuyOrderUseCase.GetLastIdPaymentFromRegister
+    private val getLastIdPaymentUseCase: BuyOrderUseCase.GetLastIdPaymentFromRegister,
+    private val deleteInvoiceUseCase: InvoiceUseCase.DeleteInvoice
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(invoiceNumber = invoiceNumber))
@@ -38,6 +39,7 @@ class DetailInvoiceViewModel(
         val invoiceNumber: String = "",
         val isLoading: Boolean = false,
         val isProcessingPayment: Boolean = false,
+        val isDeleted: Boolean = false,
         val billing: BillingModel = BillingModel(),
         val buyOrder: BuyOrderModel = BuyOrderModel(),
         val error: String? = null,
@@ -353,6 +355,28 @@ class DetailInvoiceViewModel(
         val updated = current.billing.copy(stateBilling = newState)
         _state.update { it.copy(billing = updated) }
         saveBilling()
+    }
+
+    fun deleteInvoice() {
+        if (_state.value.payments.isNotEmpty()) {
+            _state.update { it.copy(message = "No se puede eliminar una factura con movimientos en su historial") }
+            return
+        }
+
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            val result = deleteInvoiceUseCase(_state.value.invoiceNumber)
+            if (result) {
+                _state.update { it.copy(isDeleted = true, isLoading = false) }
+            } else {
+                _state.update {
+                    it.copy(
+                        message = "Error al eliminar factura",
+                        isLoading = false
+                    )
+                }
+            }
+        }
     }
 
     private fun saveBilling() {
