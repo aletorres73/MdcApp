@@ -11,6 +11,7 @@ data class RemotePaymentRegisterResult(
     @SerialName("Pago Id") val id: Int = 0,
     @SerialName("Cliente ID") val clientId: String = "",
     @SerialName("Marca") val branch: String = "",
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Fecha") val date: Long = 0L,
     @SerialName("Razón Social") val clientName: String = "",
     @SerialName("Remito") val documentNumber: String = "",
@@ -19,7 +20,9 @@ data class RemotePaymentRegisterResult(
     @SerialName("Notas") val notes: String = "",
     @SerialName("Metodo") val method: String = MovementMethod.PAGO.name,
     @SerialName("Estado") val status: String = MovementStatus.PENDIENTE.name,
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Fecha Conciliacion") val reconciliationDate: Long = 0L,
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Fecha Confirmacion") val confirmationTimestamp: Long = 0L,
     @SerialName("Es Virtual") val isVirtual: Boolean = false
 )

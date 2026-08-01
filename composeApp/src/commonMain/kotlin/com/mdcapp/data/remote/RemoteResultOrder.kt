@@ -14,6 +14,7 @@ data class RemoteResultOrder(
     var branch: String = "", //marca
     @SerialName("Tipo")
     var type: String = "", //tipo de facturación
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Fecha Remito/Factura")
     var documentDate: Long = 0L, // fecha de facturación
     @SerialName("N° Factura/Remito")
@@ -24,12 +25,15 @@ data class RemoteResultOrder(
     var documentComments: String = "", // comentarios
     @SerialName("Descuentos")
     var sellOut: String = "", // descuento financiero
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Fecha de carga")
     var inputDate: Long = 0L, //fecha de carga
     @SerialName("Estado de cobranza")
     var payState: String = "", // estado de cobranza
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Fecha recepción")
     var receptionDate: Long = 0L, // fecha de recepción
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Fecha de pago")
     var payDate: Long = 0L, // fecha de pago
     @SerialName("Importe fc/rt")
@@ -50,6 +54,7 @@ data class RemoteResultOrder(
     var checked: String? = "", //nombre de archivo de comprobantes
     @SerialName("Calendario")
     var calendar: String? = "", // verificación
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Plazo")
     var date: Long = 0L
 )

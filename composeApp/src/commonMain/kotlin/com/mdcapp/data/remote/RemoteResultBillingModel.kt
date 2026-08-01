@@ -13,8 +13,11 @@ data class RemoteResultBillingModel(
     @SerialName("Orden") var orderId: String = "",
     @SerialName("Tipo Facturacion") var type: String = "",
     @SerialName("Total") var total: String = "",
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Fecha") var loadDate: Long = 0L,
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Fecha recepción") var deliveryDate: Long = 0L,
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Fecha Pago") var payDate: Long = 0L,
     @SerialName("Articulos") var articles: List<RemoteArticle> = emptyList(),
     @SerialName("Condicion de pago") var paymentCondition: String = "",
@@ -28,6 +31,7 @@ data class RemoteResultBillingModel(
     @SerialName("Segmento") var branch: String = "",
     @SerialName("Comentarios") var comments: List<RemoteBillingComments> = emptyList(),
     @SerialName("Razon Social") var clientName: String = "",
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Timestamp") var timeStamp: Long = 0L
 )
 
@@ -42,6 +46,7 @@ data class RemoteArticle(
 @Serializable
 data class RemoteBillingComments(
     val comments: String = "",
+    @Serializable(with = FirestoreDateSerializer::class)
     val date: Long = 0L
 )
 

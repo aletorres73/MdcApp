@@ -13,15 +13,18 @@ data class RemoteResultBuyOrder(
     @SerialName("Razón Social") var client: String = "",
     @SerialName("Fábrica") var factory: String = "",
     @SerialName("Marca") var branch: String = "",
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Plazo de entrega") var deliveryDate: Long = 0L,
     @SerialName("Tipo") var type: String = "",
     @SerialName("Facturación") var billing: String = "",
     @SerialName("Comentarios") var comments: String = "",
     @SerialName("Articulos") var articles: List<RemoteArticleOrderModel> = emptyList(),
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Fecha de carga") var loadedDate: Long = 0L,
     @SerialName("Condición de Pago") var paymentCondition: String = "",
     @SerialName("Descuento") var discount: Double = 0.0,
     @SerialName("Días Vencimiento") var expirationDays: Int = 0,
+    @Serializable(with = FirestoreDateSerializer::class)
     @SerialName("Timestamp") var timeStamp: Long = 0L
 )
 
