@@ -30,7 +30,9 @@ class CommissionsViewModel(private val repository: OrderRepository) : ViewModel(
 
         val filteredPayments = payments.filter { payment ->
             val inRange = if (filters.startDate != null && filters.endDate != null) {
-                payment.date in filters.startDate..filters.endDate
+                // Ajustar el fin del día para incluir los pagos del último día seleccionado
+                val adjustedEndDate = filters.endDate + (24 * 60 * 60 * 1000) - 1
+                payment.date in filters.startDate..adjustedEndDate
             } else true
 
             val isRealPayment = !MovementMethod.fromName(payment.method).isVirtual
@@ -47,7 +49,15 @@ class CommissionsViewModel(private val repository: OrderRepository) : ViewModel(
                     billing.brand.equals(filters.selectedFactory, ignoreCase = true)
                 } else true
 
-                if (matchesFactory) {
+                val matchesSegment = if (filters.selectedSegment != null) {
+                    billing.branch.equals(filters.selectedSegment, ignoreCase = true)
+                } else true
+
+                val matchesType = if (filters.selectedType != null) {
+                    billing.type.contains(filters.selectedType, ignoreCase = true)
+                } else true
+
+                if (matchesFactory && matchesSegment && matchesType) {
                     // Buscar configuración de fábrica (insensible a mayúsculas para asegurar match)
                     val factory =
                         factories.find { it.name.equals(billing.brand, ignoreCase = true) }
@@ -66,9 +76,16 @@ class CommissionsViewModel(private val repository: OrderRepository) : ViewModel(
             } else null
         }
 
+        val allFactories = factories.map { it.name }.distinct().sorted()
+        val allSegments = items.map { it.billing.branch }.distinct().sorted()
+        val allTypes = listOf("Factura", "Remito")
+
         UiState(
             items = items.sortedByDescending { it.payment.date },
             totalCommission = items.sumOf { it.commissionAmount },
+            factories = allFactories,
+            segments = allSegments,
+            types = allTypes,
             isLoading = false
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState(isLoading = true))
@@ -77,12 +94,17 @@ class CommissionsViewModel(private val repository: OrderRepository) : ViewModel(
         val startDate: Long? = null,
         val endDate: Long? = null,
         val selectedFactory: String? = null,
+        val selectedSegment: String? = null,
+        val selectedType: String? = null,
         val config: CommissionConfig = CommissionConfig()
     )
 
     data class UiState(
         val items: List<CommissionItem> = emptyList(),
         val totalCommission: Double = 0.0,
+        val factories: List<String> = emptyList(),
+        val segments: List<String> = emptyList(),
+        val types: List<String> = emptyList(),
         val isLoading: Boolean = false
     )
 
@@ -98,6 +120,14 @@ class CommissionsViewModel(private val repository: OrderRepository) : ViewModel(
 
     fun setFactory(factoryName: String?) {
         _filterState.update { it.copy(selectedFactory = factoryName) }
+    }
+
+    fun setSegment(segment: String?) {
+        _filterState.update { it.copy(selectedSegment = segment) }
+    }
+
+    fun setType(type: String?) {
+        _filterState.update { it.copy(selectedType = type) }
     }
 
     fun toggleDeductIVA(deduct: Boolean) {

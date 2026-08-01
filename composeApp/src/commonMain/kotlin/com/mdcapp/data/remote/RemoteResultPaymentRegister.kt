@@ -20,38 +20,41 @@ data class RemotePaymentRegisterResult(
     @SerialName("Metodo") val method: String = MovementMethod.PAGO.name,
     @SerialName("Estado") val status: String = MovementStatus.PENDIENTE.name,
     @SerialName("Fecha Conciliacion") val reconciliationDate: Long = 0L,
+    @SerialName("Fecha Confirmacion") val confirmationTimestamp: Long = 0L,
     @SerialName("Es Virtual") val isVirtual: Boolean = false
 )
 
 fun RemotePaymentRegisterResult.toPaymentDomain() = PaymentRegisterModel(
-    id,
-    clientId,
-    branch,
-    date,
-    clientName,
-    documentNumber,
-    type,
-    total,
-    notes,
-    method,
-    status,
-    reconciliationDate,
-    isVirtual
+    id = id,
+    clientId = clientId,
+    branch = branch,
+    date = date,
+    clientName = clientName,
+    documentNumber = documentNumber,
+    type = type,
+    total = total,
+    notes = notes,
+    method = method,
+    status = status,
+    reconciliationDate = reconciliationDate,
+    confirmationTimestamp = confirmationTimestamp,
+    isVirtual = isVirtual
 )
 
 fun PaymentRegisterModel.toPaymentRemote() = RemotePaymentRegisterResult(
-    id,
-    clientId,
-    branch,
-    date,
-    clientName,
-    documentNumber,
-    type,
-    total,
-    notes,
-    method,
-    status,
-    reconciliationDate,
-    isVirtual
+    id = id,
+    clientId = clientId,
+    branch = branch,
+    date = date,
+    clientName = clientName,
+    documentNumber = documentNumber,
+    type = type,
+    total = total,
+    notes = notes,
+    method = method,
+    status = status,
+    reconciliationDate = reconciliationDate,
+    confirmationTimestamp = confirmationTimestamp,
+    isVirtual = isVirtual
 )
 

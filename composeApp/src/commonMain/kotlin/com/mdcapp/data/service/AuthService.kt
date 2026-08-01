@@ -33,5 +33,15 @@ class AuthService(private val auth: FirebaseAuth) {
     fun isUserLoggedIn(): Boolean {
         return auth.currentUser != null
     }
+
+    suspend fun updatePassword(newPassword: String): Boolean {
+        return try {
+            auth.currentUser?.updatePassword(newPassword)
+            true
+        } catch (e: Exception) {
+            println("Error updating password: ${e.message}")
+            false
+        }
+    }
 }
 

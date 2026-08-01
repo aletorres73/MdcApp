@@ -42,7 +42,7 @@ sealed class AppRoute(val route: String) {
     data object InvoicesPaged : AppRoute("InvoicesPaged")
     data object Commissions : AppRoute("Commissions")
     data object Agenda : AppRoute("Agenda")
-
+    data object Profile : AppRoute("Profile")
 
     data class Invoices(val clientId: String) : AppRoute("Invoices") {
         companion object {

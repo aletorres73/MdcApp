@@ -9,6 +9,7 @@ import com.mdcapp.data.service.ClientService
 import com.mdcapp.data.service.HomeService
 import com.mdcapp.data.service.InitService
 import com.mdcapp.data.service.OrderService
+import com.mdcapp.data.service.UserService
 import com.mdcapp.domain.repositories.AuthRepository
 import com.mdcapp.domain.repositories.HomeRepository
 import com.mdcapp.domain.repositories.OrderRepository
@@ -27,6 +28,7 @@ import com.mdcapp.ui.viewmodels.CommissionsViewModel
 import com.mdcapp.ui.viewmodels.FactoryViewModel
 import com.mdcapp.ui.viewmodels.HomeViewModel
 import com.mdcapp.ui.viewmodels.LoginViewModel
+import com.mdcapp.ui.viewmodels.ProfileViewModel
 import com.mdcapp.ui.viewmodels.SignUpViewModel
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import com.mdcapp.ui.viewmodels.invoices.AddInvoiceViewModel
@@ -102,6 +104,7 @@ val dataModule = module {
     factory { ClientService(get(), get()) }
     factory { BillingPaginationService(get(), get()) }
     factoryOf(::AuthService)
+    factoryOf(::UserService)
 //repositories
     factoryOf(::OrderRepository)
     factoryOf(::HomeRepository)
@@ -128,6 +131,7 @@ val viewModelModule = module {
     viewModelOf(::AgendaViewModel)
     viewModelOf(::LoginViewModel)
     viewModelOf(::SignUpViewModel)
+    viewModelOf(::ProfileViewModel)
     viewModelOf(::AddClientViewModel)
     viewModelOf(::CommissionsViewModel)
 //    viewModelOf(::InvoicesViewModel)

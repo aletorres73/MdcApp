@@ -242,7 +242,8 @@ class DetailInvoiceViewModel(
             try {
                 val updated = payment.copy(
                     status = MovementStatus.IMPUTADO.name,
-                    reconciliationDate = System.currentTimeMillis()
+                    reconciliationDate = System.currentTimeMillis(),
+                    confirmationTimestamp = System.currentTimeMillis()
                 )
                 val result = addPaymentToRegisterUseCase(updated)
                 if (result) {

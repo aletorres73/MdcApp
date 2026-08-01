@@ -1,5 +1,6 @@
 package com.mdcapp.domain.entities
 
+import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -84,6 +85,7 @@ data class PaymentRegisterModel(
     val method: String = MovementMethod.PAGO.name,
     val status: String = MovementStatus.PENDIENTE.name,
     val reconciliationDate: Long = 0L,
+    val confirmationTimestamp: Long = 0L,
     val isVirtual: Boolean = false
 )
 
@@ -115,6 +117,14 @@ enum class MovementStatus(val displayName: String, val colorHex: String) {
 data class ClientModel(
     val clientId: String,
     val clientName: String,
+)
+
+@Serializable
+data class UserModel(
+    val uid: String = "",
+    val name: String = "",
+    val lastName: String = "",
+    val email: String = ""
 )
 
 data class BillingModel(

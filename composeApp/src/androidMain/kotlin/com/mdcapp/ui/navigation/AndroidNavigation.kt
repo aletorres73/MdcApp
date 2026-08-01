@@ -16,6 +16,7 @@ import com.mdcapp.ui.screens.FactoryManagementScreen
 import com.mdcapp.ui.screens.LoginScreen
 import com.mdcapp.ui.screens.MainScreen
 import com.mdcapp.ui.screens.OrderDetailScreen
+import com.mdcapp.ui.screens.ProfileScreen
 import com.mdcapp.ui.screens.SignUpScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.DetailInvoiceScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.InvoicesScreen
@@ -153,6 +154,9 @@ fun AndroidNavigation(startRoute: String) {
                 onNavigateToCreateOrder = {
                     navController.navigate(AppRoute.CreateOrder.createRoute())
                 },
+                onNavigateToProfile = {
+                    navController.navigate(AppRoute.Profile.route)
+                },
                 onManageFactories = {
                     navController.navigate(AppRoute.Factories.route)
                 },
@@ -164,6 +168,12 @@ fun AndroidNavigation(startRoute: String) {
                         }
                     }
                 }
+            )
+        }
+
+        composable(route = AppRoute.Profile.route) {
+            ProfileScreen(
+                onBack = { navController.popBackStack() }
             )
         }
 
