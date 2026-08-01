@@ -1,5 +1,6 @@
 package com.mdcapp.ui.screens.invoicesPage
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -37,6 +38,12 @@ fun InvoicesPageScreen(
     onNavigationInvoice: (String) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    if (state.isSearchMode) {
+        BackHandler {
+            viewModel.setSearchMode(false)
+        }
+    }
 
     Column(
         modifier = Modifier

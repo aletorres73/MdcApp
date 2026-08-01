@@ -1,12 +1,15 @@
 package com.mdcapp.ui.screens
 
+import android.app.Activity
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
@@ -22,10 +25,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -50,8 +55,21 @@ fun MainScreen(
     val navController = rememberNavController()
     var showLogoutDialog by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    var lastBackPressTime by remember { mutableLongStateOf(0L) }
+
+    BackHandler {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastBackPressTime < 2000) {
+            (context as? Activity)?.finish()
+        } else {
+            lastBackPressTime = currentTime
+            Toast.makeText(context, "Presiona de nuevo para salir", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val items = listOf(
-        NavigationItem("Dashboard", AppRoute.InvoicesPaged.route, Icons.Default.List),
+        NavigationItem("Dashboard", AppRoute.InvoicesPaged.route, Icons.AutoMirrored.Filled.List),
         NavigationItem("Agenda", AppRoute.Agenda.route, Icons.Default.DateRange),
         NavigationItem("Comisiones", AppRoute.Commissions.route, Icons.Default.ShoppingCart),
         NavigationItem("Clientes", AppRoute.Clients.route, Icons.Default.AccountBox)
@@ -83,10 +101,10 @@ fun MainScreen(
                             Icon(Icons.Default.DateRange, contentDescription = "Rango de Fechas")
                         }
                     }
-
-                    IconButton(onClick = onManageFactories) {
-                        Icon(Icons.Default.Settings, contentDescription = "Gestionar Fábricas")
-                    }
+                    if (currentRoute == AppRoute.Clients.route)
+                        IconButton(onClick = onManageFactories) {
+                            Icon(Icons.Default.Settings, contentDescription = "Gestionar Fábricas")
+                        }
                     IconButton(onClick = { showLogoutDialog = true }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ExitToApp,

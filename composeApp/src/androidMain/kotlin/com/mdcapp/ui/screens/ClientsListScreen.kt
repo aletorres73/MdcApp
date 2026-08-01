@@ -13,7 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,9 +28,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mdcapp.domain.entities.ClientModel
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -44,6 +48,7 @@ fun ClientsListScreen(
     viewModel: ClientsViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    var clientToDelete by remember { mutableStateOf<ClientModel?>(null) }
 
     // Forzar recarga de clientes al entrar a la pantalla
     LaunchedEffect(Unit) {
@@ -67,7 +72,10 @@ fun ClientsListScreen(
             ) {
                 items(state.clients) { client ->
                     Card(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
+                        onClick = { onEditClientClick(client.clientId, client.clientName) }
                     ) {
                         Column {
                             ListItem(
@@ -80,22 +88,12 @@ fun ClientsListScreen(
                                 },
                                 supportingContent = { Text("ID: ${client.clientId}") },
                                 trailingContent = {
-                                    Row {
-                                        IconButton(onClick = {
-                                            onEditClientClick(
-                                                client.clientId,
-                                                client.clientName
-                                            )
-                                        }) {
-                                            Icon(Icons.Default.Edit, contentDescription = "Editar")
-                                        }
-                                        IconButton(onClick = { viewModel.deleteClient(client.clientId) }) {
-                                            Icon(
-                                                Icons.Default.Delete,
-                                                contentDescription = "Eliminar",
-                                                tint = MaterialTheme.colorScheme.error
-                                            )
-                                        }
+                                    IconButton(onClick = { clientToDelete = client }) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Eliminar",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
                                     }
                                 }
                             )
@@ -123,6 +121,29 @@ fun ClientsListScreen(
                 }
             }
         }
+    }
+
+    clientToDelete?.let { client ->
+        AlertDialog(
+            onDismissRequest = { clientToDelete = null },
+            title = { Text("Eliminar Cliente") },
+            text = { Text("¿Estás seguro de que deseas eliminar a ${client.clientName}? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteClient(client.clientId)
+                        clientToDelete = null
+                    }
+                ) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { clientToDelete = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 
