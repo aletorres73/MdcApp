@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 
     id("com.google.gms.google-services")
+    alias(libs.plugins.firebaseCrashlytics)
 }
 
 kotlin {
@@ -33,6 +34,7 @@ kotlin {
             implementation(project.dependencies.platform(libs.android.firebase.bom))
             implementation(libs.koin.android)
             implementation(libs.androidx.work.runtime)
+            implementation(libs.gitlive.firebase.crashlytics)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -46,6 +48,10 @@ kotlin {
 
             implementation(libs.gitlive.firebase.firestore)
             implementation(libs.gitlive.auth)
+            implementation(libs.gitlive.firebase.analytics)
+//            implementation(libs.gitlive.firebase.crashlytics)
+            implementation(libs.napier)
+
             implementation(libs.koin.core)
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.compose)

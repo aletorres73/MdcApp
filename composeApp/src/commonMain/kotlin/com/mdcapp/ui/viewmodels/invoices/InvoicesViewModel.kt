@@ -1,13 +1,14 @@
 package com.mdcapp.ui.viewmodels.invoices
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.ClientModel
 import com.mdcapp.domain.entities.MovementStatus
 import com.mdcapp.domain.entities.recalculate
+import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -21,7 +22,8 @@ class InvoicesViewModel(
     private val observeDocumentsUseCase: InvoiceUseCase.ObserveBillingsByClient,
     private val getClientNameUseCase: InvoiceUseCase.GetClientName,
     private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
-    private val observePaymentsByClientUseCase: InvoiceUseCase.ObservePaymentsByClient
+    private val observePaymentsByClientUseCase: InvoiceUseCase.ObservePaymentsByClient,
+    private val analytics: AnalyticsService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(clientId = clientId))
@@ -65,7 +67,7 @@ class InvoicesViewModel(
     )
 
     init {
-        Log.i("InvoicesViewModel", "clientId: $clientId")
+        analytics.logScreenView("Invoices", clientId)
         getClientName(clientId)
         getDocuments(clientId)
     }
@@ -90,7 +92,7 @@ class InvoicesViewModel(
         try {
             block()
         } catch (e: Exception) {
-            Log.e("InvoicesViewModel", "Error", e)
+            Napier.e("InvoicesViewModel error", e)
             _state.update { it.copy(isLoading = false, error = e.message ?: "Error desconocido") }
         }
     }

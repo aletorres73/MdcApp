@@ -1,7 +1,6 @@
 package com.mdcapp.ui.viewmodels.invoices
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,8 +10,10 @@ import com.mdcapp.domain.entities.MovementStatus
 import com.mdcapp.domain.entities.TypeSearch
 import com.mdcapp.domain.entities.UpdateState
 import com.mdcapp.domain.entities.recalculate
+import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.InitConfigUseCase
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -25,7 +26,8 @@ class InvoicesPagedViewModel(
     private val initConfigUseCase: InitConfigUseCase,
     private val observeAllBillingsUseCase: InvoiceUseCase.ObserveAllBillings,
     private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
-    private val observeAllPaymentsUseCase: InvoiceUseCase.ObserveAllPayments
+    private val observeAllPaymentsUseCase: InvoiceUseCase.ObserveAllPayments,
+    private val analytics: AnalyticsService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InvoiceUiState())
@@ -68,6 +70,7 @@ class InvoicesPagedViewModel(
     }
 
     init {
+        analytics.logScreenView("InvoicesPaged")
         initConfig()
         loadAllClients()
         observeAllBillings()
@@ -127,7 +130,7 @@ class InvoicesPagedViewModel(
                     overlay = Overlay.UpdateApp(result, releaseNotes)
                 )
             }
-            Log.i("MdcAppOnly", "InvoicesPagedViewModel--- initConfig: $result")
+            Napier.i("InvoicesPagedViewModel--- initConfig: $result")
         }
     }
 
@@ -213,7 +216,7 @@ class InvoicesPagedViewModel(
 
     fun updateApk(context: Context) {
         viewModelScope.launch {
-            Log.i("MdcAppOnly", "updating apk")
+            Napier.i("updating apk")
             val result = initConfigUseCase.download(context)
             if (!result)
                 _uiState.value = _uiState.value.copy(

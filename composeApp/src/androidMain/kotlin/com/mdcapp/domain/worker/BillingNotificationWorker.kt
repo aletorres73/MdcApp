@@ -9,6 +9,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.mdcapp.domain.entities.toLocalDate
 import com.mdcapp.domain.repositories.OrderRepository
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -29,6 +30,7 @@ class BillingNotificationWorker(
 
     override suspend fun doWork(): Result {
         try {
+            Napier.d("BillingNotificationWorker: Iniciando chequeo de facturas")
             val billings = repository.observeAllBillings().first()
             val today = LocalDate.now()
 
@@ -64,6 +66,7 @@ class BillingNotificationWorker(
             }
             return Result.success()
         } catch (e: Exception) {
+            Napier.e("BillingNotificationWorker: Error durante el chequeo", e)
             return Result.failure()
         }
     }

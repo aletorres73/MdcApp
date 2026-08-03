@@ -14,8 +14,11 @@ import com.mdcapp.ui.PlatformNavigation
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.FirebaseOptions
 import dev.gitlive.firebase.initialize
+import io.github.aakira.napier.DebugAntilog
+import io.github.aakira.napier.Napier
 
 fun main() = application {
+    Napier.base(DebugAntilog())
     initKoin()
     try {
         FirebasePlatform.initializeFirebasePlatform(object : FirebasePlatform() {

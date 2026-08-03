@@ -2,6 +2,7 @@ package com.mdcapp.data.service
 
 import com.mdcapp.data.remote.RemoteResultClientModel
 import dev.gitlive.firebase.firestore.FirebaseFirestore
+import io.github.aakira.napier.Napier
 
 class ClientService(
     private val db: FirebaseFirestore,
@@ -60,7 +61,7 @@ class ClientService(
 
             items to true
         } catch (e: Exception) {
-            println("Error en fetchClientsPaged: ${e.message}")
+            Napier.e("Error en fetchClientsPaged", e)
             emptyList<RemoteResultClientModel>() to false
         }
     }
@@ -70,7 +71,7 @@ class ClientService(
             val snapshot = clientsCollection.get()
             snapshot.documents.size.toLong()
         } catch (e: Exception) {
-            println("Error en fetchAmountClients: ${e.message}")
+            Napier.e("Error en fetchAmountClients", e)
             0L
         }
     }
@@ -85,7 +86,7 @@ class ClientService(
                 try {
                     doc.data<RemoteResultClientModel>()
                 } catch (e: Exception) {
-                    println("firestore -> Error mapping client: $e")
+                    Napier.w("Error mapping client", e)
                     null
                 }
             }.filter { client ->
@@ -93,7 +94,7 @@ class ClientService(
                 else client.clientName.lowercase().contains(searchTerm)
             }
         } catch (e: Exception) {
-            println("firestore -> Error fetching clients: $e")
+            Napier.e("Error fetching clients", e)
             emptyList()
         }
     }
@@ -106,10 +107,10 @@ class ClientService(
                 clientName = snapshot.get("Razón Social") ?: ""
             )
 
-            println("ClientService -> fetClientName: $client")
+            Napier.d("ClientService -> fetchClientName: $client")
             client
         } catch (e: Exception) {
-            println("firestore -> Error fetching client name: $e")
+            Napier.e("Error fetching client name", e)
             RemoteResultClientModel("", "")
         }
     }
@@ -124,14 +125,14 @@ class ClientService(
                         clientName = doc.get("Razón Social") ?: ""
                     )
                 } catch (e: Exception) {
-                    println("firestore -> Error mapping client")
+                    Napier.w("Error mapping client", e)
                     null
                 }
             }
-            println("ClientService -> fetchAllClientsName: $clientList")
+            Napier.d("ClientService -> fetchAllClientsName: $clientList")
             clientList
         } catch (e: Exception) {
-            println("firestore -> Error fetching clients: $e")
+            Napier.e("Error fetching clients", e)
             emptyList()
         }
     }
@@ -146,7 +147,7 @@ class ClientService(
             }
             true
         } catch (e: Exception) {
-            println("Error saving client: ${e.message}")
+            Napier.e("Error saving client", e)
             false
         }
     }
@@ -156,8 +157,8 @@ class ClientService(
             clientsCollection.document(clientId).delete()
             true
         } catch (e: Exception) {
-            println("Error deleting client: ${e.message}")
-            false
+            Napier.e("Error deleting client", e)
+            true
         }
     }
 }

@@ -3,16 +3,25 @@ package com.mdcapp.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.ClientModel
+import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.clientsusecase.GetClientsUseCase
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class AddClientViewModel(private val clientUseCase: GetClientsUseCase) : ViewModel() {
+class AddClientViewModel(
+    private val clientUseCase: GetClientsUseCase,
+    private val analytics: AnalyticsService
+) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState())
     val state = _state.asStateFlow()
+
+    init {
+        analytics.logScreenView("AddClient")
+    }
 
     data class UiState(
         val isLoading: Boolean = false,
@@ -28,11 +37,29 @@ class AddClientViewModel(private val clientUseCase: GetClientsUseCase) : ViewMod
 
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            val success = clientUseCase.save(ClientModel(clientId = id, clientName = name))
-            if (success) {
-                _state.update { it.copy(isLoading = false, isSuccess = true) }
-            } else {
-                _state.update { it.copy(isLoading = false, error = "Error al guardar el cliente") }
+            try {
+                val success = clientUseCase.save(ClientModel(clientId = id, clientName = name))
+                if (success) {
+                    analytics.logEvent("add_client_success", mapOf("client_name" to name))
+                    _state.update { it.copy(isLoading = false, isSuccess = true) }
+                } else {
+                    analytics.logEvent("add_client_failure", mapOf("reason" to "repository_error"))
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Error al guardar el cliente"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Napier.e("Error adding client", e)
+                analytics.logEvent("add_client_error", mapOf("error" to e.message))
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "Error desconocido"
+                    )
+                }
             }
         }
     }

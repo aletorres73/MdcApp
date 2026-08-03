@@ -25,6 +25,8 @@ work = "2.9.1"
 compose = "1.7.8"
 compose-jb = "1.7.0"
 desugar-jdk-libs = "2.1.4"
+napier = "2.7.1"
+firebase-crashlytics-gradle = "3.0.2"
 
 [libraries]
 desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
@@ -48,6 +50,9 @@ kotlinx-serilization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializat
 android-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 gitlive-firebase-firestore = { group = "dev.gitlive", name = "firebase-firestore", version.ref = "gitlive" }
 gitlive-auth = { group = "dev.gitlive", name = "firebase-auth", version.ref = "gitlive" }
+gitlive-firebase-analytics = { group = "dev.gitlive", name = "firebase-analytics", version.ref = "gitlive" }
+gitlive-firebase-crashlytics = { group = "dev.gitlive", name = "firebase-crashlytics", version.ref = "gitlive" }
+napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 
 koin-bom = { group = "io.insert-koin", name = "koin-bom", version.ref = "koin" }
 koin-android = { group = "io.insert-koin", name = "koin-android" }
@@ -71,3 +76,4 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-mu
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics-gradle" }

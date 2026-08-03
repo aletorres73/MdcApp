@@ -1,6 +1,5 @@
 package com.mdcapp.ui.viewmodels.invoices
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingComments
@@ -11,8 +10,10 @@ import com.mdcapp.domain.entities.MovementStatus
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.entities.PaymentRegisterModel
 import com.mdcapp.domain.entities.recalculate
+import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -29,7 +30,8 @@ class DetailInvoiceViewModel(
     private val observePaymentsRegisterUseCase: InvoiceUseCase.ObservePaymentsByInvoice,
     private val addPaymentToRegisterUseCase: BuyOrderUseCase.AddPaymentToRegister,
     private val getLastIdPaymentUseCase: BuyOrderUseCase.GetLastIdPaymentFromRegister,
-    private val deleteInvoiceUseCase: InvoiceUseCase.DeleteInvoice
+    private val deleteInvoiceUseCase: InvoiceUseCase.DeleteInvoice,
+    private val analytics: AnalyticsService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(invoiceNumber = invoiceNumber))
@@ -49,6 +51,7 @@ class DetailInvoiceViewModel(
     )
 
     init {
+        analytics.logScreenView("DetailInvoice", invoiceNumber)
         loadData(invoiceNumber)
     }
 
@@ -80,7 +83,7 @@ class DetailInvoiceViewModel(
                                 _state.update { it.copy(paymentConditionList = paymentConditions) }
                             }
                         } catch (e: Exception) {
-                            Log.e("MdcAppOnly", "Error loading BuyOrder or Conditions: $e")
+                            Napier.e("Error loading BuyOrder or Conditions", e)
                         }
                     }
                 } else if (_state.value.paymentConditionList.isEmpty()) {
@@ -93,7 +96,7 @@ class DetailInvoiceViewModel(
                             )
                             _state.update { it.copy(paymentConditionList = paymentConditions) }
                         } catch (e: Exception) {
-                            Log.e("MdcAppOnly", "Error loading PaymentConditions: $e")
+                            Napier.e("Error loading PaymentConditions", e)
                         }
                     }
                 }
@@ -118,7 +121,7 @@ class DetailInvoiceViewModel(
                         isLoading = false
                     )
                 }
-                Log.i("MdcAppOnly", "DetailInvoiceViewModel --- reactive billing update: $billing")
+                Napier.d("DetailInvoiceViewModel --- reactive billing update: $billing")
             }.launchIn(viewModelScope)
 
         observePaymentsRegisterUseCase(invoiceNumber)
@@ -161,7 +164,7 @@ class DetailInvoiceViewModel(
 
         saveBilling()
 
-        Log.i("MdcAppOnly", "DetailInvoiceViewModel --- on updateDeliveryDate: $updated")
+        Napier.d("DetailInvoiceViewModel --- on updateDeliveryDate: $updated")
     }
 
     fun registerMovement(
@@ -202,6 +205,12 @@ class DetailInvoiceViewModel(
                 val registerResult = addPaymentToRegisterUseCase(paymentRegister)
 
                 if (registerResult) {
+                    analytics.logEvent(
+                        "register_movement_success", mapOf(
+                            "amount" to amount,
+                            "method" to method.name
+                        )
+                    )
                     // 4. Update Billing payed total (sum all existing + new)
                     val totalPayed = (current.payments + paymentRegister).sumOf { it.total }
                     val updatedBilling = current.billing.copy(
@@ -225,7 +234,7 @@ class DetailInvoiceViewModel(
                     }
                 }
             } catch (e: Exception) {
-                Log.e("MdcAppOnly", "Error registering movement: $e")
+                Napier.e("Error registering movement", e)
                 _state.update {
                     it.copy(
                         message = "Error: ${e.message}",
@@ -326,7 +335,7 @@ class DetailInvoiceViewModel(
                     }
                 }
             } catch (e: Exception) {
-                Log.e("MdcAppOnly", "Error editing movement: $e")
+                Napier.e("Error editing movement", e)
                 _state.update {
                     it.copy(
                         message = "Error: ${e.message}",

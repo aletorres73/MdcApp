@@ -6,6 +6,7 @@ import com.google.firebase.firestore.firestore
 import com.mdcapp.data.service.AuthService
 import com.mdcapp.data.service.BillingPaginationService
 import com.mdcapp.data.service.ClientService
+import com.mdcapp.data.service.FirebaseAnalyticsService
 import com.mdcapp.data.service.HomeService
 import com.mdcapp.data.service.InitService
 import com.mdcapp.data.service.OrderService
@@ -13,6 +14,7 @@ import com.mdcapp.data.service.UserService
 import com.mdcapp.domain.repositories.AuthRepository
 import com.mdcapp.domain.repositories.HomeRepository
 import com.mdcapp.domain.repositories.OrderRepository
+import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.InitConfigUseCase
 import com.mdcapp.domain.usescases.clientsusecase.GetClientsUseCase
 import com.mdcapp.domain.usescases.homeusescases.HomeUseCase
@@ -99,6 +101,7 @@ val appModule = module {
 
 val dataModule = module {
 //services
+    single<AnalyticsService> { FirebaseAnalyticsService() }
     factoryOf(::InitService)
     factory { OrderService(get(), get()) }
     factory { HomeService(get(), get()) }
@@ -124,7 +127,7 @@ val dataModule = module {
 val viewModelModule = module {
     viewModelOf(::OrdersViewModel)
     viewModelOf(::CreateOrderViewModel)
-    viewModel { (clientId: String) -> ClientOrdersViewModel(clientId, get()) }
+    viewModel { (clientId: String) -> ClientOrdersViewModel(clientId, get(), get()) }
     viewModelOf(::BuyOrdersViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::ClientsViewModel)
@@ -136,10 +139,20 @@ val viewModelModule = module {
     viewModelOf(::AddClientViewModel)
     viewModelOf(::CommissionsViewModel)
 //    viewModelOf(::InvoicesViewModel)
-    viewModel { (clientId: String) -> InvoicesViewModel(clientId, get(), get(), get(), get()) }
+    viewModel { (clientId: String) ->
+        InvoicesViewModel(
+            clientId,
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
     viewModel { (orderId: String) ->
         AddInvoiceViewModel(
             orderId,
+            get(),
             get(),
             get(),
             get()
@@ -155,18 +168,11 @@ val viewModelModule = module {
             get(),
             get(),
             get(),
-            get()
-        )
-    }
-    viewModel {
-        InvoicesPagedViewModel(
-            get(),
-            get(),
-            get(),
             get(),
             get()
         )
     }
+    viewModelOf(::InvoicesPagedViewModel)
 }
 
 //expect val nativeModule: Module

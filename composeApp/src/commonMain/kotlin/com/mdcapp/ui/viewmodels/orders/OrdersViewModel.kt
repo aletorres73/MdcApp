@@ -1,6 +1,5 @@
 package com.mdcapp.ui.viewmodels.orders
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,8 +8,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.OrderModel
+import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.ordersusescases.GetFactoriesListUseCase
 import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -18,10 +19,15 @@ import kotlinx.coroutines.launch
 class OrdersViewModel(
     private val observeOrdersByFactory: OrdersUseCase.ObserveOrdersByFactory,
     private val getBranchUseCase: OrdersUseCase.GetOrderBranch,
-    private val getFactoriesList: GetFactoriesListUseCase
+    private val getFactoriesList: GetFactoriesListUseCase,
+    private val analytics: AnalyticsService
 ) : ViewModel() {
     var state by mutableStateOf(UiState())
         private set
+
+    init {
+        analytics.logScreenView("Orders")
+    }
 
     private val _branches = mutableStateMapOf<String, String>()
     val branch: Map<String, String> get() = _branches
@@ -58,30 +64,33 @@ class OrdersViewModel(
 
     private fun observeOrders(factoryName: String) {
         state = state.copy(loading = true)
+        analytics.logEvent("observe_orders", mapOf("factory" to factoryName))
         observeOrdersByFactory(factoryName)
             .onEach { remoteList ->
-                val sorted = remoteList.sortedByDescending { it.orderNumber }
-                val factoriesList =
-                    if (state.factoriesList.isEmpty()) getFactoriesList() else state.factoriesList
+                try {
+                    val sorted = remoteList.sortedByDescending { it.orderNumber }
+                    val factoriesList =
+                        if (state.factoriesList.isEmpty()) getFactoriesList() else state.factoriesList
 
-                if (state.factoriesList.isEmpty() && factoriesList.isNotEmpty()) {
-                    factoriesList.forEach { factory ->
-                        state.filterFactory[factory] = false
+                    if (state.factoriesList.isEmpty() && factoriesList.isNotEmpty()) {
+                        factoriesList.forEach { factory ->
+                            state.filterFactory[factory] = false
+                        }
                     }
-                }
 
-                state = state.copy(
-                    loading = false,
-                    orderList = sorted,
-                    backupList = sorted,
-                    factoriesList = factoriesList
-                )
+                    state = state.copy(
+                        loading = false,
+                        orderList = sorted,
+                        backupList = sorted,
+                        factoriesList = factoriesList
+                    )
 
-                // Re-apply filters if needed? 
-                // searchOrders(state.query, isAnyFilterActive() || isAnyFilterFactoryActive())
-                // For now let's just update the lists.
-                if (state.query.text.isNotEmpty()) {
-                    searchOrders(state.query, isAnyFilterActive() || isAnyFilterFactoryActive())
+                    if (state.query.text.isNotEmpty()) {
+                        searchOrders(state.query, isAnyFilterActive() || isAnyFilterFactoryActive())
+                    }
+                } catch (e: Exception) {
+                    Napier.e("Error processing orders for $factoryName", e)
+                    state = state.copy(loading = false)
                 }
             }.launchIn(viewModelScope)
     }
@@ -207,7 +216,7 @@ class OrdersViewModel(
             } else {
                 searchOrders(state.query, true)
             }
-            Log.i("Home", "OrdersViewModel: ${state.filters}")
+            Napier.i("OrdersViewModel: ${state.filters}")
         }
     }
 
@@ -233,7 +242,7 @@ class OrdersViewModel(
             } else {
                 searchOrders(state.query, true)
             }
-            Log.i("Home", "OrdersViewModel: ${state.filters}")
+            Napier.i("OrdersViewModel: ${state.filters}")
         }
     }
 

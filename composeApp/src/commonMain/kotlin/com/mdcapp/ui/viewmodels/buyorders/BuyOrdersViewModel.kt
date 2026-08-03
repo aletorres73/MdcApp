@@ -1,6 +1,5 @@
 package com.mdcapp.ui.viewmodels.buyorders
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingModel
@@ -8,8 +7,10 @@ import com.mdcapp.domain.entities.BuyOrderModel
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.entities.PaymentRegisterModel
 import com.mdcapp.domain.entities.recalculate
+import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,8 @@ class BuyOrdersViewModel(
     private val addPaymentToRegister: BuyOrderUseCase.AddPaymentToRegister,
     private val getLastId: BuyOrderUseCase.GetLastIdPaymentFromRegister,
     private val updateBilling: BuyOrderUseCase.UpdateBilling,
-    private val getPaymentsRegister: BuyOrderUseCase.GetPaymentsRegister
+    private val getPaymentsRegister: BuyOrderUseCase.GetPaymentsRegister,
+    private val analytics: AnalyticsService
 ) : ViewModel() {
 
     // Estado inmutable expuesto a la UI
@@ -60,6 +62,7 @@ class BuyOrdersViewModel(
 
     // Inicialización del ViewModel
     fun init(clientId: String, orderId: String, factoryName: String) {
+        analytics.logScreenView("BuyOrders", orderId)
         viewModelScope.launch {
             _state.value =
                 _state.value.copy(clientId = clientId, orderId = orderId, factoryName = factoryName)
@@ -189,7 +192,7 @@ class BuyOrdersViewModel(
     // Manejo de errores centralizado
     private fun handleError(e: Exception) {
         _state.value = _state.value.copy(error = e.message)
-        Log.e("BuyOrdersViewModel", "Error: ${e.message}")
+        Napier.e("BuyOrdersViewModel Error", e)
     }
 
     // Guardar datos editados
@@ -240,7 +243,7 @@ class BuyOrdersViewModel(
                 }
             )
         } catch (e: Exception) {
-            Log.e("BuyOrdersViewModel", "saveDateSelected: $e")
+            Napier.e("saveDateSelected error", e)
             _tempState.value =
                 _tempState.value.copy(error = "Error al guardar la fecha: ${e.message}")
         }
@@ -267,7 +270,7 @@ class BuyOrdersViewModel(
                     _tempState.value = _tempState.value.copy(error = "Error al registrar el pago")
                 }
             } catch (e: Exception) {
-                Log.e("BuyOrdersViewModel", "addPayment: $e")
+                Napier.e("addPayment error", e)
                 _tempState.value =
                     _tempState.value.copy(error = "Error al agregar el pago: ${e.message}")
             }

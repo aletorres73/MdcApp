@@ -1,6 +1,5 @@
 package com.mdcapp.data.service
 
-import android.util.Log
 import com.mdcapp.data.remote.RemoteBranchOrder
 import com.mdcapp.data.remote.RemotePaymentRegisterResult
 import com.mdcapp.data.remote.RemoteResultBillingModel
@@ -10,6 +9,7 @@ import com.mdcapp.data.remote.RemoteResultOrder
 import com.mdcapp.domain.entities.PaymentCondition
 import dev.gitlive.firebase.firestore.FieldPath
 import dev.gitlive.firebase.firestore.FirebaseFirestore
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -47,12 +47,12 @@ class OrderService(
                 .get()
                 .documents
                 .map { it.data<RemoteResultOrder>() }
-            Log.i("MdcAppOnly", "on fetchAllOrders in firestore: $documents")
-            Log.i("MdcAppOnly", "on fetchAllOrders in firestore data size: ${documents.size}")
+            Napier.i("on fetchAllOrders in firestore: $documents")
+            Napier.i("on fetchAllOrders in firestore data size: ${documents.size}")
 
             documents
         } catch (e: Exception) {
-            Log.i("MdcAppOnly", "Firestore : on firestore getCollections: $e")
+            Napier.i("Firestore : on firestore getCollections: $e")
             emptyList()
         }
     }
@@ -66,7 +66,7 @@ class OrderService(
                 .map { it.data<RemoteBranchOrder>() }
             data.first().branch
         } catch (e: Exception) {
-            Log.e("MdcAppOnly", "firestore --- on fetchOrderBranchList: $e")
+            Napier.e("firestore --- on fetchOrderBranchList: $e")
             ""
         }
     }
@@ -82,7 +82,7 @@ class OrderService(
             document
 
         } catch (e: Exception) {
-            Log.i("MdcAppOnly", "Firestore: on firesotore get orders by factories $e")
+            Napier.i("Firestore: on firesotore get orders by factories $e")
             emptyList()
         }
     }
@@ -91,10 +91,10 @@ class OrderService(
         return try {
             val document = clientOrdersCollection(clientId).document(orderId).get()
             val data = document.data<RemoteResultBuyOrder>()
-            Log.i("MdcAppOnly", "firestore --- on fetchBuyOrder: $data")
+            Napier.i("firestore --- on fetchBuyOrder: $data")
             data
         } catch (e: Exception) {
-            Log.i("MdcAppOnly", "Firestore : on firestore fetchBuyOrder: $e")
+            Napier.i("Firestore : on firestore fetchBuyOrder: $e")
             RemoteResultBuyOrder()
         }
     }
@@ -107,7 +107,7 @@ class OrderService(
                 .map { it.data<RemoteResultBuyOrder>() }
             documents
         } catch (e: Exception) {
-            Log.e("OrderService", "Error fetchBuyOrdersByClient", e)
+            Napier.e("Error fetchBuyOrdersByClient", e)
             emptyList()
         }
     }
@@ -120,11 +120,11 @@ class OrderService(
                 .get()
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }
-            Log.i("MdcAppOnly", "firestore --- on fetchBillings: $document")
+            Napier.i("firestore --- on fetchBillings: $document")
             document
         } catch (e: Exception) {
-            Log.i("MdcAppOnly", "Firestore: on fetchBillings $e")
-            emptyList()
+            Napier.i("Firestore: on fetchBillings $e")
+            emptyList<RemoteResultBillingModel>()
         }
     }
 
@@ -135,13 +135,10 @@ class OrderService(
                 .get()
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }
-            Log.i(
-                "MdcAppOnly",
-                "OrderService --- on fetchBillingsByClient in firestore : $document"
-            )
+            Napier.i("OrderService --- on fetchBillingsByClient in firestore : $document")
             document
         } catch (e: Exception) {
-            Log.i("MdcAppOnly", "OrderService: on fetchBillingsByClient $e")
+            Napier.i("OrderService: on fetchBillingsByClient $e")
             emptyList()
         }
     }
@@ -155,13 +152,10 @@ class OrderService(
                 .map { it.data<RemoteResultFactoryModel>() }
                 .first()
             val paymentsTypes = document.paymentsTypes
-            Log.i(
-                "MdcAppOnly",
-                "Firestore --- on fetchPaymentsTypesFactory in firestore : $paymentsTypes"
-            )
+            Napier.i("Firestore --- on fetchPaymentsTypesFactory in firestore : $paymentsTypes")
             paymentsTypes
         } catch (e: Exception) {
-            Log.i("MdcAppOnly", "Firestore: on fetchPaymentsTypesFactory $e")
+            Napier.i("Firestore: on fetchPaymentsTypesFactory $e")
             emptyMap()
         }
     }
@@ -175,13 +169,10 @@ class OrderService(
                 .map { it.data<RemoteResultFactoryModel>() }
                 .first()
             val paymentsTypes = document.paymentsTypes
-            Log.i(
-                "MdcAppOnly",
-                "Firestore --- on fetchPaymentsTypesFactory in firestore : $paymentsTypes"
-            )
+            Napier.i("Firestore --- on fetchPaymentsTypesFactory in firestore : $paymentsTypes")
             paymentsTypes
         } catch (e: Exception) {
-            Log.i("MdcAppOnly", "Firestore ---- on fetchPaymentsTypesFactory $e")
+            Napier.i("Firestore ---- on fetchPaymentsTypesFactory $e")
             emptyMap()
         }
 
@@ -196,7 +187,7 @@ class OrderService(
                 .update(mapOf("Condiciones" to data))
             true
         } catch (e: Exception) {
-            Log.e("MdcAppOnly", "Firestore: on setPaymentsConditionsFactory $e")
+            Napier.e("Firestore: on setPaymentsConditionsFactory $e")
             false
         }
     }
@@ -206,10 +197,10 @@ class OrderService(
             paymentsRegisterCollection
                 .document(data.id.toString())
                 .set(data)
-            Log.i("MdcAppOnly", "Firestore --- On addPaymentToRegister $data successful")
+            Napier.i("Firestore --- On addPaymentToRegister $data successful")
             true
         } catch (e: Exception) {
-            Log.e("MdcAppOnly", "Firestore--- onAddPaymentToRegister $e")
+            Napier.e("Firestore--- onAddPaymentToRegister $e")
             false
         }
     }
@@ -223,7 +214,7 @@ class OrderService(
             val list = documents.maxByOrNull { it.id }!!
             if (documents.isEmpty()) 0 else list.id
         } catch (e: Exception) {
-            Log.e("MdcAppOnly", "firestore --- on fetchLastIdFromPayments $e")
+            Napier.e("firestore --- on fetchLastIdFromPayments $e")
             -1
         }
     }
@@ -240,10 +231,10 @@ class OrderService(
                 .document(document)
                 .update(data)
 
-            Log.i("MdcAppOnly", "firestore --- on updateBilling success $data")
+            Napier.i("firestore --- on updateBilling success $data")
             true
         } catch (e: Exception) {
-            Log.e("MdcAppOnly", "firestore --- on updateBilling $e")
+            Napier.e("firestore --- on updateBilling $e")
             false
         }
     }
@@ -259,10 +250,10 @@ class OrderService(
                 .document(data.billingNumber)
                 .set(data)
 
-            Log.i("MdcAppOnly", "firestore --- on saveBilling success $data")
+            Napier.i("firestore --- on saveBilling success $data")
             true
         } catch (e: Exception) {
-            Log.e("MdcAppOnly", "firestore --- on saveBilling $e")
+            Napier.e("firestore --- on saveBilling $e")
             false
         }
     }
@@ -270,10 +261,10 @@ class OrderService(
     suspend fun deleteBilling(invoiceNumber: String): Boolean {
         return try {
             allBillingsCollection.document(invoiceNumber).delete()
-            Log.i("MdcAppOnly", "firestore --- on deleteBilling success: $invoiceNumber")
+            Napier.i("firestore --- on deleteBilling success: $invoiceNumber")
             true
         } catch (e: Exception) {
-            Log.e("MdcAppOnly", "firestore --- on deleteBilling $e")
+            Napier.e("firestore --- on deleteBilling $e")
             false
         }
     }
@@ -288,13 +279,13 @@ class OrderService(
                     .documents
                     .map { it.data<RemotePaymentRegisterResult>() }
 
-                Log.e("firestore", "on fetchPaymentRegisterByNumberList: $data")
+                Napier.e("firestore --- on fetchPaymentRegisterByNumberList: $data")
                 if (data.isNotEmpty())
                     paymentRegisterResult.addAll(data)
             }
             paymentRegisterResult
         } catch (e: Exception) {
-            Log.e("firestore", "on fetchPaymentRegisterByNumberList: $e ")
+            Napier.e("firestore --- on fetchPaymentRegisterByNumberList: $e ")
             paymentRegisterResult
         }
     }
@@ -309,7 +300,7 @@ class OrderService(
             documents.forEach { nameList.add(it.name) }
             nameList
         } catch (e: Exception) {
-            Log.e("firestore", "on fetchFactoriesLisName: $e ")
+            Napier.e("firestore --- on fetchFactoriesLisName: $e ")
             emptyList()
         }
     }
@@ -321,7 +312,7 @@ class OrderService(
                 .documents
                 .map { it.data<RemoteResultFactoryModel>() }
         } catch (e: Exception) {
-            Log.e("firestore", "on fetchAllFactories: $e ")
+            Napier.e("firestore --- on fetchAllFactories: $e ")
             emptyList()
         }
     }
@@ -337,10 +328,10 @@ class OrderService(
                 .get()
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }
-            Log.i("OrderService", "on fetchBillingsByBrand: $documents")
+            Napier.i("on fetchBillingsByBrand: $documents")
             documents
         } catch (e: Exception) {
-            println("OrderService: on fetchBillingsByBrand $e")
+            Napier.i("OrderService: on fetchBillingsByBrand $e")
             emptyList()
         }
     }
@@ -353,11 +344,11 @@ class OrderService(
                 .documents
                 .map { it.data<RemoteResultBillingModel>() }
                 .first()
-            Log.i("OrderService", "on fetchInvoiceByNumber: $document")
+            Napier.i("on fetchInvoiceByNumber: $document")
 
             document
         } catch (e: Exception) {
-            println("OrderService: on fetchInvoiceByNumber $e")
+            Napier.i("OrderService: on fetchInvoiceByNumber $e")
             RemoteResultBillingModel()
         }
     }
@@ -473,7 +464,7 @@ class OrderService(
             clientOrdersCollection(clientId).document(orderId).set(finalOrder)
             true
         } catch (e: Exception) {
-            Log.e("OrderService", "Error saving order", e)
+            Napier.e("Error saving order", e)
             false
         }
     }
@@ -487,7 +478,7 @@ class OrderService(
             configDoc.set(mapOf("lastOrderNumber" to next))
             next
         } catch (e: Exception) {
-            Log.e("OrderService", "Error getting next order number", e)
+            Napier.e("Error getting next order number", e)
             1
         }
     }
@@ -497,7 +488,7 @@ class OrderService(
             factoriesCollection.document(factory.name).set(factory)
             true
         } catch (e: Exception) {
-            Log.e("OrderService", "Error saving factory", e)
+            Napier.e("Error saving factory", e)
             false
         }
     }
@@ -507,7 +498,7 @@ class OrderService(
             factoriesCollection.document(factoryName).delete()
             true
         } catch (e: Exception) {
-            Log.e("OrderService", "Error deleting factory", e)
+            Napier.e("Error deleting factory", e)
             false
         }
     }

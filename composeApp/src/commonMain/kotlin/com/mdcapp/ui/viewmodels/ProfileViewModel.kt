@@ -4,12 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.UserModel
 import com.mdcapp.domain.repositories.AuthRepository
+import com.mdcapp.domain.service.AnalyticsService
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ProfileViewModel(private val authRepository: AuthRepository) : ViewModel() {
+class ProfileViewModel(
+    private val authRepository: AuthRepository,
+    private val analytics: AnalyticsService
+) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState())
     val state = _state.asStateFlow()
@@ -24,22 +29,28 @@ class ProfileViewModel(private val authRepository: AuthRepository) : ViewModel()
     )
 
     init {
+        analytics.logScreenView("Profile")
         loadUserProfile()
     }
 
     private fun loadUserProfile() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
-            val profile = authRepository.getUserProfile()
-            if (profile != null) {
-                _state.update { it.copy(isLoading = false, user = profile) }
-            } else {
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = "Error al cargar perfil"
-                    )
+            try {
+                val profile = authRepository.getUserProfile()
+                if (profile != null) {
+                    _state.update { it.copy(isLoading = false, user = profile) }
+                } else {
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "Error al cargar perfil"
+                        )
+                    }
                 }
+            } catch (e: Exception) {
+                Napier.e("Error loading user profile", e)
+                _state.update { it.copy(isLoading = false, errorMessage = e.message) }
             }
         }
     }
@@ -61,6 +72,7 @@ class ProfileViewModel(private val authRepository: AuthRepository) : ViewModel()
             _state.update { it.copy(isLoading = true) }
             try {
                 authRepository.saveUserProfile(_state.value.user)
+                analytics.logEvent("update_profile_success")
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -69,8 +81,8 @@ class ProfileViewModel(private val authRepository: AuthRepository) : ViewModel()
                     )
                 }
             } catch (e: Exception) {
+                Napier.e("Error saving profile", e)
                 _state.update { it.copy(isLoading = false, errorMessage = e.message) }
-                return@launch
             }
         }
     }
@@ -84,6 +96,7 @@ class ProfileViewModel(private val authRepository: AuthRepository) : ViewModel()
 
                 // 2. Actualizar contraseña
                 authRepository.updatePassword(newPassword)
+                analytics.logEvent("update_password_success")
 
                 _state.update {
                     it.copy(
@@ -92,6 +105,7 @@ class ProfileViewModel(private val authRepository: AuthRepository) : ViewModel()
                     )
                 }
             } catch (e: Exception) {
+                Napier.e("Error updating password", e)
                 _state.update {
                     it.copy(
                         isLoading = false,

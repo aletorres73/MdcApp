@@ -2,6 +2,7 @@ package com.mdcapp.data.service
 
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.auth.FirebaseUser
+import io.github.aakira.napier.Napier
 
 class AuthService(private val auth: FirebaseAuth) {
 
@@ -12,7 +13,7 @@ class AuthService(private val auth: FirebaseAuth) {
         return try {
             auth.signInWithEmailAndPassword(email, password).user
         } catch (e: Exception) {
-            println("Error al iniciar sesión: ${e.message}")
+            Napier.e("Error al iniciar sesión", e)
             null
         }
     }
@@ -21,7 +22,7 @@ class AuthService(private val auth: FirebaseAuth) {
         return try {
             auth.createUserWithEmailAndPassword(email, password).user
         } catch (e: Exception) {
-            println("Error al registrar usuario: ${e.message}")
+            Napier.e("Error al registrar usuario", e)
             null
         }
     }

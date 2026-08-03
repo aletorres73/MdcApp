@@ -1,8 +1,8 @@
 package com.mdcapp.data.service
 
-import android.util.Log
 import com.mdcapp.domain.entities.RemoteInitConfig
 import dev.gitlive.firebase.firestore.FirebaseFirestore
+import io.github.aakira.napier.Napier
 
 class InitService(
     private val db: FirebaseFirestore
@@ -19,10 +19,10 @@ class InitService(
                 .documents.map { it.data<RemoteInitConfig>() }
                 .last()
 
-            Log.i("MDCAppOnly", "InitService --- init: $doc")
+            Napier.i("InitService --- init: $doc")
             doc
         } catch (e: Exception) {
-            Log.e("MDCAppOnly", "InitService --- init: ${e.message}")
+            Napier.e("InitService --- init: ${e.message}", e)
             RemoteInitConfig()
         }
 

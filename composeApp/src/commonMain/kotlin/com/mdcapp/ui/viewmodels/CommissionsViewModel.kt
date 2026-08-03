@@ -9,6 +9,7 @@ import com.mdcapp.domain.entities.MovementMethod
 import com.mdcapp.domain.entities.PaymentRegisterModel
 import com.mdcapp.domain.logic.CommissionCalculator
 import com.mdcapp.domain.repositories.OrderRepository
+import com.mdcapp.domain.service.AnalyticsService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,10 +17,17 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
-class CommissionsViewModel(private val repository: OrderRepository) : ViewModel() {
+class CommissionsViewModel(
+    private val repository: OrderRepository,
+    private val analytics: AnalyticsService
+) : ViewModel() {
 
     private val _filterState = MutableStateFlow(FilterState())
     val filterState = _filterState.asStateFlow()
+
+    init {
+        analytics.logScreenView("Commissions")
+    }
 
     val state: StateFlow<UiState> = combine(
         repository.observeAllBillings(),

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.toLocalDate
 import com.mdcapp.domain.repositories.OrderRepository
+import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.ui.theme.getBillingStatusColor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,7 +15,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 
-class AgendaViewModel(private val repository: OrderRepository) : ViewModel() {
+class AgendaViewModel(
+    private val repository: OrderRepository,
+    private val analytics: AnalyticsService
+) : ViewModel() {
+
+    init {
+        analytics.logScreenView("Agenda")
+    }
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     val selectedDate = _selectedDate

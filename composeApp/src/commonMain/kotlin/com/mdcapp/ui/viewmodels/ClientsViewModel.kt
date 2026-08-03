@@ -3,7 +3,9 @@ package com.mdcapp.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.ClientModel
+import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.clientsusecase.GetClientsUseCase
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,6 +14,7 @@ import kotlinx.coroutines.launch
 
 class ClientsViewModel(
     private val getClientsUseCase: GetClientsUseCase,
+    private val analytics: AnalyticsService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState())
@@ -26,6 +29,7 @@ class ClientsViewModel(
     )
 
     init {
+        analytics.logScreenView("Clients")
         loadClients()
     }
 
@@ -43,6 +47,7 @@ class ClientsViewModel(
                     )
                 }
             } catch (e: Exception) {
+                Napier.e("Error loading clients", e)
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
         }
@@ -54,12 +59,14 @@ class ClientsViewModel(
             try {
                 val success = getClientsUseCase.delete(clientId)
                 if (success) {
+                    analytics.logEvent("delete_client_success", mapOf("client_id" to clientId))
                     _state.update { it.copy(message = "Cliente eliminado") }
                     loadClients()
                 } else {
                     _state.update { it.copy(isLoading = false, error = "Error al eliminar") }
                 }
             } catch (e: Exception) {
+                Napier.e("Error deleting client", e)
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
         }

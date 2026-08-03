@@ -7,8 +7,10 @@ import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.BuyOrderModel
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.entities.recalculate
+import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,11 +20,16 @@ class AddInvoiceViewModel(
     orderId: String,
     private val createInvoiceUseCase: InvoiceUseCase.CreateInvoice,
     private val getBuyOrderUseCase: BuyOrderUseCase.GetBuyOrderById,
-    private val getPaymentConditionUseCase: InvoiceUseCase.GetPaymentCondition
+    private val getPaymentConditionUseCase: InvoiceUseCase.GetPaymentCondition,
+    private val analytics: AnalyticsService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(orderId = orderId))
     val state = _state.asStateFlow()
+
+    init {
+        analytics.logScreenView("AddInvoice")
+    }
 
     data class UiState(
         val orderId: String = "",
@@ -58,6 +65,7 @@ class AddInvoiceViewModel(
                     )
                 }
             } catch (e: Exception) {
+                Napier.e("Error loading data for AddInvoice", e)
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
         }
@@ -109,11 +117,21 @@ class AddInvoiceViewModel(
                     finalInvoice
                 )
                 if (success) {
+                    analytics.logEvent(
+                        "add_invoice_success", mapOf(
+                            "invoice_number" to number,
+                            "amount" to amount,
+                            "client" to finalInvoice.clientName
+                        )
+                    )
                     _state.update { it.copy(isLoading = false, isSuccess = true) }
                 } else {
+                    analytics.logEvent("add_invoice_failure", mapOf("reason" to "repository_error"))
                     _state.update { it.copy(isLoading = false, error = "Error al guardar factura") }
                 }
             } catch (e: Exception) {
+                Napier.e("Error saving invoice", e)
+                analytics.logEvent("add_invoice_error", mapOf("error" to e.message))
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
         }

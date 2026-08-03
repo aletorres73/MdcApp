@@ -8,8 +8,10 @@ import com.mdcapp.domain.entities.ClientModel
 import com.mdcapp.domain.entities.FactoryModel
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.repositories.OrderRepository
+import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.clientsusecase.GetClientsUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,11 +20,16 @@ import kotlinx.coroutines.launch
 class CreateOrderViewModel(
     private val saveOrderUseCase: BuyOrderUseCase.SaveOrder,
     private val repository: OrderRepository,
-    private val getClientsUseCase: GetClientsUseCase
+    private val getClientsUseCase: GetClientsUseCase,
+    private val analytics: AnalyticsService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState())
     val state = _state.asStateFlow()
+
+    init {
+        analytics.logScreenView("CreateOrder")
+    }
 
     data class UiState(
         val isLoading: Boolean = false,
@@ -60,6 +67,7 @@ class CreateOrderViewModel(
                     )
                 }
             } catch (e: Exception) {
+                Napier.e("Error loading data for CreateOrder", e)
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
         }
@@ -113,27 +121,52 @@ class CreateOrderViewModel(
 
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            val order = BuyOrderModel(
-                clientId = currentState.selectedClient.clientId,
-                client = currentState.selectedClient.clientName,
-                factory = currentState.selectedFactory.name,
-                branch = currentState.selectedSegment,
-                articles = currentState.articles,
-                comments = currentState.comments,
-                loadedDate = System.currentTimeMillis(),
-                order = "",
-                paymentCondition = currentState.selectedCondition?.paymentName ?: "",
-                discount = currentState.selectedCondition?.discount ?: 0.0,
-                expirationDays = currentState.selectedCondition?.expiration ?: 0,
-                timeStamp = System.currentTimeMillis()
-            )
-            // Note: We need to store paymentCondition in BuyOrderModel too for inheritance
-            // Let's assume BuyOrderModel has it or we add it.
-            val success = saveOrderUseCase(currentState.selectedClient.clientId, order)
-            if (success) {
-                _state.update { it.copy(isLoading = false, isSuccess = true) }
-            } else {
-                _state.update { it.copy(isLoading = false, error = "Error al guardar el pedido") }
+            try {
+                val order = BuyOrderModel(
+                    clientId = currentState.selectedClient.clientId,
+                    client = currentState.selectedClient.clientName,
+                    factory = currentState.selectedFactory.name,
+                    branch = currentState.selectedSegment,
+                    articles = currentState.articles,
+                    comments = currentState.comments,
+                    loadedDate = System.currentTimeMillis(),
+                    order = "",
+                    paymentCondition = currentState.selectedCondition?.paymentName ?: "",
+                    discount = currentState.selectedCondition?.discount ?: 0.0,
+                    expirationDays = currentState.selectedCondition?.expiration ?: 0,
+                    timeStamp = System.currentTimeMillis()
+                )
+                val success = saveOrderUseCase(currentState.selectedClient.clientId, order)
+                if (success) {
+                    analytics.logEvent(
+                        "create_order_success", mapOf(
+                            "client" to order.client,
+                            "factory" to order.factory,
+                            "articles_count" to order.articles.size
+                        )
+                    )
+                    _state.update { it.copy(isLoading = false, isSuccess = true) }
+                } else {
+                    analytics.logEvent(
+                        "create_order_failure",
+                        mapOf("reason" to "repository_error")
+                    )
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Error al guardar el pedido"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Napier.e("Error saving order", e)
+                analytics.logEvent("create_order_error", mapOf("error" to e.message))
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "Error desconocido"
+                    )
+                }
             }
         }
     }
