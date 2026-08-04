@@ -49,6 +49,7 @@ kotlin {
             implementation(libs.gitlive.firebase.firestore)
             implementation(libs.gitlive.auth)
             implementation(libs.gitlive.firebase.analytics)
+            implementation(libs.gitlive.firebase.storage)
 //            implementation(libs.gitlive.firebase.crashlytics)
             implementation(libs.napier)
 

@@ -18,10 +18,12 @@ import com.mdcapp.ui.screens.MainScreen
 import com.mdcapp.ui.screens.OrderDetailScreen
 import com.mdcapp.ui.screens.ProfileScreen
 import com.mdcapp.ui.screens.SignUpScreen
+import com.mdcapp.ui.screens.SubscriptionStatusScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.DetailInvoiceScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.InvoicesScreen
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -32,7 +34,38 @@ import org.koin.core.parameter.parametersOf
 fun AndroidNavigation(startRoute: String) {
     val navController = rememberNavController()
     val authRepo: com.mdcapp.domain.repositories.AuthRepository = org.koin.compose.koinInject()
+    val userService: com.mdcapp.data.service.UserService = org.koin.compose.koinInject()
     val scope = androidx.compose.runtime.rememberCoroutineScope()
+
+    // Lógica de redirección por suscripción en tiempo real
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        userService.observeUserProfile().collectLatest { profile ->
+            val currentRoute = navController.currentDestination?.route
+            if (authRepo.isLogged() &&
+                currentRoute != AppRoute.Login.route &&
+                currentRoute != AppRoute.SignUp.route &&
+                currentRoute != AppRoute.SubscriptionStatus.route
+            ) {
+                val isExpired = (profile?.subscriptionExpiresAt ?: 0) < System.currentTimeMillis()
+                val isManuallyEnabled = profile?.isManuallyEnabled == true
+
+                if (isExpired && !isManuallyEnabled) {
+                    navController.navigate(AppRoute.SubscriptionStatus.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            } else if (authRepo.isLogged() && currentRoute == AppRoute.SubscriptionStatus.route) {
+                // Si estamos en la pantalla de bloqueo y la suscripción se activa, salir de ahí
+                val isExpired = (profile?.subscriptionExpiresAt ?: 0) < System.currentTimeMillis()
+                val isManuallyEnabled = profile?.isManuallyEnabled == true
+                if (!isExpired || isManuallyEnabled) {
+                    navController.navigate(AppRoute.InvoicesPaged.route) {
+                        popUpTo(AppRoute.SubscriptionStatus.route) { inclusive = true }
+                    }
+                }
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -174,6 +207,19 @@ fun AndroidNavigation(startRoute: String) {
         composable(route = AppRoute.Profile.route) {
             ProfileScreen(
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = AppRoute.SubscriptionStatus.route) {
+            SubscriptionStatusScreen(
+                onLogout = {
+                    scope.launch {
+                        authRepo.logout()
+                        navController.navigate(AppRoute.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                }
             )
         }
 

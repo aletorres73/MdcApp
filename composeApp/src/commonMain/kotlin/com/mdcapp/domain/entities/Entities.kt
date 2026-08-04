@@ -124,7 +124,19 @@ data class UserModel(
     val uid: String = "",
     val name: String = "",
     val lastName: String = "",
-    val email: String = ""
+    val email: String = "",
+    val subscriptionExpiresAt: Long = 0L,
+    val isManuallyEnabled: Boolean = false,
+    val paymentHistory: List<PaymentEntry> = emptyList()
+)
+
+@Serializable
+data class PaymentEntry(
+    val date: Long = 0L,
+    val amount: Double = 0.0,
+    val status: String = "PENDIENTE", // PENDIENTE, APROBADO, RECHAZADO
+    val transactionRef: String = "",
+    val receiptRef: String = "" // Referencia al archivo en Storage
 )
 
 data class BillingModel(
