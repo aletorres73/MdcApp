@@ -8,6 +8,8 @@ expect fun checkUpdate(remote: RemoteInitConfig): Pair<UpdateState, String>
 
 expect fun downloadInstaller(context: Any, url: String): Boolean
 
+expect val appVersion: String
+
 fun compareVersions(v1: String, v2: String): Int {
     val parts1 = v1.split(".").map { it.toIntOrNull() ?: 0 }
     val parts2 = v2.split(".").map { it.toIntOrNull() ?: 0 }

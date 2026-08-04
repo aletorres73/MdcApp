@@ -1,6 +1,7 @@
 package com.mdcapp.data.service
 
 import com.mdcapp.domain.entities.RemoteInitConfig
+import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import io.github.aakira.napier.Napier
 
@@ -15,16 +16,17 @@ class InitService(
         return try {
             val doc = db
                 .collection(PATH)
+                .orderBy("versionCode", Direction.DESCENDING)
+                .limit(1)
                 .get()
-                .documents.map { it.data<RemoteInitConfig>() }
-                .last()
+                .documents.firstOrNull()?.data<RemoteInitConfig>()
+                ?: RemoteInitConfig()
 
             Napier.i("InitService --- init: $doc")
             doc
         } catch (e: Exception) {
-            Napier.e("InitService --- init: ${e.message}", e)
+            Napier.e("InitService --- init error: ${e.message}", e)
             RemoteInitConfig()
         }
-
     }
 }

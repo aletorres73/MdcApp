@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.mdcapp.domain.config.appVersion
 import com.mdcapp.ui.viewmodels.LoginViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -113,6 +114,14 @@ fun LoginScreen(
         TextButton(onClick = onRegisterClick) {
             Text("¿No tienes cuenta? Regístrate aquí")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "v$appVersion",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.outline
+        )
     }
 }
 

@@ -39,6 +39,13 @@ fun InvoicesPageScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    // Bloqueo de botón atrás si hay actualización forzada
+    if (state.updateState == UpdateState.FORCE_UPDATE) {
+        BackHandler(enabled = true) {
+            // Bloqueado
+        }
+    }
+
     if (state.isSearchMode) {
         BackHandler {
             viewModel.setSearchMode(false)

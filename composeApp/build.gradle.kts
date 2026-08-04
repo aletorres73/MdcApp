@@ -96,7 +96,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "4.2.1"
+        versionName = "4.3.0"
     }
     buildFeatures {
         compose = true
@@ -109,11 +109,25 @@ android {
     }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
-            isDebuggable = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    // Nomenclatura personalizada para el APK
+    applicationVariants.all {
+        outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val fileName = "MDCapp-v${versionName}.apk"
+            output.outputFileName = fileName
+        }
+    }
+
     buildFeatures {
         compose = true
     }

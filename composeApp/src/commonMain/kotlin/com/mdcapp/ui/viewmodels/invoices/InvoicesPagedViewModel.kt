@@ -127,7 +127,8 @@ class InvoicesPagedViewModel(
             _uiState.update {
                 it.copy(
                     updateState = result,
-                    overlay = Overlay.UpdateApp(result, releaseNotes)
+                    overlay = if (result == UpdateState.OK) Overlay.None
+                    else Overlay.UpdateApp(result, releaseNotes)
                 )
             }
             Napier.i("InvoicesPagedViewModel--- initConfig: $result")
@@ -218,15 +219,23 @@ class InvoicesPagedViewModel(
         viewModelScope.launch {
             Napier.i("updating apk")
             val result = initConfigUseCase.download(context)
-            if (!result)
-                _uiState.value = _uiState.value.copy(
-                    message = "Error en el servidor"
-                )
-            else
-                _uiState.value = _uiState.value.copy(
-                    message = "Actualización iniciada",
-                    overlay = Overlay.None
-                )
+            if (!result) {
+                _uiState.update {
+                    it.copy(message = "Error en el servidor")
+                }
+            } else {
+                _uiState.update {
+                    val nextOverlay = if (it.updateState == UpdateState.FORCE_UPDATE) {
+                        it.overlay // Mantener el diálogo si es forzado
+                    } else {
+                        Overlay.None // Cerrar si es opcional
+                    }
+                    it.copy(
+                        message = "Actualización iniciada",
+                        overlay = nextOverlay
+                    )
+                }
+            }
         }
     }
 
