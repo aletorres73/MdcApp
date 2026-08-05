@@ -1,9 +1,11 @@
 package com.mdcapp.data.service
 
+import com.mdcapp.data.remote.RemotePaymentInfo
 import com.mdcapp.data.remote.RemoteResultUserModel
 import com.mdcapp.data.remote.toDomain
 import com.mdcapp.data.remote.toRemote
 import com.mdcapp.domain.entities.PaymentEntry
+import com.mdcapp.domain.entities.PaymentInfo
 import com.mdcapp.domain.entities.UserModel
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.storage.FirebaseStorage
@@ -20,6 +22,19 @@ class UserService(
 
     private val userDocument
         get() = db.collection("users").document(userId)
+
+    suspend fun getPaymentInfo(): PaymentInfo {
+        return try {
+            db.collection("appConfig/android/payment_info")
+                .get()
+                .documents
+                .firstOrNull()?.data<RemotePaymentInfo>()?.toDomain()
+                ?: PaymentInfo()
+        } catch (e: Exception) {
+            println("Error fetching payment info: ${e.message}")
+            PaymentInfo()
+        }
+    }
 
     fun observeUserProfile(): Flow<UserModel?> {
         return userDocument.snapshots.map { it.data<RemoteResultUserModel>().toDomain() }

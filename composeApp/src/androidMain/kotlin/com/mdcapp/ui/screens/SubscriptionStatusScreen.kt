@@ -37,15 +37,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mdcapp.domain.entities.PaymentInfo
 import com.mdcapp.domain.entities.toFormattedDate
+import com.mdcapp.domain.entities.toPrint
 import com.mdcapp.ui.viewmodels.SubscriptionViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
 fun SubscriptionStatusScreen(
     vm: SubscriptionViewModel = koinViewModel(),
@@ -98,7 +103,7 @@ fun SubscriptionStatusScreen(
                 )
             } else {
                 StatusCard(
-                    title = "Suscripción Vencida",
+                    title = "Suscripción Inactiva",
                     subtitle = "Para seguir usando la app, por favor realiza el pago.",
                     icon = Icons.Default.Warning,
                     color = MaterialTheme.colorScheme.error
@@ -106,7 +111,7 @@ fun SubscriptionStatusScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                PaymentInstructionsCard()
+                PaymentInstructionsCard(state.paymentInfo)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -188,7 +193,9 @@ fun StatusCard(
 }
 
 @Composable
-fun PaymentInstructionsCard() {
+fun PaymentInstructionsCard(info: PaymentInfo) {
+    val clipboardManager = LocalClipboardManager.current
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -200,13 +207,34 @@ fun PaymentInstructionsCard() {
                 Text("Datos para Transferencia", fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Alias: MDCAPP.PAGOS", fontSize = 16.sp)
-            Text("CBU: 0000003100012345678901", fontSize = 16.sp)
-            Text("Titular: MDC App Services", fontSize = 14.sp)
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Alias: ${info.alias}", fontSize = 16.sp, modifier = Modifier.weight(1f))
+                TextButton(onClick = { clipboardManager.setText(AnnotatedString(info.alias)) }) {
+                    Text("Copiar", fontSize = 12.sp)
+                }
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("CBU: ${info.cbu}", fontSize = 16.sp, modifier = Modifier.weight(1f))
+                TextButton(onClick = { clipboardManager.setText(AnnotatedString(info.cbu)) }) {
+                    Text("Copiar", fontSize = 12.sp)
+                }
+            }
+
+            Text("Titular: ${info.titular}", fontSize = 14.sp)
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "Una vez realizada la transferencia, sube la captura del comprobante aquí abajo.",
-                style = MaterialTheme.typography.bodySmall
+                "Monto a transferir: ${info.amount.toPrint()}",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "Importante: El comprobante debe ser una captura de pantalla clara de la transferencia realizada.",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }

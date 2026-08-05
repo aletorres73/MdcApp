@@ -139,6 +139,13 @@ data class PaymentEntry(
     val receiptRef: String = "" // Referencia al archivo en Storage
 )
 
+data class PaymentInfo(
+    val alias: String = "",
+    val cbu: String = "",
+    val titular: String = "",
+    val amount: Double = 0.0
+)
+
 data class BillingModel(
     val billingNumber: String = "",
     val orderId: String = "",

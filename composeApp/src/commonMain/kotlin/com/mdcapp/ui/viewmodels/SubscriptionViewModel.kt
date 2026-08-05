@@ -3,6 +3,7 @@ package com.mdcapp.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.data.service.UserService
+import com.mdcapp.domain.entities.PaymentInfo
 import com.mdcapp.domain.entities.UserModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +19,14 @@ class SubscriptionViewModel(
 
     init {
         observeUserProfile()
+        loadPaymentInfo()
+    }
+
+    private fun loadPaymentInfo() {
+        viewModelScope.launch {
+            val info = userService.getPaymentInfo()
+            _uiState.value = _uiState.value.copy(paymentInfo = info)
+        }
     }
 
     private fun observeUserProfile() {
@@ -58,6 +67,7 @@ class SubscriptionViewModel(
 
 data class SubscriptionUiState(
     val userProfile: UserModel? = null,
+    val paymentInfo: PaymentInfo = PaymentInfo(),
     val isLoading: Boolean = false,
     val isUploading: Boolean = false,
     val uploadSuccess: Boolean = false,
