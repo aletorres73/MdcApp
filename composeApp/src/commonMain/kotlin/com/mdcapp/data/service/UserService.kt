@@ -72,21 +72,20 @@ class UserService(
         ref.putData(wrapImageData(imageBytes))
 
         val currentUser = getUserProfile() ?: return ""
-        val paymentId = getNextPaymentId()
-        
+
+        // El paymentId ahora lo asigna la Cloud Function tras validar con IA.
+        // Se envía en 0 y la función lo actualiza de forma atómica.
         val newPayment = PaymentEntry(
             date = timestamp,
             amount = paymentInfo.amount,
             status = "PENDIENTE",
             receiptRef = fileName,
             paymentInfoId = paymentInfo.id,
-            paymentId = paymentId
+            paymentId = 0L
         )
 
         val updatedHistory = currentUser.paymentHistory + newPayment
 
-        // La extensión de la suscripción ahora la maneja la Cloud Function tras validar con IA.
-        // Solo guardamos el historial actualizado con el estado PENDIENTE_IA.
         saveUserProfile(
             currentUser.copy(
                 paymentHistory = updatedHistory
@@ -94,25 +93,5 @@ class UserService(
         )
 
         return fileName
-    }
-
-    private suspend fun getNextPaymentId(): Long {
-        val counterDoc = db.collection("appConfig/android/counters").document("payments")
-        return try {
-            val snapshot = counterDoc.get()
-            val current = if (snapshot.exists) {
-                try {
-                    snapshot.get<Long>("lastPaymentId")
-                } catch (e: Exception) {
-                    snapshot.get<Int>("lastPaymentId").toLong()
-                }
-            } else 0L
-            val next = current + 1
-            counterDoc.set(mapOf("lastPaymentId" to next))
-            next
-        } catch (e: Exception) {
-            println("Error getting next payment id: ${e.message}")
-            0L
-        }
     }
 }

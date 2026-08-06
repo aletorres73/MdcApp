@@ -67,19 +67,11 @@ fun PaymentHistoryScreen(
                         ListItem(
                             headlineContent = {
                                 val title =
-                                    if (payment.paymentId > 0) "Pago N° ${payment.paymentId}" else "Pago"
+                                    if (payment.paymentId > 0) "Pago N° ${payment.paymentId}" else "Pago (Procesando ID)"
                                 Text("$title del ${payment.date.toFormattedDate()}")
                             },
                             supportingContent = {
-                                Column {
-                                    Text("Estado: ${payment.status}")
-                                    if (payment.paymentInfoId.isNotEmpty()) {
-                                        Text(
-                                            "ID Cuenta: ${payment.paymentInfoId}",
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
-                                    }
-                                }
+                                Text("Estado: ${payment.status}")
                             },
                             trailingContent = {
                                 Text(
