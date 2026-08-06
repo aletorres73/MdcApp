@@ -32,6 +32,7 @@ import com.mdcapp.ui.viewmodels.HomeViewModel
 import com.mdcapp.ui.viewmodels.LoginViewModel
 import com.mdcapp.ui.viewmodels.ProfileViewModel
 import com.mdcapp.ui.viewmodels.SignUpViewModel
+import com.mdcapp.ui.viewmodels.SubscriptionViewModel
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import com.mdcapp.ui.viewmodels.invoices.AddInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
@@ -43,6 +44,7 @@ import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
 import dev.gitlive.firebase.auth.FirebaseAuth
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
+import dev.gitlive.firebase.storage.storage
 import org.koin.compose.viewmodel.dsl.viewModel
 import org.koin.compose.viewmodel.dsl.viewModelOf
 import org.koin.core.context.startKoin
@@ -53,6 +55,7 @@ import org.koin.dsl.module
 val appModule = module {
     single<FirebaseFirestore> { Firebase.firestore }
     single<dev.gitlive.firebase.firestore.FirebaseFirestore> { dev.gitlive.firebase.Firebase.firestore }
+    single<dev.gitlive.firebase.storage.FirebaseStorage> { dev.gitlive.firebase.Firebase.storage }
     single<FirebaseAuth> { dev.gitlive.firebase.Firebase.auth }
 
     single<HomeUseCase.GetAllFactories> { get<HomeUseCase>().GetAllFactories() }
@@ -139,6 +142,7 @@ val viewModelModule = module {
     viewModelOf(::ProfileViewModel)
     viewModelOf(::AddClientViewModel)
     viewModelOf(::CommissionsViewModel)
+    viewModelOf(::SubscriptionViewModel)
 //    viewModelOf(::InvoicesViewModel)
     viewModel { (clientId: String) ->
         InvoicesViewModel(

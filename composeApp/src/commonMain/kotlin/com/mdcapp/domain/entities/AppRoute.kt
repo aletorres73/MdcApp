@@ -49,6 +49,7 @@ sealed class AppRoute(val route: String) {
     data object Commissions : AppRoute("Commissions")
     data object Agenda : AppRoute("Agenda")
     data object Profile : AppRoute("Profile")
+    data object SubscriptionStatus : AppRoute("SubscriptionStatus")
 
     data class Invoices(val clientId: String) : AppRoute("Invoices") {
         companion object {

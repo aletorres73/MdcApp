@@ -124,7 +124,26 @@ data class UserModel(
     val uid: String = "",
     val name: String = "",
     val lastName: String = "",
-    val email: String = ""
+    val email: String = "",
+    val subscriptionExpiresAt: Long = 0L,
+    val isManuallyEnabled: Boolean = false,
+    val paymentHistory: List<PaymentEntry> = emptyList()
+)
+
+@Serializable
+data class PaymentEntry(
+    val date: Long = 0L,
+    val amount: Double = 0.0,
+    val status: String = "PENDIENTE", // PENDIENTE, APROBADO, RECHAZADO
+    val transactionRef: String = "",
+    val receiptRef: String = "" // Referencia al archivo en Storage
+)
+
+data class PaymentInfo(
+    val alias: String = "",
+    val cbu: String = "",
+    val titular: String = "",
+    val amount: Double = 0.0
 )
 
 data class BillingModel(
@@ -191,11 +210,11 @@ fun Double.discountToPrint(): String {
 }
 
 fun Long.toLocalDate(): LocalDate {
-    return Instant.ofEpochMilli(this).atZone(ZoneId.of("UTC")).toLocalDate()
+    return Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
 }
 
 fun LocalDate.toEpochMillis(): Long {
-    return this.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+    return this.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 }
 
 fun Long.toFormattedDate(): String {
