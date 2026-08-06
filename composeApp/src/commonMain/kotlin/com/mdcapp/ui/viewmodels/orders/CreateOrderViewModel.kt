@@ -14,6 +14,8 @@ import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -42,18 +44,37 @@ class CreateOrderViewModel(
         val articles: List<ArticleOrderModel> = emptyList(),
         val comments: String = "",
         val isSuccess: Boolean = false,
-        val error: String? = null
+        val error: String? = null,
+        // Dialog state
+        val dialogArticleName: String = "",
+        val dialogArticleColor: String = "",
+        val dialogArticlePairs: String = "12"
     )
 
     fun initData(clientId: String? = null) {
+        observeFactories()
         loadInitialData(clientId)
+    }
+
+    private fun observeFactories() {
+        repository.observeFactories()
+            .onEach { factories ->
+                _state.update { state ->
+                    val updatedSelectedFactory =
+                        factories.find { it.name == state.selectedFactory?.name }
+                    state.copy(
+                        factories = factories,
+                        selectedFactory = updatedSelectedFactory
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun loadInitialData(clientId: String? = null) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
-                val factories = repository.getFactories()
                 val clients = getClientsUseCase.getAll()
                 val selectedClient =
                     if (clientId != null) clients.find { it.clientId == clientId } else null
@@ -61,7 +82,6 @@ class CreateOrderViewModel(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        factories = factories,
                         clients = clients,
                         selectedClient = selectedClient
                     )
@@ -97,7 +117,56 @@ class CreateOrderViewModel(
 
     fun addArticle(name: String, color: String, pairs: Int) {
         val newArticle = ArticleOrderModel(name = name, color = color, pairs = pairs)
-        _state.update { it.copy(articles = it.articles + newArticle) }
+        _state.update {
+            it.copy(
+                articles = it.articles + newArticle,
+                dialogArticleName = "",
+                dialogArticleColor = "",
+                dialogArticlePairs = "12"
+            )
+        }
+    }
+
+    fun addArticleAndContinue() {
+        val currentState = _state.value
+        val pairs = currentState.dialogArticlePairs.toIntOrNull() ?: 0
+        if (currentState.dialogArticleName.isBlank() || pairs <= 0) return
+
+        val newArticle = ArticleOrderModel(
+            name = currentState.dialogArticleName,
+            color = currentState.dialogArticleColor,
+            pairs = pairs
+        )
+        _state.update {
+            it.copy(
+                articles = it.articles + newArticle,
+                dialogArticleColor = "", // Clear color as success indicator
+                dialogArticlePairs = "12" // Reset pairs
+            )
+        }
+    }
+
+    fun onDialogNameChange(name: String) {
+        _state.update { it.copy(dialogArticleName = name) }
+    }
+
+    fun onDialogColorChange(color: String) {
+        _state.update { it.copy(dialogArticleColor = color) }
+    }
+
+    fun onDialogPairsChange(pairs: String) {
+        _state.update { it.copy(dialogArticlePairs = pairs) }
+    }
+
+    fun incrementPairs() {
+        val current = _state.value.dialogArticlePairs.toIntOrNull() ?: 0
+        _state.update { it.copy(dialogArticlePairs = (current + 12).toString()) }
+    }
+
+    fun decrementPairs() {
+        val current = _state.value.dialogArticlePairs.toIntOrNull() ?: 0
+        val next = if (current >= 12) current - 12 else 0
+        _state.update { it.copy(dialogArticlePairs = next.toString()) }
     }
 
     fun removeArticle(index: Int) {

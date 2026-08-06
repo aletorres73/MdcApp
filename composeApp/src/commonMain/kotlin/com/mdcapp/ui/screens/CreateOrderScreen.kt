@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -39,16 +40,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.ClientModel
 import com.mdcapp.domain.entities.FactoryModel
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.ui.viewmodels.orders.CreateOrderViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
 fun CreateOrderScreen(
     clientId: String? = null,
@@ -131,7 +136,7 @@ fun CreateOrderScreen(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Artículos", style = MaterialTheme.typography.titleMedium)
                 TextButton(onClick = { showAddArticleDialog = true }) {
@@ -184,11 +189,24 @@ fun CreateOrderScreen(
 
     if (showAddArticleDialog) {
         AddArticleDialog(
-            onDismiss = { showAddArticleDialog = false },
-            onConfirm = { name, color, pairs ->
-                viewModel.addArticle(name, color, pairs)
+            state = state,
+            onNameChange = { viewModel.onDialogNameChange(it) },
+            onColorChange = { viewModel.onDialogColorChange(it) },
+            onPairsChange = { viewModel.onDialogPairsChange(it) },
+            onIncrement = { viewModel.incrementPairs() },
+            onDecrement = { viewModel.decrementPairs() },
+            onClearName = { viewModel.onDialogNameChange("") },
+            onClearColor = { viewModel.onDialogColorChange("") },
+            onConfirm = {
+                viewModel.addArticle(
+                    state.dialogArticleName,
+                    state.dialogArticleColor,
+                    state.dialogArticlePairs.toIntOrNull() ?: 0
+                )
                 showAddArticleDialog = false
-            }
+            },
+            onConfirmAndContinue = { viewModel.addArticleAndContinue() },
+            onDismiss = { showAddArticleDialog = false }
         )
     }
 }
@@ -354,44 +372,89 @@ fun ConditionSelector(
 
 @Composable
 fun AddArticleDialog(
+    state: CreateOrderViewModel.UiState,
+    onNameChange: (String) -> Unit,
+    onColorChange: (String) -> Unit,
+    onPairsChange: (String) -> Unit,
+    onIncrement: () -> Unit,
+    onDecrement: () -> Unit,
+    onConfirm: () -> Unit,
+    onConfirmAndContinue: () -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (String, String, Int) -> Unit
+    onClearName: () -> Unit,
+    onClearColor: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var color by remember { mutableStateOf("") }
-    var pairs by remember { mutableStateOf("") }
-
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Agregar Artículo") },
         text = {
             Column {
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
+                    value = state.dialogArticleName,
+                    onValueChange = onNameChange,
                     label = { Text("Artículo") },
-                    singleLine = true
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    trailingIcon = {
+                        if (state.dialogArticleName.isNotEmpty()) {
+                            IconButton(onClick = onClearName) {
+                                Icon(Icons.Default.Clear, contentDescription = "Limpiar")
+                            }
+                        }
+                    }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = color,
-                    onValueChange = { color = it },
+                    value = state.dialogArticleColor,
+                    onValueChange = onColorChange,
                     label = { Text("Color") },
-                    singleLine = true
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    trailingIcon = {
+                        if (state.dialogArticleColor.isNotEmpty()) {
+                            IconButton(onClick = onClearColor) {
+                                Icon(Icons.Default.Clear, contentDescription = "Limpiar")
+                            }
+                        }
+                    }
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = pairs,
-                    onValueChange = { pairs = it },
-                    label = { Text("Cantidad de Pares") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Cantidad de Pares", style = MaterialTheme.typography.labelMedium)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    IconButton(onClick = onDecrement) {
+                        Text("-", style = MaterialTheme.typography.titleLarge)
+                    }
+                    OutlinedTextField(
+                        value = state.dialogArticlePairs,
+                        onValueChange = onPairsChange,
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        textStyle = TextStyle(textAlign = TextAlign.Center)
+                    )
+                    IconButton(onClick = onIncrement) {
+                        Icon(Icons.Default.Add, contentDescription = "Más")
+                    }
+                }
+                Text(
+                    "Múltiplos de 12 (Docena)",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 48.dp)
                 )
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(name, color, pairs.toIntOrNull() ?: 0) }) {
-                Text("Agregar")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = onConfirmAndContinue) {
+                    Text("Continuar")
+                }
+                Button(onClick = onConfirm) {
+                    Text("Cerrar")
+                }
             }
         },
         dismissButton = {
