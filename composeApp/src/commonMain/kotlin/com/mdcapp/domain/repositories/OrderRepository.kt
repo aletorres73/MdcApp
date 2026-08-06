@@ -121,6 +121,10 @@ class OrderRepository(private val service: OrderService) {
         return service.saveOrder(clientId, order.toBuyOrderRemote())
     }
 
+    suspend fun updateOrder(clientId: String, order: BuyOrderModel): Boolean {
+        return service.updateOrder(clientId, order.order, order.toBuyOrderRemote())
+    }
+
     suspend fun saveFactory(factory: FactoryModel): Boolean {
         return service.saveFactory(factory.toFactoryRemote())
     }

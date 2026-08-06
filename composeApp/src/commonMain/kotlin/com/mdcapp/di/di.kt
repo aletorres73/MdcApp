@@ -72,6 +72,7 @@ val appModule = module {
     single<BuyOrderUseCase.UpdateBilling> { get<BuyOrderUseCase>().UpdateBilling() }
     single<BuyOrderUseCase.GetPaymentsRegister> { get<BuyOrderUseCase>().GetPaymentsRegister() }
     single<BuyOrderUseCase.SaveOrder> { get<BuyOrderUseCase>().SaveOrder() }
+    single<BuyOrderUseCase.UpdateOrder> { get<BuyOrderUseCase>().UpdateOrder() }
     single<GetFactoriesListUseCase> { get<GetFactoriesListUseCase>() }
 
     single<PaymentConditionsUseCase.GetPaymentsConditions> { get<PaymentConditionsUseCase>().GetPaymentsConditions() }

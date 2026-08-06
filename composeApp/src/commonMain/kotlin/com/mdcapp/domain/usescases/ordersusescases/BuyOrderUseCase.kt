@@ -67,5 +67,11 @@ class BuyOrderUseCase(private val repository: OrderRepository) {
             return repository.saveOrder(clientId, order)
         }
     }
+
+    inner class UpdateOrder {
+        suspend operator fun invoke(clientId: String, order: BuyOrderModel): Boolean {
+            return repository.updateOrder(clientId, order)
+        }
+    }
 }
 

@@ -13,11 +13,17 @@ sealed class AppRoute(val route: String) {
             }
         }
     }
-    data class CreateOrder(val clientId: String? = null) : AppRoute("CreateOrder") {
+    data class CreateOrder(val clientId: String? = null, val orderId: String? = null) :
+        AppRoute("CreateOrder") {
         companion object {
-            const val BASE_ROUTE = "CreateOrder?clientId={clientId}"
-            fun createRoute(clientId: String? = null): String {
-                return if (clientId != null) "CreateOrder?clientId=$clientId" else "CreateOrder"
+            const val BASE_ROUTE = "CreateOrder?clientId={clientId}&orderId={orderId}"
+            fun createRoute(clientId: String? = null, orderId: String? = null): String {
+                return when {
+                    clientId != null && orderId != null -> "CreateOrder?clientId=$clientId&orderId=$orderId"
+                    clientId != null -> "CreateOrder?clientId=$clientId"
+                    orderId != null -> "CreateOrder?orderId=$orderId"
+                    else -> "CreateOrder"
+                }
             }
         }
     }

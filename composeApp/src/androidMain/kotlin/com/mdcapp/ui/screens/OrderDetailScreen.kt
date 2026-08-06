@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
@@ -63,6 +64,7 @@ fun OrderDetailScreen(
     factoryName: String,
     onBack: () -> Unit,
     onNavigateToInvoice: (String) -> Unit,
+    onEditOrder: (String, String) -> Unit,
     viewModel: BuyOrdersViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -84,6 +86,11 @@ fun OrderDetailScreen(
                 },
                 actions = {
                     if (!state.loadingOrder) {
+                        IconButton(onClick = {
+                            onEditOrder(clientId, orderId)
+                        }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar Pedido")
+                        }
                         IconButton(onClick = {
                             val report = ReportGenerator.generateOrderReport(state.buyOrder)
                             ShareUtils.shareText(

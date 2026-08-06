@@ -80,11 +80,16 @@ fun AndroidNavigation(startRoute: String) {
 
         composable(
             route = AppRoute.CreateOrder.BASE_ROUTE,
-            arguments = listOf(navArgument("clientId") { nullable = true; defaultValue = null })
+            arguments = listOf(
+                navArgument("clientId") { nullable = true; defaultValue = null },
+                navArgument("orderId") { nullable = true; defaultValue = null }
+            )
         ) {
             val clientId = it.arguments?.getString("clientId")
+            val orderId = it.arguments?.getString("orderId")
             CreateOrderScreen(
                 clientId = clientId,
+                orderId = orderId,
                 onBack = { navController.popBackStack() },
                 onManageFactories = { navController.navigate(AppRoute.Factories.route) }
             )
@@ -130,6 +135,9 @@ fun AndroidNavigation(startRoute: String) {
                 onBack = { navController.popBackStack() },
                 onNavigateToInvoice = { invoiceNumber ->
                     navController.navigateToDetailInvoice(invoiceNumber)
+                },
+                onEditOrder = { cId, oId ->
+                    navController.navigate(AppRoute.CreateOrder.createRoute(cId, oId))
                 }
             )
         }

@@ -57,6 +57,7 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun CreateOrderScreen(
     clientId: String? = null,
+    orderId: String? = null,
     onBack: () -> Unit,
     onManageFactories: () -> Unit = {},
     viewModel: CreateOrderViewModel = koinViewModel()
@@ -64,8 +65,8 @@ fun CreateOrderScreen(
     val state by viewModel.state.collectAsState()
     var showAddArticleDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(clientId) {
-        viewModel.initData(clientId)
+    LaunchedEffect(clientId, orderId) {
+        viewModel.initData(clientId, orderId)
     }
 
     LaunchedEffect(state.isSuccess) {
@@ -77,7 +78,7 @@ fun CreateOrderScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nuevo Pedido") },
+                title = { Text(if (state.orderId != null) "Editar Pedido" else "Nuevo Pedido") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")

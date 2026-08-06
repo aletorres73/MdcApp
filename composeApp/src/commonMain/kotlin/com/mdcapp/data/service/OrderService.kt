@@ -469,6 +469,20 @@ class OrderService(
         }
     }
 
+    suspend fun updateOrder(
+        clientId: String,
+        orderId: String,
+        order: RemoteResultBuyOrder
+    ): Boolean {
+        return try {
+            clientOrdersCollection(clientId).document(orderId).set(order)
+            true
+        } catch (e: Exception) {
+            Napier.e("Error updating order", e)
+            false
+        }
+    }
+
     private suspend fun getNextOrderNumber(): Int {
         val configDoc = userDoc.collection("config").document("counters")
         return try {
