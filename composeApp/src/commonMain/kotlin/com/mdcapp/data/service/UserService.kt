@@ -25,11 +25,14 @@ class UserService(
 
     suspend fun getPaymentInfo(): PaymentInfo {
         return try {
-            db.collection("appConfig/android/payment_info")
+            val doc = db.collection("appConfig/android/payment_info")
                 .get()
                 .documents
-                .firstOrNull()?.data<RemotePaymentInfo>()?.toDomain()
-                ?: PaymentInfo()
+                .firstOrNull()
+            val data = doc?.data<RemotePaymentInfo>()
+            data?.let {
+                it.toDomain().copy(id = it.id.ifEmpty { doc.id })
+            } ?: PaymentInfo()
         } catch (e: Exception) {
             println("Error fetching payment info: ${e.message}")
             PaymentInfo()
@@ -61,7 +64,7 @@ class UserService(
         userDocument?.set(user.copy(uid = id).toRemote())
     }
 
-    suspend fun uploadReceipt(imageBytes: ByteArray): String {
+    suspend fun uploadReceipt(imageBytes: ByteArray, paymentInfo: PaymentInfo): String {
         val id = userId ?: return ""
         val timestamp = System.currentTimeMillis()
         val fileName = "receipts/$id/$timestamp.jpg"
@@ -71,8 +74,10 @@ class UserService(
         val currentUser = getUserProfile() ?: return ""
         val newPayment = PaymentEntry(
             date = timestamp,
+            amount = paymentInfo.amount,
             status = "PENDIENTE",
-            receiptRef = fileName
+            receiptRef = fileName,
+            paymentInfoId = paymentInfo.id
         )
 
         val updatedHistory = currentUser.paymentHistory + newPayment

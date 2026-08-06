@@ -157,8 +157,24 @@ fun SubscriptionStatusScreen(
                 items(state.userProfile?.paymentHistory?.reversed() ?: emptyList()) { payment ->
                     ListItem(
                         headlineContent = { Text("Pago del ${payment.date.toFormattedDate()}") },
-                        supportingContent = { Text("Estado: ${payment.status}") },
-                        trailingContent = { Text(payment.amount.toString()) }
+                        supportingContent = {
+                            Column {
+                                Text("Estado: ${payment.status}")
+                                if (payment.paymentInfoId.isNotEmpty()) {
+                                    Text(
+                                        "ID Cuenta: ${payment.paymentInfoId}",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                        },
+                        trailingContent = {
+                            Text(
+                                "$%,.2f".format(payment.amount),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     )
                     HorizontalDivider()
                 }

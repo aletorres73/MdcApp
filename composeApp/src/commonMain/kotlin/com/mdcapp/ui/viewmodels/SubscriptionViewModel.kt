@@ -45,7 +45,7 @@ class SubscriptionViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isUploading = true)
             try {
-                userService.uploadReceipt(imageBytes)
+                userService.uploadReceipt(imageBytes, _uiState.value.paymentInfo)
                 // Ya no hace falta recargar manualmente porque observeUserProfile() lo hace solo
                 _uiState.value = _uiState.value.copy(
                     isUploading = false,

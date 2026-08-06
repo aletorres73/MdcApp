@@ -136,10 +136,12 @@ data class PaymentEntry(
     val amount: Double = 0.0,
     val status: String = "PENDIENTE", // PENDIENTE, APROBADO, RECHAZADO
     val transactionRef: String = "",
-    val receiptRef: String = "" // Referencia al archivo en Storage
+    val receiptRef: String = "", // Referencia al archivo en Storage
+    val paymentInfoId: String = ""
 )
 
 data class PaymentInfo(
+    val id: String = "",
     val alias: String = "",
     val cbu: String = "",
     val titular: String = "",

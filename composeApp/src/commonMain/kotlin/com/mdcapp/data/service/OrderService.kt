@@ -91,8 +91,13 @@ class OrderService(
         return try {
             val document = clientOrdersCollection(clientId).document(orderId).get()
             val data = document.data<RemoteResultBuyOrder>()
-            Napier.i("firestore --- on fetchBuyOrder: $data")
-            data
+            val finalData = if (data.id.isEmpty() || data.order.isEmpty()) {
+                data.copy(id = document.id, order = document.id)
+            } else {
+                data
+            }
+            Napier.i("firestore --- on fetchBuyOrder: $finalData")
+            finalData
         } catch (e: Exception) {
             Napier.i("Firestore : on firestore fetchBuyOrder: $e")
             RemoteResultBuyOrder()
@@ -104,7 +109,14 @@ class OrderService(
             val documents = clientOrdersCollection(clientId)
                 .get()
                 .documents
-                .map { it.data<RemoteResultBuyOrder>() }
+                .map { doc ->
+                    val data = doc.data<RemoteResultBuyOrder>()
+                    if (data.id.isEmpty() || data.order.isEmpty()) {
+                        data.copy(id = doc.id, order = doc.id)
+                    } else {
+                        data
+                    }
+                }
             documents
         } catch (e: Exception) {
             Napier.e("Error fetchBuyOrdersByClient", e)
@@ -418,7 +430,15 @@ class OrderService(
         return clientOrdersCollection(clientId)
             .snapshots()
             .map { snapshot ->
-                snapshot.documents.map { it.data<RemoteResultBuyOrder>() }
+                snapshot.documents.map { doc ->
+                    val data = doc.data<RemoteResultBuyOrder>()
+                    // Si el ID está vacío por corrupción previa, usar el ID del documento
+                    if (data.id.isEmpty() || data.order.isEmpty()) {
+                        data.copy(id = doc.id, order = doc.id)
+                    } else {
+                        data
+                    }
+                }
             }
     }
 
@@ -475,7 +495,9 @@ class OrderService(
         order: RemoteResultBuyOrder
     ): Boolean {
         return try {
-            clientOrdersCollection(clientId).document(orderId).set(order)
+            // Asegurar que el ID se mantenga correcto durante la actualización
+            val finalOrder = order.copy(id = orderId, order = orderId)
+            clientOrdersCollection(clientId).document(orderId).set(finalOrder)
             true
         } catch (e: Exception) {
             Napier.e("Error updating order", e)

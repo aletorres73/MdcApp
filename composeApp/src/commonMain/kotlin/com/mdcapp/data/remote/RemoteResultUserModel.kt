@@ -21,7 +21,8 @@ data class RemoteResultPaymentEntry(
     val amount: Double = 0.0,
     val status: String = "PENDIENTE",
     val transactionRef: String = "",
-    val receiptRef: String = ""
+    val receiptRef: String = "",
+    val paymentInfoId: String = ""
 )
 
 fun RemoteResultUserModel.toDomain() = UserModel(
@@ -49,7 +50,8 @@ fun RemoteResultPaymentEntry.toDomain() = PaymentEntry(
     amount = amount,
     status = status,
     transactionRef = transactionRef,
-    receiptRef = receiptRef
+    receiptRef = receiptRef,
+    paymentInfoId = paymentInfoId
 )
 
 fun PaymentEntry.toRemote() = RemoteResultPaymentEntry(
@@ -57,5 +59,6 @@ fun PaymentEntry.toRemote() = RemoteResultPaymentEntry(
     amount = amount,
     status = status,
     transactionRef = transactionRef,
-    receiptRef = receiptRef
+    receiptRef = receiptRef,
+    paymentInfoId = paymentInfoId
 )

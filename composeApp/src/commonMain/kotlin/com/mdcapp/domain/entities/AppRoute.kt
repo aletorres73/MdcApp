@@ -13,6 +13,7 @@ sealed class AppRoute(val route: String) {
             }
         }
     }
+
     data class CreateOrder(val clientId: String? = null, val orderId: String? = null) :
         AppRoute("CreateOrder") {
         companion object {
@@ -27,6 +28,7 @@ sealed class AppRoute(val route: String) {
             }
         }
     }
+
     data object Factories : AppRoute("Factories")
 
     data class AddInvoice(val clientId: String, val orderId: String) : AppRoute("AddInvoice") {
@@ -50,6 +52,7 @@ sealed class AppRoute(val route: String) {
     data object Agenda : AppRoute("Agenda")
     data object Profile : AppRoute("Profile")
     data object SubscriptionStatus : AppRoute("SubscriptionStatus")
+    data object PaymentHistory : AppRoute("PaymentHistory")
 
     data class Invoices(val clientId: String) : AppRoute("Invoices") {
         companion object {
@@ -74,11 +77,13 @@ sealed class AppRoute(val route: String) {
     }
 
     data class OrderDetail(val clientId: String, val orderId: String, val factoryName: String) :
-        AppRoute("OrderDetail/$clientId/$orderId/$factoryName") {
+        AppRoute("OrderDetail") {
         companion object {
-            const val BASE_ROUTE = "OrderDetail/{clientId}/{orderId}/{factoryName}"
+            const val BASE_ROUTE =
+                "OrderDetail?clientId={clientId}&orderId={orderId}&factoryName={factoryName}"
+
             fun createRoute(clientId: String, orderId: String, factoryName: String) =
-                "OrderDetail/$clientId/$orderId/$factoryName"
+                "OrderDetail?clientId=$clientId&orderId=$orderId&factoryName=$factoryName"
         }
     }
 }

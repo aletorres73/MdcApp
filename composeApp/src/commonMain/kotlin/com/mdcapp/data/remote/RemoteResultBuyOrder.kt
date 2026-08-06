@@ -87,4 +87,3 @@ fun ArticleOrderModel.toArticleOrderRemote() = RemoteArticleOrderModel(
     delivered = delivered.toString(),
     pairs = pairs.toString()
 )
-

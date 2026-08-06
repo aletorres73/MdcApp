@@ -214,6 +214,7 @@ class CreateOrderViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 val order = BuyOrderModel(
+                    id = currentState.orderId ?: "",
                     clientId = currentState.selectedClient.clientId,
                     client = currentState.selectedClient.clientName,
                     factory = currentState.selectedFactory.name,

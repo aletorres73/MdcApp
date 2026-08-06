@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class RemotePaymentInfo(
+    val id: String = "",
     val alias: String = "",
     val cbu: String = "",
     val titular: String = "",
@@ -12,6 +13,7 @@ data class RemotePaymentInfo(
 )
 
 fun RemotePaymentInfo.toDomain() = PaymentInfo(
+    id = id,
     alias = alias,
     cbu = cbu,
     titular = titular,
@@ -19,6 +21,7 @@ fun RemotePaymentInfo.toDomain() = PaymentInfo(
 )
 
 fun PaymentInfo.toRemote() = RemotePaymentInfo(
+    id = id,
     alias = alias,
     cbu = cbu,
     titular = titular,

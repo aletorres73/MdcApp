@@ -57,6 +57,7 @@ fun MainScreen(
     onNavigateToEditClient: (String, String) -> Unit,
     onNavigateToCreateOrder: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToPaymentHistory: () -> Unit,
     onManageFactories: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -132,6 +133,19 @@ fun MainScreen(
                                     },
                                     leadingIcon = {
                                         Icon(Icons.Default.Person, contentDescription = null)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Historial de Pagos") },
+                                    onClick = {
+                                        showMenu = false
+                                        onNavigateToPaymentHistory()
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.List,
+                                            contentDescription = null
+                                        )
                                     }
                                 )
                                 DropdownMenuItem(

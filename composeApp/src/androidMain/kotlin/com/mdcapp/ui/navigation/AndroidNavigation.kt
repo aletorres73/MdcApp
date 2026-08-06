@@ -16,6 +16,7 @@ import com.mdcapp.ui.screens.FactoryManagementScreen
 import com.mdcapp.ui.screens.LoginScreen
 import com.mdcapp.ui.screens.MainScreen
 import com.mdcapp.ui.screens.OrderDetailScreen
+import com.mdcapp.ui.screens.PaymentHistoryScreen
 import com.mdcapp.ui.screens.ProfileScreen
 import com.mdcapp.ui.screens.SignUpScreen
 import com.mdcapp.ui.screens.SubscriptionStatusScreen
@@ -153,9 +154,9 @@ fun AndroidNavigation(startRoute: String) {
         composable(
             route = AppRoute.OrderDetail.BASE_ROUTE,
             arguments = listOf(
-                navArgument("clientId") { type = NavType.StringType },
-                navArgument("orderId") { type = NavType.StringType },
-                navArgument("factoryName") { type = NavType.StringType }
+                navArgument("clientId") { nullable = true; defaultValue = null },
+                navArgument("orderId") { nullable = true; defaultValue = null },
+                navArgument("factoryName") { nullable = true; defaultValue = null }
             )
         ) {
             val clientId = it.arguments?.getString("clientId") ?: return@composable
@@ -198,6 +199,9 @@ fun AndroidNavigation(startRoute: String) {
                 onNavigateToProfile = {
                     navController.navigate(AppRoute.Profile.route)
                 },
+                onNavigateToPaymentHistory = {
+                    navController.navigate(AppRoute.PaymentHistory.route)
+                },
                 onManageFactories = {
                     navController.navigate(AppRoute.Factories.route)
                 },
@@ -214,6 +218,12 @@ fun AndroidNavigation(startRoute: String) {
 
         composable(route = AppRoute.Profile.route) {
             ProfileScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(route = AppRoute.PaymentHistory.route) {
+            PaymentHistoryScreen(
                 onBack = { navController.popBackStack() }
             )
         }
