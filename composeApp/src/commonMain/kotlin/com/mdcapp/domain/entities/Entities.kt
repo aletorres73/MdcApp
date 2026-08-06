@@ -137,7 +137,8 @@ data class PaymentEntry(
     val status: String = "PENDIENTE", // PENDIENTE, APROBADO, RECHAZADO
     val transactionRef: String = "",
     val receiptRef: String = "", // Referencia al archivo en Storage
-    val paymentInfoId: String = ""
+    val paymentInfoId: String = "",
+    val paymentId: Long = 0L
 )
 
 data class PaymentInfo(

@@ -72,12 +72,15 @@ class UserService(
         ref.putData(wrapImageData(imageBytes))
 
         val currentUser = getUserProfile() ?: return ""
+        val paymentId = getNextPaymentId()
+        
         val newPayment = PaymentEntry(
             date = timestamp,
             amount = paymentInfo.amount,
             status = "PENDIENTE",
             receiptRef = fileName,
-            paymentInfoId = paymentInfo.id
+            paymentInfoId = paymentInfo.id,
+            paymentId = paymentId
         )
 
         val updatedHistory = currentUser.paymentHistory + newPayment
@@ -91,5 +94,25 @@ class UserService(
         )
 
         return fileName
+    }
+
+    private suspend fun getNextPaymentId(): Long {
+        val counterDoc = db.collection("appConfig/android/counters").document("payments")
+        return try {
+            val snapshot = counterDoc.get()
+            val current = if (snapshot.exists) {
+                try {
+                    snapshot.get<Long>("lastPaymentId")
+                } catch (e: Exception) {
+                    snapshot.get<Int>("lastPaymentId").toLong()
+                }
+            } else 0L
+            val next = current + 1
+            counterDoc.set(mapOf("lastPaymentId" to next))
+            next
+        } catch (e: Exception) {
+            println("Error getting next payment id: ${e.message}")
+            0L
+        }
     }
 }

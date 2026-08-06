@@ -99,7 +99,7 @@ fun ClientOrdersScreen(
                         onClick = { onOrderClick(order.id, order.factory) }
                     ) {
                         ListItem(
-                            headlineContent = { Text("Pedido #${order.id}") },
+                            headlineContent = { Text("Pedido N° ${order.id}") },
                             supportingContent = {
                                 Column {
                                     Text("Fábrica: ${order.factory}")

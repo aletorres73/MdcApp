@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
 import com.mdcapp.domain.entities.BillingComments
 import com.mdcapp.domain.entities.MovementMethod
 import com.mdcapp.domain.entities.MovementStatus
@@ -334,7 +335,7 @@ fun DetailInvoiceScreen(
     }
 
     if (showPaymentDialog) {
-        val methods = MovementMethod.values()
+        val methods = MovementMethod.entries.toTypedArray()
 
         AlertDialog(
             onDismissRequest = {
@@ -388,7 +389,7 @@ fun DetailInvoiceScreen(
                         label = { Text("Notas / Referencia") },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !state.isProcessingPayment,
-                        placeholder = { Text("Ej: Efectivo, Transf #1234, Recibo #55") },
+                        placeholder = { Text("Ej: Efectivo, Transf N° 1234, Recibo N° 55") },
                         singleLine = true
                     )
                 }
@@ -476,7 +477,7 @@ fun PaymentsSection(
                             Column(modifier = Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        "ID: ${payment.id} - ${payment.date.toFormattedDate()}",
+                                        "N° ${payment.id} - ${payment.date.toFormattedDate()}",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -531,7 +532,7 @@ fun PaymentsSection(
 @Composable
 fun StatusBadge(status: String) {
     val statusEnum = MovementStatus.fromName(status)
-    val color = Color(android.graphics.Color.parseColor(statusEnum.colorHex))
+    val color = Color(statusEnum.colorHex.toColorInt())
 
     Surface(
         color = color.copy(alpha = 0.1f),

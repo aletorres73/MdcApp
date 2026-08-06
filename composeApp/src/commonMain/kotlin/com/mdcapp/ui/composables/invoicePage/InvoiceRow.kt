@@ -1,11 +1,11 @@
 package com.mdcapp.ui.composables.invoicePage
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Card
+import androidx.compose.material3.Badge
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.toFormattedDate
@@ -39,39 +42,71 @@ fun InvoiceRow(
 ) {
     val statusColor = rememberStatusColor(invoice)
 
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable { onNavigationInvoice(invoice.billingNumber) },
-        shape = MaterialTheme.shapes.medium
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onNavigationInvoice(invoice.billingNumber) },
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.3f)),
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = statusColor.copy(alpha = 0.05f),
+        )
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Semáforo Indicator
+            // Semáforo Indicator - Slightly wider for a more modern look
             Surface(
-                modifier = Modifier.width(8.dp).fillMaxHeight(),
+                modifier = Modifier
+                    .width(6.dp)
+                    .fillMaxHeight(),
                 color = statusColor
             ) {}
 
             Column(
-                modifier = Modifier.padding(12.dp).weight(1f),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier = Modifier
+                    .padding(16.dp)
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-
-                // Header: Cliente + Total
+                // Header: Client Name + Total Amount
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = invoice.clientName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Badge(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ) {
+                                Text(
+                                    text = invoice.type,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
                             Text(
-                                text = "Doc #${invoice.billingNumber} • ${invoice.type}",
-                                style = MaterialTheme.typography.titleSmall,
+                                text = "N° ${invoice.billingNumber}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             if (hasPendingReconciliation) {
-                                Spacer(Modifier.width(8.dp))
                                 Icon(
                                     imageVector = Icons.Default.Refresh,
                                     contentDescription = "Pendiente Imputar",
@@ -80,38 +115,45 @@ fun InvoiceRow(
                                 )
                             }
                         }
-                        Text(
-                            text = invoice.clientName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
+
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = invoice.total.toPrint(),
                             style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        if (invoice.expectedDiscount > 0)
-                            Text(
-                                text = "Dto: ${(invoice.expectedDiscount * 100).toInt()}%",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                        if (invoice.expectedDiscount > 0) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                                shape = MaterialTheme.shapes.extraSmall
+                            ) {
+                                Text(
+                                    text = "${(invoice.expectedDiscount * 100).toInt()}% Dto",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                     }
                 }
 
-                // Estado de pagos
+                // Financial State
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    if (invoice.toPay > 0)
+                    if (invoice.toPay > 0) {
                         AmountLabel(
-                            label = "A pagar",
+                            label = "A cobrar",
                             value = invoice.toPay,
-                            color = Color(0xFFC62828)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+                    }
                     AmountLabel(
                         label = "Pagado",
                         value = invoice.payed,
@@ -120,37 +162,42 @@ fun InvoiceRow(
                     AmountLabel(
                         label = "Saldo",
                         value = invoice.rest,
-                        color = if (invoice.rest > 0) Color(0xFFC62828) else Color.Gray
+                        color = if (invoice.rest > 0) MaterialTheme.colorScheme.error else Color.Gray,
+                        isBold = invoice.rest > 0
                     )
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    thickness = 0.5.dp
+                )
 
-                // Fechas
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    val dates = mutableListOf<String>()
-                    dates.add("Carga: ${invoice.loadDate.toFormattedDate()}")
-                    if (invoice.deliveryDate != 0L) {
-                        dates.add("Entrega: ${invoice.deliveryDate.toFormattedDate()}")
+                // Footer: Dates and Brand
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val dateText = buildString {
+                        append("Carga: ${invoice.loadDate.toFormattedDate()}")
+                        if (invoice.payDate != 0L) {
+                            append(" • Venc: ${invoice.payDate.toFormattedDate()}")
+                        }
                     }
-                    if (invoice.payDate != 0L) {
-                        dates.add("Venc: ${invoice.payDate.toFormattedDate()}")
-                    }
-
                     Text(
-                        text = dates.joinToString(" • "),
-                        style = MaterialTheme.typography.bodySmall,
+                        text = dateText,
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
 
-                // Marca
-                if (invoice.brand.isNotBlank()) {
-                    Text(
-                        text = invoice.brand,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+                    if (invoice.brand.isNotBlank()) {
+                        Text(
+                            text = invoice.brand,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
                 }
             }
         }
@@ -168,7 +215,8 @@ fun rememberStatusColor(invoice: BillingModel): Color {
 private fun AmountLabel(
     label: String,
     value: Double,
-    color: Color
+    color: Color,
+    isBold: Boolean = false
 ) {
     Column {
         Text(
@@ -179,6 +227,7 @@ private fun AmountLabel(
         Text(
             text = value.toPrint(),
             style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Medium,
             color = color
         )
     }

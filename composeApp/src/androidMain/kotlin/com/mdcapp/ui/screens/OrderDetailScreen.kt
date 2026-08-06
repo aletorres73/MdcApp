@@ -78,7 +78,7 @@ fun OrderDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detalle de Pedido #$orderId") },
+                title = { Text("Detalle de Pedido N° $orderId") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
@@ -96,7 +96,7 @@ fun OrderDetailScreen(
                             ShareUtils.shareText(
                                 context,
                                 report,
-                                "Nota de Pedido #${state.buyOrder.order}"
+                                "Nota de Pedido N° ${state.buyOrder.order}"
                             )
                         }) {
                             Icon(Icons.Default.Share, contentDescription = "Compartir")

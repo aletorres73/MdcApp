@@ -156,7 +156,11 @@ fun SubscriptionStatusScreen(
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 items(state.userProfile?.paymentHistory?.reversed() ?: emptyList()) { payment ->
                     ListItem(
-                        headlineContent = { Text("Pago del ${payment.date.toFormattedDate()}") },
+                        headlineContent = {
+                            val title =
+                                if (payment.paymentId > 0) "Pago N° ${payment.paymentId}" else "Pago"
+                            Text("$title del ${payment.date.toFormattedDate()}")
+                        },
                         supportingContent = {
                             Column {
                                 Text("Estado: ${payment.status}")
