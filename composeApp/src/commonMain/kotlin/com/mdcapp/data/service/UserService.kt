@@ -17,11 +17,11 @@ class UserService(
     private val storage: FirebaseStorage,
     private val authService: AuthService
 ) {
-    private val userId: String
-        get() = authService.currentUser?.uid ?: throw Exception("User not logged in")
+    private val userId: String?
+        get() = authService.currentUser?.uid
 
     private val userDocument
-        get() = db.collection("users").document(userId)
+        get() = userId?.let { db.collection("users").document(it) }
 
     suspend fun getPaymentInfo(): PaymentInfo {
         return try {
@@ -37,16 +37,18 @@ class UserService(
     }
 
     fun observeUserProfile(): Flow<UserModel?> {
-        return userDocument.snapshots.map { it.data<RemoteResultUserModel>().toDomain() }
+        val doc = userDocument ?: return kotlinx.coroutines.flow.flowOf(null)
+        return doc.snapshots.map { it.data<RemoteResultUserModel>().toDomain() }
     }
 
     suspend fun getUserProfile(): UserModel? {
+        val doc = userDocument ?: return null
         return try {
-            val snapshot = userDocument.get()
+            val snapshot = doc.get()
             if (snapshot.exists) {
                 snapshot.data<RemoteResultUserModel>().toDomain()
             } else {
-                UserModel(uid = userId, email = authService.currentUser?.email ?: "")
+                UserModel(uid = userId ?: "", email = authService.currentUser?.email ?: "")
             }
         } catch (e: Exception) {
             println("Error fetching user profile: ${e.message}")
@@ -55,12 +57,14 @@ class UserService(
     }
 
     suspend fun saveUserProfile(user: UserModel) {
-        userDocument.set(user.copy(uid = userId).toRemote())
+        val id = userId ?: return
+        userDocument?.set(user.copy(uid = id).toRemote())
     }
 
     suspend fun uploadReceipt(imageBytes: ByteArray): String {
+        val id = userId ?: return ""
         val timestamp = System.currentTimeMillis()
-        val fileName = "receipts/$userId/$timestamp.jpg"
+        val fileName = "receipts/$id/$timestamp.jpg"
         val ref = storage.reference(fileName)
         ref.putData(wrapImageData(imageBytes))
 

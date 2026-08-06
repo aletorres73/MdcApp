@@ -210,11 +210,11 @@ fun Double.discountToPrint(): String {
 }
 
 fun Long.toLocalDate(): LocalDate {
-    return Instant.ofEpochMilli(this).atZone(ZoneId.of("UTC")).toLocalDate()
+    return Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
 }
 
 fun LocalDate.toEpochMillis(): Long {
-    return this.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+    return this.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 }
 
 fun Long.toFormattedDate(): String {
