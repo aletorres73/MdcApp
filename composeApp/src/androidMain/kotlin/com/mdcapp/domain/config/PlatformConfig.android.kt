@@ -2,9 +2,9 @@ package com.mdcapp.domain.config
 
 import android.app.DownloadManager
 import android.content.Context
-import android.net.Uri
 import android.os.Environment
 import android.util.Log
+import androidx.core.net.toUri
 import com.mdcapp.BuildConfig
 import com.mdcapp.domain.entities.RemoteInitConfig
 import com.mdcapp.domain.entities.UpdateState
@@ -19,6 +19,10 @@ actual fun checkUpdate(remote: RemoteInitConfig): Pair<UpdateState, String> {
     Log.i("MdcAppOnly", "checkUpdate: $currentVersion")
 
     val analytics = GlobalContext.get().get<AnalyticsService>()
+
+    if (!remote.enable) {
+        return UpdateState.OK to ""
+    }
 
     val result = if (compareVersions(currentVersion, remote.minSupported) < 0) {
         UpdateState.FORCE_UPDATE to remote.releaseNotes
@@ -57,7 +61,7 @@ actual fun downloadInstaller(context: Any, url: String): Boolean {
     analytics.logEvent("update_download_started", mapOf("url" to url))
     crashlytics.log("PlatformConfig: Enqueuing download for $url")
 
-    val request = DownloadManager.Request(Uri.parse(url)).apply {
+    val request = DownloadManager.Request(url.toUri()).apply {
         setTitle("Actualizando aplicación")
         setDescription("Descargando nueva versión")
         setNotificationVisibility(
