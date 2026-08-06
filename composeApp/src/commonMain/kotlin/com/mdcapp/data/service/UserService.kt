@@ -67,7 +67,7 @@ class UserService(
         val currentUser = getUserProfile() ?: return ""
         val newPayment = PaymentEntry(
             date = timestamp,
-            status = "PENDIENTE_IA",
+            status = "PENDIENTE",
             receiptRef = fileName
         )
 

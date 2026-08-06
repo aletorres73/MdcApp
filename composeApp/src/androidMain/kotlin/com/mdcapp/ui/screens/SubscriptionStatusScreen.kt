@@ -132,13 +132,13 @@ fun SubscriptionStatusScreen(
                     }
                 }
 
-                if (state.uploadSuccess) {
-                    Text(
-                        "¡Comprobante subido! Tu cuenta se activará en breve.",
-                        color = Color(0xFF2E7D32),
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
+                /*                if (state.uploadSuccess) {
+                                    Text(
+                                        "¡Comprobante subido! Tu cuenta se activará en breve.",
+                                        color = Color(0xFF2E7D32),
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                }*/
 
                 state.error?.let {
                     Text("Error: $it", color = MaterialTheme.colorScheme.error)
