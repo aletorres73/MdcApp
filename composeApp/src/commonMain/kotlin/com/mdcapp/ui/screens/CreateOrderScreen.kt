@@ -75,6 +75,13 @@ fun CreateOrderScreen(
         }
     }
 
+    LaunchedEffect(state.isDialogSuccess) {
+        if (state.isDialogSuccess) {
+            showAddArticleDialog = false
+            viewModel.resetDialog()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -204,10 +211,12 @@ fun CreateOrderScreen(
                     state.dialogArticleColor,
                     state.dialogArticlePairs.toIntOrNull() ?: 0
                 )
-                showAddArticleDialog = false
             },
             onConfirmAndContinue = { viewModel.addArticleAndContinue() },
-            onDismiss = { showAddArticleDialog = false }
+            onDismiss = {
+                showAddArticleDialog = false
+                viewModel.resetDialog()
+            }
         )
     }
 }
@@ -390,12 +399,21 @@ fun AddArticleDialog(
         title = { Text("Agregar Artículo") },
         text = {
             Column {
+                if (state.dialogError != null) {
+                    Text(
+                        text = state.dialogError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
                 OutlinedTextField(
                     value = state.dialogArticleName,
                     onValueChange = onNameChange,
                     label = { Text("Artículo") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    isError = state.dialogError != null && state.dialogArticleName.isBlank(),
                     trailingIcon = {
                         if (state.dialogArticleName.isNotEmpty()) {
                             IconButton(onClick = onClearName) {
@@ -411,6 +429,7 @@ fun AddArticleDialog(
                     label = { Text("Color") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    isError = state.dialogError != null && state.dialogArticleColor.isBlank(),
                     trailingIcon = {
                         if (state.dialogArticleColor.isNotEmpty()) {
                             IconButton(onClick = onClearColor) {
@@ -434,6 +453,8 @@ fun AddArticleDialog(
                         modifier = Modifier.weight(1f),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
+                        isError = state.dialogError != null && (state.dialogArticlePairs.toIntOrNull()
+                            ?: 0) <= 0,
                         textStyle = TextStyle(textAlign = TextAlign.Center)
                     )
                     IconButton(onClick = onIncrement) {

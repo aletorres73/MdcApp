@@ -127,7 +127,9 @@ fun ClientsListScreen(
         AlertDialog(
             onDismissRequest = { clientToDelete = null },
             title = { Text("Eliminar Cliente") },
-            text = { Text("¿Estás seguro de que deseas eliminar a ${client.clientName}? Esta acción no se puede deshacer.") },
+            text = {
+                Text("¿Estás seguro de que deseas eliminar a ${client.clientName}? Se borrarán también de forma permanente todos sus pedidos, facturas y pagos asociados. Esta acción no se puede deshacer.")
+            },
             confirmButton = {
                 TextButton(
                     onClick = {

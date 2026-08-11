@@ -3,9 +3,13 @@ package com.mdcapp.domain.usescases.clientsusecase
 import com.mdcapp.data.remote.toClientDomain
 import com.mdcapp.data.remote.toClientRemote
 import com.mdcapp.data.service.ClientService
+import com.mdcapp.data.service.OrderService
 import com.mdcapp.domain.entities.ClientModel
 
-class GetClientsUseCase(private val service: ClientService) {
+class GetClientsUseCase(
+    private val service: ClientService,
+    private val orderService: OrderService
+) {
     private var currentPage = 0
 
     suspend operator fun invoke(): Pair<List<ClientModel>, Boolean> {
@@ -35,6 +39,9 @@ class GetClientsUseCase(private val service: ClientService) {
     }
 
     suspend fun delete(clientId: String): Boolean {
+        // Primero borramos todos los datos asociados (pedidos, facturas, pagos)
+        orderService.deleteAllClientData(clientId)
+        // Finalmente borramos al cliente
         return service.deleteClient(clientId)
     }
 

@@ -51,7 +51,9 @@ class CreateOrderViewModel(
         // Dialog state
         val dialogArticleName: String = "",
         val dialogArticleColor: String = "",
-        val dialogArticlePairs: String = "12"
+        val dialogArticlePairs: String = "12",
+        val dialogError: String? = null,
+        val isDialogSuccess: Boolean = false
     )
 
     fun initData(clientId: String? = null, orderId: String? = null) {
@@ -138,21 +140,36 @@ class CreateOrderViewModel(
     }
 
     fun addArticle(name: String, color: String, pairs: Int) {
-        val newArticle = ArticleOrderModel(name = name, color = color, pairs = pairs)
-        _state.update {
-            it.copy(
-                articles = it.articles + newArticle,
-                dialogArticleName = "",
-                dialogArticleColor = "",
-                dialogArticlePairs = "12"
-            )
+        val isValid = name.isNotBlank() && color.isNotBlank() && pairs > 0
+
+        if (isValid) {
+            val newArticle = ArticleOrderModel(name = name, color = color, pairs = pairs)
+            _state.update {
+                it.copy(
+                    articles = it.articles + newArticle,
+                    isDialogSuccess = true,
+                    dialogError = null
+                )
+            }
+        } else {
+            // Si no es válido, simplemente cerramos y descartamos lo que haya en el diálogo
+            _state.update {
+                it.copy(
+                    isDialogSuccess = true,
+                    dialogError = null
+                )
+            }
         }
     }
 
     fun addArticleAndContinue() {
         val currentState = _state.value
         val pairs = currentState.dialogArticlePairs.toIntOrNull() ?: 0
-        if (currentState.dialogArticleName.isBlank() || pairs <= 0) return
+
+        if (currentState.dialogArticleName.isBlank() || currentState.dialogArticleColor.isBlank() || pairs <= 0) {
+            _state.update { it.copy(dialogError = "Complete todos los campos del artículo") }
+            return
+        }
 
         val newArticle = ArticleOrderModel(
             name = currentState.dialogArticleName,
@@ -162,22 +179,36 @@ class CreateOrderViewModel(
         _state.update {
             it.copy(
                 articles = it.articles + newArticle,
-                dialogArticleColor = "", // Clear color as success indicator
-                dialogArticlePairs = "12" // Reset pairs
+                // dialogArticleName = currentState.dialogArticleName, // Keep name for next color
+                dialogArticleColor = "",
+                dialogArticlePairs = "12",
+                dialogError = null
+            )
+        }
+    }
+
+    fun resetDialog() {
+        _state.update {
+            it.copy(
+                dialogArticleName = "",
+                dialogArticleColor = "",
+                dialogArticlePairs = "12",
+                dialogError = null,
+                isDialogSuccess = false
             )
         }
     }
 
     fun onDialogNameChange(name: String) {
-        _state.update { it.copy(dialogArticleName = name) }
+        _state.update { it.copy(dialogArticleName = name, dialogError = null) }
     }
 
     fun onDialogColorChange(color: String) {
-        _state.update { it.copy(dialogArticleColor = color) }
+        _state.update { it.copy(dialogArticleColor = color, dialogError = null) }
     }
 
     fun onDialogPairsChange(pairs: String) {
-        _state.update { it.copy(dialogArticlePairs = pairs) }
+        _state.update { it.copy(dialogArticlePairs = pairs, dialogError = null) }
     }
 
     fun incrementPairs() {

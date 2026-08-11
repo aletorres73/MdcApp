@@ -538,5 +538,37 @@ class OrderService(
             false
         }
     }
+
+    suspend fun deleteAllClientData(clientId: String): Boolean {
+        return try {
+            // 1. Borrar todos los pedidos en la subcolección buyOrders del cliente
+            val buyOrders = clientOrdersCollection(clientId).get().documents
+            buyOrders.forEach { doc ->
+                clientOrdersCollection(clientId).document(doc.id).delete()
+            }
+
+            // 2. Borrar todas las facturas en la colección global allBillings
+            val billings = allBillingsCollection
+                .where { FieldPath("Cliente Id").equalTo(clientId) }
+                .get().documents
+            billings.forEach { doc ->
+                allBillingsCollection.document(doc.id).delete()
+            }
+
+            // 3. Borrar todos los pagos en la colección global paymentRegister
+            val payments = paymentsRegisterCollection
+                .where { FieldPath("Cliente ID").equalTo(clientId) }
+                .get().documents
+            payments.forEach { doc ->
+                paymentsRegisterCollection.document(doc.id).delete()
+            }
+
+            Napier.i("OrderService --- All data for client $clientId deleted successfully")
+            true
+        } catch (e: Exception) {
+            Napier.e("OrderService --- Error deleting all data for client $clientId", e)
+            false
+        }
+    }
 }
 
