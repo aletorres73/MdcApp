@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.mdcapp.di.initFirebaseApp
 import com.mdcapp.di.initKoin
 import com.mdcapp.domain.worker.BillingNotificationWorker
 import com.mdcapp.ui.utils.CrashlyticsAntilog
@@ -24,6 +25,7 @@ class OrdersApp : Application() {
             Napier.base(CrashlyticsAntilog())
         }
 
+        initFirebaseApp(this)
         initKoin {
             androidLogger(Level.DEBUG)
             androidContext(this@OrdersApp)

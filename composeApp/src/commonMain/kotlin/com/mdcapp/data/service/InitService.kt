@@ -1,12 +1,11 @@
 package com.mdcapp.data.service
 
 import com.mdcapp.domain.entities.RemoteInitConfig
-import dev.gitlive.firebase.firestore.Direction
-import dev.gitlive.firebase.firestore.FirebaseFirestore
+import com.mdcapp.domain.repositories.IDatabaseRepository
 import io.github.aakira.napier.Napier
 
 class InitService(
-    private val db: FirebaseFirestore
+    private val db: IDatabaseRepository
 ) {
     companion object {
         const val PATH = "appConfig/android/releases"
@@ -14,12 +13,9 @@ class InitService(
 
     suspend fun init(): RemoteInitConfig {
         return try {
-            val doc = db
-                .collection(PATH)
-                .orderBy("versionCode", Direction.DESCENDING)
-                .limit(1)
-                .get()
-                .documents.firstOrNull()?.data<RemoteInitConfig>()
+            val doc = db.getCollection(PATH, RemoteInitConfig.serializer())
+                .sortedByDescending { it.versionCode }
+                .firstOrNull()
                 ?: RemoteInitConfig()
 
             Napier.i("InitService --- init: $doc")

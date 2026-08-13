@@ -1,12 +1,13 @@
 package com.mdcapp.data.remote
 
-import dev.gitlive.firebase.firestore.Timestamp
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+
+expect fun decodeTimestampToMillis(decoder: Decoder): Long
 
 /**
  * Serializador resiliente para fechas de Firestore.
@@ -25,9 +26,8 @@ object FirestoreDateSerializer : KSerializer<Long> {
             decoder.decodeLong()
         } catch (e: Exception) {
             try {
-                // Intentamos decodificar como Timestamp si está disponible
-                val timestamp = decoder.decodeSerializableValue(Timestamp.serializer())
-                (timestamp.seconds * 1000) + (timestamp.nanoseconds / 1000000)
+                // Intentamos decodificar como Timestamp según plataforma
+                decodeTimestampToMillis(decoder)
             } catch (e2: Exception) {
                 try {
                     decoder.decodeDouble().toLong()

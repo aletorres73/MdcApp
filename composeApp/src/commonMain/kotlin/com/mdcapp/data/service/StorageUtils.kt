@@ -1,5 +1,3 @@
 package com.mdcapp.data.service
 
-import dev.gitlive.firebase.storage.Data
-
-expect fun wrapImageData(bytes: ByteArray): Data
+// Obsoleto: Usar IStorageRepository directamente con ByteArray

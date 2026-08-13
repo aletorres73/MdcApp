@@ -10,7 +10,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.mdcapp.domain.entities.AppRoute
 import com.mdcapp.domain.repositories.AuthRepository
-import com.mdcapp.ui.navigation.AndroidNavigation
+import com.mdcapp.ui.navigation.AppNavigation
 import org.koin.compose.koinInject
 
 @Composable
@@ -37,7 +37,7 @@ actual fun PlatformNavigation() {
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            AndroidNavigation(
+            AppNavigation(
                 startRoute = startRoute
             )
         }

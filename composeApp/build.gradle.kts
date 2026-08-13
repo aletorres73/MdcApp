@@ -8,9 +8,6 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
-
-    id("com.google.gms.google-services")
-    alias(libs.plugins.firebaseCrashlytics)
 }
 
 kotlin {
@@ -21,20 +18,23 @@ kotlin {
         }
     }
 
-    jvm("desktop")
+    jvm()
 
     sourceSets {
-        val desktopMain by getting
+        val jvmMain by getting
 
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.compose.ui.tooling)
             implementation(libs.androidx.activity.compose)
-            implementation(project.dependencies.platform(libs.android.firebase.bom))
             implementation(libs.koin.android)
             implementation(libs.androidx.work.runtime)
             implementation(libs.gitlive.firebase.crashlytics)
+            implementation(libs.gitlive.firebase.analytics)
+            implementation(libs.gitlive.firebase.firestore)
+            implementation(libs.gitlive.auth)
+            implementation(libs.gitlive.firebase.storage)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -46,11 +46,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
 
-            implementation(libs.gitlive.firebase.firestore)
-            implementation(libs.gitlive.auth)
-            implementation(libs.gitlive.firebase.analytics)
-            implementation(libs.gitlive.firebase.storage)
-//            implementation(libs.gitlive.firebase.crashlytics)
             implementation(libs.napier)
 
             implementation(libs.koin.core)
@@ -60,25 +55,17 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serilization.json)
             implementation(libs.androidx.navigation.compose)
-//            implementation(libs.material.icons.extended) esta librería es una pija, rompe todo
 
-//            implementation(libs.compose.foundation.desktop)
-//            implementation(libs.compose.material3.desktop)
-//            implementation(libs.compose.runtime.desktop)
-//            implementation(libs.compose.ui.text.desktop)
-//            implementation(libs.compose.ui.util.desktop)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.client.auth)
         }
-        desktopMain.dependencies {
+        jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-//            implementation(compose.components.uiToolingPreview)
-//            implementation(libs.compose.ui.tooling)
-//            implementation(libs.compose.ui.util)
-//            implementation(libs.compose.foundation.desktop)
-//            implementation(libs.compose.material3.desktop)
-//            implementation(libs.compose.runtime.desktop)
-//            implementation(libs.compose.ui.text.desktop)
-//            implementation(libs.compose.ui.util.desktop)
+            implementation(libs.ktor.client.cio)
         }
     }
     task("testClasses")
@@ -154,4 +141,7 @@ compose.desktop {
         }
     }
 }
+
+// apply(plugin = "com.google.gms.google-services")
+// apply(plugin = "com.google.firebase.crashlytics")
 

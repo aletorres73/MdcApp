@@ -1,6 +1,5 @@
 package com.mdcapp.ui.viewmodels.invoices
 
-import android.content.Context
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,6 +12,7 @@ import com.mdcapp.domain.entities.recalculate
 import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.InitConfigUseCase
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
+import com.mdcapp.ui.utils.AppInstaller
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -215,10 +215,10 @@ class InvoicesPagedViewModel(
         _uiState.value = _uiState.value.copy(overlay = Overlay.None)
     }
 
-    fun updateApk(context: Context) {
+    fun updateApk(installer: AppInstaller) {
         viewModelScope.launch {
             Napier.i("updating apk")
-            val result = initConfigUseCase.download(context)
+            val result = initConfigUseCase.download(installer)
             if (!result) {
                 _uiState.update {
                     it.copy(message = "Error en el servidor")

@@ -1,26 +1,26 @@
 package com.mdcapp.data.service
 
-import dev.gitlive.firebase.auth.FirebaseAuth
-import dev.gitlive.firebase.auth.FirebaseUser
+import com.mdcapp.domain.model.AppUser
+import com.mdcapp.domain.repositories.IAuthRepository
 import io.github.aakira.napier.Napier
 
-class AuthService(private val auth: FirebaseAuth) {
+class AuthService(private val auth: IAuthRepository) {
 
-    val currentUser: FirebaseUser?
+    val currentUser: AppUser?
         get() = auth.currentUser
 
-    suspend fun signIn(email: String, password: String): FirebaseUser? {
+    suspend fun signIn(email: String, password: String): AppUser? {
         return try {
-            auth.signInWithEmailAndPassword(email, password).user
+            auth.signIn(email, password)
         } catch (e: Exception) {
             Napier.e("Error al iniciar sesión", e)
             null
         }
     }
 
-    suspend fun signUp(email: String, password: String): FirebaseUser? {
+    suspend fun signUp(email: String, password: String): AppUser? {
         return try {
-            auth.createUserWithEmailAndPassword(email, password).user
+            auth.signUp(email, password)
         } catch (e: Exception) {
             Napier.e("Error al registrar usuario", e)
             null
@@ -32,17 +32,15 @@ class AuthService(private val auth: FirebaseAuth) {
     }
 
     fun isUserLoggedIn(): Boolean {
-        return auth.currentUser != null
+        return auth.isUserLoggedIn()
     }
 
     suspend fun reauthenticate(password: String) {
-        val email = auth.currentUser?.email ?: throw Exception("Usuario no autenticado")
-        auth.signInWithEmailAndPassword(email, password)
+        auth.reauthenticate(password)
     }
 
     suspend fun updatePassword(newPassword: String) {
-        val user = auth.currentUser ?: throw Exception("Usuario no autenticado")
-        user.updatePassword(newPassword)
+        auth.updatePassword(newPassword)
     }
 }
 

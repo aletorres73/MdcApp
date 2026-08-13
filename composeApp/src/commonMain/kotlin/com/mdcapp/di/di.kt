@@ -1,15 +1,12 @@
 package com.mdcapp.di
 
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
 import com.mdcapp.data.service.AuthService
 import com.mdcapp.data.service.BillingPaginationService
 import com.mdcapp.data.service.ClientService
-import com.mdcapp.data.service.FirebaseAnalyticsService
 import com.mdcapp.data.service.HomeService
 import com.mdcapp.data.service.InitService
 import com.mdcapp.data.service.OrderService
+import com.mdcapp.data.service.PlatformAnalyticsService
 import com.mdcapp.data.service.UserService
 import com.mdcapp.domain.repositories.AuthRepository
 import com.mdcapp.domain.repositories.HomeRepository
@@ -41,23 +38,15 @@ import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 import com.mdcapp.ui.viewmodels.orders.ClientOrdersViewModel
 import com.mdcapp.ui.viewmodels.orders.CreateOrderViewModel
 import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
-import dev.gitlive.firebase.auth.FirebaseAuth
-import dev.gitlive.firebase.auth.auth
-import dev.gitlive.firebase.firestore.firestore
-import dev.gitlive.firebase.storage.storage
 import org.koin.compose.viewmodel.dsl.viewModel
 import org.koin.compose.viewmodel.dsl.viewModelOf
 import org.koin.core.context.startKoin
+import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
 
 val appModule = module {
-    single<FirebaseFirestore> { Firebase.firestore }
-    single<dev.gitlive.firebase.firestore.FirebaseFirestore> { dev.gitlive.firebase.Firebase.firestore }
-    single<dev.gitlive.firebase.storage.FirebaseStorage> { dev.gitlive.firebase.Firebase.storage }
-    single<FirebaseAuth> { dev.gitlive.firebase.Firebase.auth }
-
     single<HomeUseCase.GetAllFactories> { get<HomeUseCase>().GetAllFactories() }
 
     single<OrdersUseCase.GetAllOrders> { get<OrdersUseCase>().GetAllOrders() }
@@ -96,7 +85,6 @@ val appModule = module {
     single<InvoiceUseCase.GetPaymentCondition> { get<InvoiceUseCase>().GetPaymentCondition() }
     single<InvoiceUseCase.GetInvoicePaged> { get<InvoiceUseCase>().GetInvoicePaged() }
     single<InvoiceUseCase.GetAllClients> { get<InvoiceUseCase>().GetAllClients() }
-    single<InitConfigUseCase> { get<InitConfigUseCase>() }
     single<InvoiceUseCase.UpdateInvoice> { get<InvoiceUseCase>().UpdateInvoice() }
     single<InvoiceUseCase.CreateInvoice> { get<InvoiceUseCase>().CreateInvoice() }
     single<InvoiceUseCase.DeleteInvoice> { get<InvoiceUseCase>().DeleteInvoice() }
@@ -105,20 +93,21 @@ val appModule = module {
 
 val dataModule = module {
 //services
-    single<AnalyticsService> { FirebaseAnalyticsService() }
+    single<AnalyticsService> { PlatformAnalyticsService() }
+    single { AuthService(get()) }
+    single { UserService(get(), get(), get()) }
+    single { InitConfigUseCase(get()) }
+
     factoryOf(::InitService)
-    factory { OrderService(get(), get()) }
-    factory { HomeService(get(), get()) }
-    factory { ClientService(get(), get()) }
-    factory { BillingPaginationService(get(), get()) }
-    factoryOf(::AuthService)
-    factoryOf(::UserService)
+    factoryOf(::OrderService)
+    factoryOf(::HomeService)
+    factoryOf(::ClientService)
+    factoryOf(::BillingPaginationService)
 //repositories
     factoryOf(::OrderRepository)
     factoryOf(::HomeRepository)
     factoryOf(::AuthRepository)
 // use cases
-    factoryOf(::InitConfigUseCase)
     factoryOf(::OrdersUseCase)
     factoryOf(::BuyOrderUseCase)
     factoryOf(::HomeUseCase)
@@ -180,12 +169,12 @@ val viewModelModule = module {
     viewModelOf(::InvoicesPagedViewModel)
 }
 
-//expect val nativeModule: Module
+expect val platformModule: Module
 
 fun initKoin(config: KoinAppDeclaration? = null) {
     startKoin {
         config?.invoke(this)
-        modules(appModule, dataModule, viewModelModule)
+        modules(appModule, dataModule, platformModule, viewModelModule)
     }
 }
 

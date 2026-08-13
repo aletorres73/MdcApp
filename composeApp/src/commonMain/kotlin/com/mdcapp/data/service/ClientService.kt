@@ -1,11 +1,11 @@
 package com.mdcapp.data.service
 
 import com.mdcapp.data.remote.RemoteResultClientModel
-import dev.gitlive.firebase.firestore.FirebaseFirestore
+import com.mdcapp.domain.repositories.IDatabaseRepository
 import io.github.aakira.napier.Napier
 
 class ClientService(
-    private val db: FirebaseFirestore,
+    private val db: IDatabaseRepository,
     private val authService: AuthService
 ) {
     companion object {
@@ -15,8 +15,8 @@ class ClientService(
     private val userId: String
         get() = authService.currentUser?.uid ?: "unknown"
 
-    private val clientsCollection
-        get() = db.collection("users").document(userId).collection(CLIENTS)
+    private val clientsPath
+        get() = "users/$userId/$CLIENTS"
 
     private var lastDocumentId: String? = null
     private var hasMore = true
@@ -30,36 +30,25 @@ class ClientService(
         return try {
             if (!hasMore) return emptyList<RemoteResultClientModel>() to false
 
-            var query = clientsCollection
-                .orderBy("Razón Social")
-                .limit(limit)
+            val allClients = db.getCollection(clientsPath, RemoteResultClientModel.serializer())
+                .sortedBy { it.clientName }
 
-            lastDocumentId?.let { docId ->
-                val lastDoc = clientsCollection.document(docId).get()
-                if (lastDoc.exists) {
-                    query = query.startAfter(lastDoc)
-                }
+            val startIndex = if (lastDocumentId == null) 0 else {
+                val index = allClients.indexOfFirst { it.clientId == lastDocumentId }
+                if (index == -1) 0 else index + 1
             }
-// ...
 
-            val snapshot = query.get()
+            val pagedItems = allClients.drop(startIndex).take(limit.toInt())
 
-            if (snapshot.documents.isEmpty()) {
+            if (pagedItems.isEmpty()) {
                 hasMore = false
                 return emptyList<RemoteResultClientModel>() to false
             }
 
-            lastDocumentId = snapshot.documents.lastOrNull()?.id
+            lastDocumentId = pagedItems.lastOrNull()?.clientId
+            hasMore = allClients.size > startIndex + pagedItems.size
 
-            val items = snapshot.documents.mapNotNull { doc ->
-                try {
-                    doc.data<RemoteResultClientModel>()
-                } catch (e: Exception) {
-                    null
-                }
-            }
-
-            items to true
+            pagedItems to hasMore
         } catch (e: Exception) {
             Napier.e("Error en fetchClientsPaged", e)
             emptyList<RemoteResultClientModel>() to false
@@ -68,8 +57,7 @@ class ClientService(
 
     suspend fun fetchAmountClients(): Long {
         return try {
-            val snapshot = clientsCollection.get()
-            snapshot.documents.size.toLong()
+            db.getCollection(clientsPath, RemoteResultClientModel.serializer()).size.toLong()
         } catch (e: Exception) {
             Napier.e("Error en fetchAmountClients", e)
             0L
@@ -80,16 +68,9 @@ class ClientService(
         val searchTerm = query.trim().lowercase()
 
         return try {
-            val snapshot = clientsCollection.get()
+            val allClients = db.getCollection(clientsPath, RemoteResultClientModel.serializer())
 
-            snapshot.documents.mapNotNull { doc ->
-                try {
-                    doc.data<RemoteResultClientModel>()
-                } catch (e: Exception) {
-                    Napier.w("Error mapping client", e)
-                    null
-                }
-            }.filter { client ->
+            allClients.filter { client ->
                 if (searchTerm.isEmpty()) true
                 else client.clientName.lowercase().contains(searchTerm)
             }
@@ -101,14 +82,9 @@ class ClientService(
 
     suspend fun fetchClientName(clientId: String): RemoteResultClientModel {
         return try {
-            val snapshot = clientsCollection.document(clientId).get()
-            val client = RemoteResultClientModel(
-                clientId = snapshot.get("Cliente Id") ?: "",
-                clientName = snapshot.get("Razón Social") ?: ""
-            )
-
-            Napier.d("ClientService -> fetchClientName: $client")
-            client
+            val client =
+                db.getDocument("$clientsPath/$clientId", RemoteResultClientModel.serializer())
+            client ?: RemoteResultClientModel("", "")
         } catch (e: Exception) {
             Napier.e("Error fetching client name", e)
             RemoteResultClientModel("", "")
@@ -117,20 +93,7 @@ class ClientService(
 
     suspend fun fetchAllClientsName(): List<RemoteResultClientModel> {
         return try {
-            val snapshot = clientsCollection.get()
-            val clientList = snapshot.documents.mapNotNull { doc ->
-                try {
-                    RemoteResultClientModel(
-                        clientId = doc.get("Cliente Id") ?: "",
-                        clientName = doc.get("Razón Social") ?: ""
-                    )
-                } catch (e: Exception) {
-                    Napier.w("Error mapping client", e)
-                    null
-                }
-            }
-            Napier.d("ClientService -> fetchAllClientsName: $clientList")
-            clientList
+            db.getCollection(clientsPath, RemoteResultClientModel.serializer())
         } catch (e: Exception) {
             Napier.e("Error fetching clients", e)
             emptyList()
@@ -140,10 +103,18 @@ class ClientService(
     suspend fun saveClient(client: RemoteResultClientModel): Boolean {
         return try {
             if (client.clientId.isEmpty()) {
-                val docRef = clientsCollection.add(client)
-                docRef.update(mapOf("Cliente Id" to docRef.id))
+                val newId =
+                    db.addDocument(clientsPath, client, RemoteResultClientModel.serializer())
+                db.updateDocument<Any>(
+                    "$clientsPath/$newId",
+                    mapOf("Cliente Id" to newId)
+                )
             } else {
-                clientsCollection.document(client.clientId).set(client)
+                db.setDocument(
+                    "$clientsPath/${client.clientId}",
+                    client,
+                    RemoteResultClientModel.serializer()
+                )
             }
             true
         } catch (e: Exception) {
@@ -154,7 +125,7 @@ class ClientService(
 
     suspend fun deleteClient(clientId: String): Boolean {
         return try {
-            clientsCollection.document(clientId).delete()
+            db.deleteDocument("$clientsPath/$clientId")
             true
         } catch (e: Exception) {
             Napier.e("Error deleting client", e)
@@ -162,4 +133,3 @@ class ClientService(
         }
     }
 }
-
