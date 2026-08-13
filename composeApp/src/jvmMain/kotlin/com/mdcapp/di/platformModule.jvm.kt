@@ -2,6 +2,7 @@ package com.mdcapp.di
 
 import com.mdcapp.data.repositories.DesktopAuthRepository
 import com.mdcapp.data.repositories.DesktopDatabaseRepository
+import com.mdcapp.data.repositories.DesktopStorageRepository
 import com.mdcapp.domain.repositories.IAuthRepository
 import com.mdcapp.domain.repositories.IDatabaseRepository
 import com.mdcapp.domain.repositories.IStorageRepository
@@ -31,10 +32,5 @@ actual val platformModule = module {
     single { DesktopAuthRepository(get()) }
     single<IAuthRepository> { get<DesktopAuthRepository>() }
     single<IDatabaseRepository> { DesktopDatabaseRepository(get(), get()) }
-    single<IStorageRepository> {
-        object : IStorageRepository {
-            override suspend fun uploadFile(path: String, data: ByteArray): String = path
-            override suspend fun getDownloadUrl(path: String): String = ""
-        }
-    }
+    single<IStorageRepository> { DesktopStorageRepository(get(), get()) }
 }
