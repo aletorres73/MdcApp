@@ -31,6 +31,8 @@ class AuthService(private val auth: IAuthRepository) {
         auth.signOut()
     }
 
+    fun observeAuthState() = auth.observeAuthState()
+
     fun isUserLoggedIn(): Boolean {
         return auth.isUserLoggedIn()
     }

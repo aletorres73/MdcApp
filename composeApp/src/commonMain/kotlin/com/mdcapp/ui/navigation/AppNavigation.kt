@@ -39,6 +39,18 @@ fun AppNavigation(startRoute: String) {
     val userService: com.mdcapp.data.service.UserService = koinInject()
     val scope = androidx.compose.runtime.rememberCoroutineScope()
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        authRepo.observeAuthState().collectLatest { user ->
+            val currentRoute = navController.currentDestination?.route
+            if (user != null && (currentRoute == AppRoute.Login.route || currentRoute == null)) {
+                println("🚀 [Navigation] Sesión detectada, redirigiendo a InvoicesPaged...")
+                navController.navigate(AppRoute.InvoicesPaged.route) {
+                    popUpTo(AppRoute.Login.route) { inclusive = true }
+                }
+            }
+        }
+    }
+
     // Lógica de redirección por suscripción en tiempo real
     androidx.compose.runtime.LaunchedEffect(Unit) {
         userService.observeUserProfile().collectLatest { profile ->

@@ -11,6 +11,7 @@ class AuthRepository(
     suspend fun login(email: String, password: String) = authService.signIn(email, password)
     suspend fun register(email: String, password: String) = authService.signUp(email, password)
     suspend fun logout() = authService.signOut()
+    fun observeAuthState() = authService.observeAuthState()
     fun isLogged() = authService.isUserLoggedIn()
     fun getCurrentUser() = authService.currentUser
     fun getUserId() = authService.currentUser?.uid
