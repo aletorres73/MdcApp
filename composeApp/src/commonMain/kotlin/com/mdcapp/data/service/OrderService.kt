@@ -6,6 +6,7 @@ import com.mdcapp.data.remote.RemoteResultBuyOrder
 import com.mdcapp.data.remote.RemoteResultFactoryModel
 import com.mdcapp.data.remote.RemoteResultOrder
 import com.mdcapp.domain.entities.PaymentCondition
+import com.mdcapp.domain.repositories.DatabaseQuery
 import com.mdcapp.domain.repositories.IDatabaseRepository
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.Flow
@@ -78,9 +79,12 @@ class OrderService(
 
     suspend fun fetchOrdersByFactory(name: String): List<RemoteResultOrder> {
         return try {
-            val allOrders = fetchAllOrders()
-            if (name == "all") return allOrders
-            allOrders.filter { it.branch == name }
+            if (name == "all") return fetchAllOrders()
+            db.getCollection(
+                ordersPath,
+                RemoteResultOrder.serializer(),
+                DatabaseQuery(filterBy = "Marca", equalTo = name)
+            )
         } catch (e: Exception) {
             Napier.i("Firestore: on firesotore get orders by factories $e")
             emptyList()
@@ -126,8 +130,11 @@ class OrderService(
 
     suspend fun fetchBillings(clientId: String, orderId: String): List<RemoteResultBillingModel> {
         return try {
-            db.getCollection(allBillingsPath, RemoteResultBillingModel.serializer())
-                .filter { it.clientId == clientId && it.orderId == orderId }
+            db.getCollection(
+                allBillingsPath,
+                RemoteResultBillingModel.serializer(),
+                DatabaseQuery(filterBy = "Cliente Id", equalTo = clientId)
+            ).filter { it.orderId == orderId }
         } catch (e: Exception) {
             Napier.i("Firestore: on fetchBillings $e")
             emptyList()
@@ -136,8 +143,11 @@ class OrderService(
 
     suspend fun fetchBillingsByClient(clientId: String): List<RemoteResultBillingModel> {
         return try {
-            db.getCollection(allBillingsPath, RemoteResultBillingModel.serializer())
-                .filter { it.clientId == clientId }
+            db.getCollection(
+                allBillingsPath,
+                RemoteResultBillingModel.serializer(),
+                DatabaseQuery(filterBy = "Cliente Id", equalTo = clientId)
+            )
         } catch (e: Exception) {
             Napier.i("OrderService: on fetchBillingsByClient $e")
             emptyList()
@@ -304,8 +314,11 @@ class OrderService(
         clientId: String
     ): List<RemoteResultBillingModel> {
         return try {
-            db.getCollection(allBillingsPath, RemoteResultBillingModel.serializer())
-                .filter { it.clientId == clientId && it.brand == brand }
+            db.getCollection(
+                allBillingsPath,
+                RemoteResultBillingModel.serializer(),
+                DatabaseQuery(filterBy = "Cliente Id", equalTo = clientId)
+            ).filter { it.brand == brand }
         } catch (e: Exception) {
             Napier.i("OrderService: on fetchBillingsByBrand $e")
             emptyList()
@@ -332,40 +345,59 @@ class OrderService(
     }
 
     fun observeBillingsByClient(clientId: String): Flow<List<RemoteResultBillingModel>> {
-        return db.observeCollection(allBillingsPath, RemoteResultBillingModel.serializer())
-            .map { list ->
-                list.filter { it.clientId == clientId }
-            }
+        return db.observeCollection(
+            allBillingsPath,
+            RemoteResultBillingModel.serializer(),
+            DatabaseQuery(filterBy = "Cliente Id", equalTo = clientId)
+        )
     }
 
     fun observePaymentsByInvoice(invoiceNumber: String): Flow<List<RemotePaymentRegisterResult>> {
-        return db.observeCollection(paymentsRegisterPath, RemotePaymentRegisterResult.serializer())
-            .map { list ->
-                list.filter { it.documentNumber == invoiceNumber }
-            }
+        return db.observeCollection(
+            paymentsRegisterPath,
+            RemotePaymentRegisterResult.serializer(),
+            DatabaseQuery(filterBy = "Remito", equalTo = invoiceNumber)
+        )
     }
 
     fun observePaymentsByClient(clientId: String): Flow<List<RemotePaymentRegisterResult>> {
-        return db.observeCollection(paymentsRegisterPath, RemotePaymentRegisterResult.serializer())
-            .map { list ->
-                list.filter { it.clientId == clientId }
-            }
+        return db.observeCollection(
+            paymentsRegisterPath,
+            RemotePaymentRegisterResult.serializer(),
+            DatabaseQuery(filterBy = "Cliente ID", equalTo = clientId)
+        )
     }
 
     fun observeAllBillings(): Flow<List<RemoteResultBillingModel>> {
-        return db.observeCollection(allBillingsPath, RemoteResultBillingModel.serializer())
+        Napier.i("OrderService --- observeAllBillings")
+        return db.observeCollection(
+            allBillingsPath,
+            RemoteResultBillingModel.serializer(),
+            DatabaseQuery(orderBy = "Timestamp", descending = true, limit = 100)
+        )
     }
 
     fun observeAllPayments(): Flow<List<RemotePaymentRegisterResult>> {
-        return db.observeCollection(paymentsRegisterPath, RemotePaymentRegisterResult.serializer())
+        Napier.i("OrderService --- observeAllPayments")
+        return db.observeCollection(
+            paymentsRegisterPath,
+            RemotePaymentRegisterResult.serializer(),
+            DatabaseQuery(orderBy = "Fecha", descending = true, limit = 100)
+        )
     }
 
     fun observeBuyOrdersByClient(clientId: String): Flow<List<RemoteResultBuyOrder>> {
+        Napier.i("OrderService --- observeBuyOrdersByClient: $clientId")
         return db.observeCollection(clientOrdersPath(clientId), RemoteResultBuyOrder.serializer())
     }
 
     fun observeAllOrders(): Flow<List<RemoteResultOrder>> {
-        return db.observeCollection(ordersPath, RemoteResultOrder.serializer())
+        Napier.i("OrderService --- observeAllOrders")
+        return db.observeCollection(
+            ordersPath,
+            RemoteResultOrder.serializer(),
+            DatabaseQuery(orderBy = "Fecha de carga", descending = true, limit = 100)
+        )
     }
 
     fun observeAllFactories(): Flow<List<RemoteResultFactoryModel>> {
@@ -373,9 +405,12 @@ class OrderService(
     }
 
     fun observeOrdersByFactory(name: String): Flow<List<RemoteResultOrder>> {
-        return observeAllOrders().map { list ->
-            if (name == "all") list else list.filter { it.branch == name }
-        }
+        if (name == "all") return observeAllOrders()
+        return db.observeCollection(
+            ordersPath,
+            RemoteResultOrder.serializer(),
+            DatabaseQuery(filterBy = "Marca", equalTo = name)
+        )
     }
 
     suspend fun saveOrder(clientId: String, order: RemoteResultBuyOrder): Boolean {

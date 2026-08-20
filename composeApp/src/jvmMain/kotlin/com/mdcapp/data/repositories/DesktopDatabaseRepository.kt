@@ -1,5 +1,6 @@
 package com.mdcapp.data.repositories
 
+import com.mdcapp.domain.repositories.DatabaseQuery
 import com.mdcapp.domain.repositories.IDatabaseRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -25,11 +26,13 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import java.util.Base64
+import kotlin.time.Duration.Companion.milliseconds
 
 class DesktopDatabaseRepository(
     private val client: HttpClient,
@@ -46,89 +49,151 @@ class DesktopDatabaseRepository(
     }
 
     private fun HttpRequestBuilder.applyAuth(token: String?) {
-        // La API Key identifica el proyecto en la petición REST
         parameter("key", apiKey)
-
         if (!token.isNullOrBlank() && token != "null") {
             val cleanToken = token.replace("\n", "").replace("\r", "").trim()
-
-            // Con un Token de Firebase "Real" (emisor securetoken), 
-            // el patrón estándar (API Key + Authorization Bearer) debería funcionar.
             header("Authorization", "Bearer $cleanToken")
-
-            // Diagnóstico de JWT (Mantenemos tus logs)
-            try {
-                val parts = cleanToken.split(".")
-                if (parts.size > 1) {
-                    val payload = String(Base64.getDecoder().decode(parts[1]))
-                    println("📊 [JWT DEBUG] Payload: $payload")
-                }
-            } catch (e: Exception) {
-                println("⚠️ [Firestore JVM] Error decoding JWT for debug: ${e.message}")
-            }
-
-            println("🔑 [Firestore JVM] Standard Auth: API Key + Bearer Token applied.")
-
-        } else {
-            println("⚠️ [Firestore JVM] Auth Token is null or blank. Using API Key only.")
         }
     }
 
     override suspend fun <T : Any> getDocument(path: String, serializer: KSerializer<T>): T? {
         val token = authRepository.idToken
-        println("🔍 [Firestore JVM] GET Document: $path")
-
         return try {
             val response = client.get("$baseUrl/$path") {
                 applyAuth(token)
             }
-
             if (response.status == HttpStatusCode.OK) {
                 val firestoreDoc = response.body<JsonObject>()
                 val flattenedJson = flattenFirestoreDocument(firestoreDoc)
-                println("✅ [Firestore JVM] Document Fetched: $path")
                 json.decodeFromJsonElement(serializer, flattenedJson)
             } else {
-                val errorBody = response.bodyAsText()
-                println("❌ [Firestore JVM] Error Fetching Document: $path - Status: ${response.status}")
-                println("📄 [Firestore JVM] Error Body: $errorBody")
                 null
             }
         } catch (e: Exception) {
-            println("💥 [Firestore JVM] Exception Fetching Document: $path - ${e.message}")
             null
         }
     }
 
     override suspend fun <T : Any> getCollection(
         path: String,
-        serializer: KSerializer<T>
+        serializer: KSerializer<T>,
+        query: DatabaseQuery?
     ): List<T> {
         val token = authRepository.idToken
-        println("🔍 [Firestore JVM] GET Collection: $path")
+        val startTime = System.currentTimeMillis()
 
         return try {
-            val response = client.get("$baseUrl/$path") {
-                applyAuth(token)
-            }
+            if (query == null) {
+                println("🔍 [Firestore JVM] GET Collection (Full): $path")
+                val response = client.get("$baseUrl/$path") {
+                    applyAuth(token)
+                }
 
-            if (response.status == HttpStatusCode.OK) {
-                val root = response.body<JsonObject>()
-                val documents = root["documents"]?.jsonArray ?: return emptyList()
-                println("✅ [Firestore JVM] Collection Fetched: $path (${documents.size} docs)")
-                documents.map { doc ->
-                    val flattened = flattenFirestoreDocument(doc.jsonObject)
-                    json.decodeFromJsonElement(serializer, flattened)
+                if (response.status == HttpStatusCode.OK) {
+                    val root = response.body<JsonObject>()
+                    val documents = root["documents"]?.jsonArray ?: emptyList()
+                    println("✅ [Firestore JVM] Response: OK (${documents.size} docs) in ${System.currentTimeMillis() - startTime}ms")
+                    documents.map { doc ->
+                        val flattened = flattenFirestoreDocument(doc.jsonObject)
+                        json.decodeFromJsonElement(serializer, flattened)
+                    }
+                } else {
+                    val errorBody = response.bodyAsText()
+                    println("❌ [Firestore JVM] Error: ${response.status} - $errorBody")
+                    emptyList()
                 }
             } else {
-                val errorBody = response.bodyAsText()
-                println("❌ [Firestore JVM] Error Fetching Collection: $path - Status: ${response.status}")
-                println("📄 [Firestore JVM] Error Body: $errorBody")
-                emptyList()
+                // Endpoint runQuery
+                val parentPath = if (path.contains("/")) path.substringBeforeLast("/") else ""
+                val collectionId = if (path.contains("/")) path.substringAfterLast("/") else path
+
+                // Firestore REST runQuery endpoint logic:
+                // If path is "users/UID/allBillings"
+                // parentPath = "users/UID"
+                // collectionId = "allBillings"
+                // URL should be: baseUrl/users/UID:runQuery
+                val runQueryUrl =
+                    if (parentPath.isEmpty()) "$baseUrl:runQuery" else "$baseUrl/$parentPath:runQuery"
+
+                val structuredQuery = buildStructuredQuery(collectionId, query)
+
+                println("🔍 [Firestore JVM] POST :runQuery on $path")
+                println(
+                    "📦 [Payload] ${
+                        json.encodeToString(
+                            JsonObject.serializer(),
+                            structuredQuery
+                        )
+                    }"
+                )
+
+                val response = client.post(runQueryUrl) {
+                    applyAuth(token)
+                    contentType(ContentType.Application.Json)
+                    setBody(structuredQuery)
+                }
+
+                if (response.status == HttpStatusCode.OK) {
+                    val results = response.body<JsonArray>()
+                    println("✅ [Firestore JVM] Response: OK (${results.size} docs) in ${System.currentTimeMillis() - startTime}ms")
+
+                    results.mapNotNull { result ->
+                        val doc =
+                            result.jsonObject["document"]?.jsonObject ?: return@mapNotNull null
+                        val flattened = flattenFirestoreDocument(doc)
+                        json.decodeFromJsonElement(serializer, flattened)
+                    }
+                } else {
+                    val errorBody = response.bodyAsText()
+                    println("❌ [Firestore JVM] Query Error: ${response.status} - $errorBody")
+                    emptyList()
+                }
             }
         } catch (e: Exception) {
-            println("💥 [Firestore JVM] Exception Fetching Collection: $path - ${e.message}")
+            println("💥 [Firestore JVM] Exception: ${e.message}")
             emptyList()
+        }
+    }
+
+    private fun buildStructuredQuery(collectionId: String, query: DatabaseQuery): JsonObject {
+        return buildJsonObject {
+            put("structuredQuery", buildJsonObject {
+                put("from", buildJsonArray {
+                    add(buildJsonObject {
+                        put("collectionId", JsonPrimitive(collectionId))
+                    })
+                })
+
+                if (query.filterBy != null && query.equalTo != null) {
+                    put("where", buildJsonObject {
+                        put("fieldFilter", buildJsonObject {
+                            put(
+                                "field",
+                                buildJsonObject { put("fieldPath", JsonPrimitive(query.filterBy)) })
+                            put("op", JsonPrimitive("EQUAL"))
+                            put("value", wrapValue(JsonPrimitive(query.equalTo)))
+                        })
+                    })
+                }
+
+                if (query.orderBy != null) {
+                    put("orderBy", buildJsonArray {
+                        add(buildJsonObject {
+                            put(
+                                "field",
+                                buildJsonObject { put("fieldPath", JsonPrimitive(query.orderBy)) })
+                            put(
+                                "direction",
+                                JsonPrimitive(if (query.descending) "DESCENDING" else "ASCENDING")
+                            )
+                        })
+                    })
+                }
+
+                if (query.limit != null) {
+                    put("limit", JsonPrimitive(query.limit))
+                }
+            })
         }
     }
 
@@ -165,21 +230,11 @@ class DesktopDatabaseRepository(
             is JsonPrimitive -> {
                 when {
                     element.isString -> JsonObject(mapOf("stringValue" to element))
-                    element.content == "true" || element.content == "false" -> JsonObject(
-                        mapOf(
-                            "booleanValue" to JsonPrimitive(
-                                element.content.toBoolean()
-                            )
-                        )
-                    )
+                    element.content == "true" || element.content == "false" ->
+                        JsonObject(mapOf("booleanValue" to JsonPrimitive(element.content.toBoolean())))
 
-                    element.content.contains(".") -> JsonObject(
-                        mapOf(
-                            "doubleValue" to JsonPrimitive(
-                                element.content.toDouble()
-                            )
-                        )
-                    )
+                    element.content.contains(".") ->
+                        JsonObject(mapOf("doubleValue" to JsonPrimitive(element.content.toDouble())))
 
                     else -> JsonObject(mapOf("integerValue" to JsonPrimitive(element.content)))
                 }
@@ -201,7 +256,6 @@ class DesktopDatabaseRepository(
 
     override suspend fun <T : Any> setDocument(path: String, data: T, serializer: KSerializer<T>) {
         val token = authRepository.idToken
-        println("📤 [Firestore JVM] SET Document: $path")
         try {
             val jsonElement = json.encodeToJsonElement(serializer, data)
             val firestoreDoc =
@@ -209,19 +263,12 @@ class DesktopDatabaseRepository(
                     wrapValue(it.value)
                 })))
 
-            val response = client.patch("$baseUrl/$path") {
+            client.patch("$baseUrl/$path") {
                 applyAuth(token)
                 contentType(ContentType.Application.Json)
                 setBody(firestoreDoc)
             }
-            if (response.status == HttpStatusCode.OK) {
-                println("✅ [Firestore JVM] Document Set: $path")
-            } else {
-                println("❌ [Firestore JVM] Error Setting Document: $path - Status: ${response.status}")
-                println("📄 [Firestore JVM] Error Body: ${response.bodyAsText()}")
-            }
         } catch (e: Exception) {
-            println("💥 [Firestore JVM] Exception Setting Document: $path - ${e.message}")
         }
     }
 
@@ -231,7 +278,6 @@ class DesktopDatabaseRepository(
         serializer: KSerializer<T>?
     ) {
         val token = authRepository.idToken
-        println("📤 [Firestore JVM] UPDATING Document: $path")
         try {
             val jsonElement = if (serializer != null) {
                 @Suppress("UNCHECKED_CAST")
@@ -240,45 +286,30 @@ class DesktopDatabaseRepository(
                 @Suppress("UNCHECKED_CAST")
                 json.encodeToJsonElement(data as Map<String, Any?>)
             } else {
-                throw Exception("Serializer or Map required for update")
+                return
             }
 
             val fields = JsonObject(jsonElement.jsonObject.mapValues { wrapValue(it.value) })
             val firestoreDoc = JsonObject(mapOf("fields" to fields))
-
             val updateMaskParams =
                 jsonElement.jsonObject.keys.joinToString("&") { "updateMask.fieldPaths=$it" }
 
-            val response = client.patch("$baseUrl/$path?$updateMaskParams") {
+            client.patch("$baseUrl/$path?$updateMaskParams") {
                 applyAuth(token)
                 contentType(ContentType.Application.Json)
                 setBody(firestoreDoc)
             }
-            if (response.status == HttpStatusCode.OK) {
-                println("✅ [Firestore JVM] Document Updated: $path")
-            } else {
-                println("❌ [Firestore JVM] Error Updating Document: $path - Status: ${response.status}")
-                println("📄 [Firestore JVM] Error Body: ${response.bodyAsText()}")
-            }
         } catch (e: Exception) {
-            println("💥 [Firestore JVM] Exception Updating Document: $path - ${e.message}")
         }
     }
 
     override suspend fun deleteDocument(path: String) {
         val token = authRepository.idToken
-        println("🗑️ [Firestore JVM] DELETING Document: $path")
         try {
-            val response = client.delete("$baseUrl/$path") {
+            client.delete("$baseUrl/$path") {
                 applyAuth(token)
             }
-            if (response.status == HttpStatusCode.OK) {
-                println("✅ [Firestore JVM] Document Deleted: $path")
-            } else {
-                println("❌ [Firestore JVM] Error Deleting Document: $path - Status: ${response.status}")
-            }
         } catch (e: Exception) {
-            println("💥 [Firestore JVM] Exception Deleting Document: $path - ${e.message}")
         }
     }
 
@@ -288,7 +319,6 @@ class DesktopDatabaseRepository(
         serializer: KSerializer<T>
     ): String {
         val token = authRepository.idToken
-        println("📤 [Firestore JVM] ADDING Document to: $path")
         return try {
             val jsonElement = json.encodeToJsonElement(serializer, data)
             val firestoreDoc =
@@ -304,15 +334,11 @@ class DesktopDatabaseRepository(
             if (response.status == HttpStatusCode.OK) {
                 val newDoc = response.body<JsonObject>()
                 val name = newDoc["name"]?.jsonPrimitive?.content ?: ""
-                val id = name.substringAfterLast("/")
-                println("✅ [Firestore JVM] Document Added: $id")
-                id
+                name.substringAfterLast("/")
             } else {
-                println("❌ [Firestore JVM] Error Adding Document: $path - Status: ${response.status}")
                 ""
             }
         } catch (e: Exception) {
-            println("💥 [Firestore JVM] Exception Adding Document: $path - ${e.message}")
             ""
         }
     }
@@ -323,23 +349,22 @@ class DesktopDatabaseRepository(
                 try {
                     emit(getDocument(path, serializer))
                 } catch (e: Exception) {
-                    println("⚠️ [Firestore JVM] Error in observeDocument ($path): ${e.message}")
                 }
-                delay(30000) // Polling cada 30 segundos
+                delay(30000.milliseconds)
             }
         }
 
     override fun <T : Any> observeCollection(
         path: String,
-        serializer: KSerializer<T>
+        serializer: KSerializer<T>,
+        query: DatabaseQuery?
     ): Flow<List<T>> = flow {
         while (true) {
             try {
-                emit(getCollection(path, serializer))
+                emit(getCollection(path, serializer, query))
             } catch (e: Exception) {
-                println("⚠️ [Firestore JVM] Error in observeCollection ($path): ${e.message}")
             }
-            delay(30000) // Polling cada 30 segundos
+            delay(30000.milliseconds)
         }
     }
 }

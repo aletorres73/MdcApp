@@ -1,7 +1,10 @@
 package com.mdcapp.data.repositories
 
+import com.mdcapp.domain.repositories.DatabaseQuery
 import com.mdcapp.domain.repositories.IDatabaseRepository
+import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.FirebaseFirestore
+import dev.gitlive.firebase.firestore.Query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.KSerializer
@@ -46,19 +49,44 @@ class AndroidDatabaseRepository(private val db: FirebaseFirestore) : IDatabaseRe
         return db.document(path).snapshots.map { if (it.exists) it.data(serializer) else null }
     }
 
+    private fun applyQuery(base: Query, query: DatabaseQuery?): Query {
+        var q = base
+        query?.let {
+            if (it.filterBy != null && it.equalTo != null) {
+                val field = it.filterBy
+                val value = it.equalTo
+                q = q.where { field.equalTo(value) }
+            }
+            if (it.orderBy != null) {
+                q = q.orderBy(
+                    it.orderBy,
+                    if (it.descending) Direction.DESCENDING else Direction.ASCENDING
+                )
+            }
+            if (it.limit != null) {
+                q = q.limit(it.limit.toLong())
+            }
+        }
+        return q
+    }
+
     override fun <T : Any> observeCollection(
         path: String,
-        serializer: KSerializer<T>
+        serializer: KSerializer<T>,
+        query: DatabaseQuery?
     ): Flow<List<T>> {
-        return db.collection(path).snapshots.map { snapshot ->
+        val q = applyQuery(db.collection(path), query)
+        return q.snapshots.map { snapshot ->
             snapshot.documents.map { it.data(serializer) }
         }
     }
 
     override suspend fun <T : Any> getCollection(
         path: String,
-        serializer: KSerializer<T>
+        serializer: KSerializer<T>,
+        query: DatabaseQuery?
     ): List<T> {
-        return db.collection(path).get().documents.map { it.data(serializer) }
+        val q = applyQuery(db.collection(path), query)
+        return q.get().documents.map { it.data(serializer) }
     }
 }
