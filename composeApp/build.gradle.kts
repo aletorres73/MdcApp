@@ -137,7 +137,7 @@ compose.desktop {
             }
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "MDCApp"
-            packageVersion = "1.0.0"
+            packageVersion = "2.0.0"
         }
     }
 }
