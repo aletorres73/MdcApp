@@ -12,6 +12,7 @@ import com.mdcapp.domain.repositories.AuthRepository
 import com.mdcapp.domain.repositories.HomeRepository
 import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.service.AnalyticsService
+import com.mdcapp.domain.service.RefreshController
 import com.mdcapp.domain.usescases.InitConfigUseCase
 import com.mdcapp.domain.usescases.clientsusecase.GetClientsUseCase
 import com.mdcapp.domain.usescases.homeusescases.HomeUseCase
@@ -88,11 +89,13 @@ val appModule = module {
     single<InvoiceUseCase.UpdateInvoice> { get<InvoiceUseCase>().UpdateInvoice() }
     single<InvoiceUseCase.CreateInvoice> { get<InvoiceUseCase>().CreateInvoice() }
     single<InvoiceUseCase.DeleteInvoice> { get<InvoiceUseCase>().DeleteInvoice() }
+    single<InvoiceUseCase.RefreshDatabase> { get<InvoiceUseCase>().RefreshDatabase() }
 }
 
 
 val dataModule = module {
 //services
+    single { RefreshController() }
     single<AnalyticsService> { PlatformAnalyticsService() }
     single { AuthService(get()) }
     single { UserService(get(), get(), get()) }
@@ -140,7 +143,9 @@ val viewModelModule = module {
             get(),
             get(),
             get(),
-            get()
+            get(),
+            refreshController = get(),
+            analytics = get()
         )
     }
     viewModel { (orderId: String) ->

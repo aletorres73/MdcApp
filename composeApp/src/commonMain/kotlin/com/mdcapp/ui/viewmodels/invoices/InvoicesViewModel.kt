@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.RoundingMode
@@ -23,6 +24,8 @@ class InvoicesViewModel(
     private val getClientNameUseCase: InvoiceUseCase.GetClientName,
     private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
     private val observePaymentsByClientUseCase: InvoiceUseCase.ObservePaymentsByClient,
+    private val refreshDatabaseUseCase: InvoiceUseCase.RefreshDatabase,
+    private val refreshController: com.mdcapp.domain.service.RefreshController,
     private val analytics: AnalyticsService
 ) : ViewModel() {
 
@@ -70,6 +73,11 @@ class InvoicesViewModel(
         analytics.logScreenView("Invoices", clientId)
         getClientName(clientId)
         getDocuments(clientId)
+
+        // Escuchar refrescos globales para actualizar los observadores
+        refreshController.refreshFlow
+            .onEach { refreshDatabaseUseCase() }
+            .launchIn(viewModelScope)
     }
 
     //----------------------------------------------

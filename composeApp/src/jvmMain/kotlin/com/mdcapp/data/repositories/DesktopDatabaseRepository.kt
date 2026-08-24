@@ -16,8 +16,8 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -32,7 +32,6 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlin.time.Duration.Companion.milliseconds
 
 class DesktopDatabaseRepository(
     private val client: HttpClient,
@@ -46,6 +45,17 @@ class DesktopDatabaseRepository(
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
+    }
+
+    private val refreshTrigger = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
+
+    fun triggerRefresh() {
+        println("🔄 [Firestore JVM] Global Refresh Triggered")
+        refreshTrigger.tryEmit(Unit)
+    }
+
+    override fun refresh() {
+        triggerRefresh()
     }
 
     private fun HttpRequestBuilder.applyAuth(token: String?) {
@@ -306,7 +316,6 @@ class DesktopDatabaseRepository(
                 JsonObject(mapOf("arrayValue" to JsonObject(mapOf("values" to values))))
             }
 
-            else -> JsonObject(mapOf("nullValue" to JsonNull))
         }
     }
 
@@ -324,6 +333,7 @@ class DesktopDatabaseRepository(
                 contentType(ContentType.Application.Json)
                 setBody(firestoreDoc)
             }
+            triggerRefresh()
         } catch (e: Exception) {
         }
     }
@@ -361,6 +371,7 @@ class DesktopDatabaseRepository(
                 contentType(ContentType.Application.Json)
                 setBody(firestoreDoc)
             }
+            triggerRefresh()
         } catch (e: Exception) {
         }
     }
@@ -371,6 +382,7 @@ class DesktopDatabaseRepository(
             client.delete("$baseUrl/$path") {
                 applyAuth(token)
             }
+            triggerRefresh()
         } catch (e: Exception) {
         }
     }
@@ -396,6 +408,7 @@ class DesktopDatabaseRepository(
             if (response.status == HttpStatusCode.OK) {
                 val newDoc = response.body<JsonObject>()
                 val name = newDoc["name"]?.jsonPrimitive?.content ?: ""
+                triggerRefresh()
                 name.substringAfterLast("/")
             } else {
                 ""
@@ -407,12 +420,9 @@ class DesktopDatabaseRepository(
 
     override fun <T : Any> observeDocument(path: String, serializer: KSerializer<T>): Flow<T?> =
         flow {
-            while (true) {
-                try {
-                    emit(getDocument(path, serializer))
-                } catch (e: Exception) {
-                }
-                delay(30000.milliseconds)
+            emit(getDocument(path, serializer))
+            refreshTrigger.collect {
+                emit(getDocument(path, serializer))
             }
         }
 
@@ -421,12 +431,9 @@ class DesktopDatabaseRepository(
         serializer: KSerializer<T>,
         query: DatabaseQuery?
     ): Flow<List<T>> = flow {
-        while (true) {
-            try {
-                emit(getCollection(path, serializer, query))
-            } catch (e: Exception) {
-            }
-            delay(30000.milliseconds)
+        emit(getCollection(path, serializer, query))
+        refreshTrigger.collect {
+            emit(getCollection(path, serializer, query))
         }
     }
 }

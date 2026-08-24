@@ -143,6 +143,12 @@ class InvoiceUseCase(
             return clientService.fetchAllClientsName().map { it.toClientDomain() }
         }
     }
+
+    inner class RefreshDatabase {
+        operator fun invoke() {
+            repository.refresh()
+        }
+    }
 }
 
 

@@ -21,6 +21,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class OrderRepository(private val service: OrderService) {
+    fun refresh() {
+        service.refresh()
+    }
+
     suspend fun getAllOrders(): List<OrderModel> =
         service.fetchAllOrders().map { it.toOrderDomain() }
 

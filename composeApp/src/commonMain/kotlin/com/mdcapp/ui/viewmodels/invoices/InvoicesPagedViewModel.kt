@@ -30,6 +30,8 @@ class InvoicesPagedViewModel(
     private val getInvoicePaged: InvoiceUseCase.GetInvoicePaged,
     private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
     private val observeAllPaymentsUseCase: InvoiceUseCase.ObserveAllPayments,
+    private val refreshDatabaseUseCase: InvoiceUseCase.RefreshDatabase,
+    private val refreshController: com.mdcapp.domain.service.RefreshController,
     private val analytics: AnalyticsService
 ) : ViewModel() {
 
@@ -77,7 +79,10 @@ class InvoicesPagedViewModel(
         initConfig()
         loadAllClients()
         observePayments()
-        // No cargamos aquí para evitar duplicados con el LaunchedEffect de la Screen
+        // Escuchar refrescos globales (Botón UI o Foco de ventana)
+        refreshController.refreshFlow
+            .onEach { refresh() }
+            .launchIn(viewModelScope)
     }
 
     private fun observePayments() {
@@ -221,6 +226,7 @@ class InvoicesPagedViewModel(
     }
 
     fun refresh() {
+        refreshDatabaseUseCase()
         loadNextPage(reset = true)
     }
 

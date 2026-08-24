@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
@@ -47,6 +48,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mdcapp.domain.entities.AppRoute
+import com.mdcapp.domain.service.RefreshController
 import com.mdcapp.ui.screens.invoicesClientDetail.DetailInvoiceScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.InvoicesScreen
 import com.mdcapp.ui.screens.invoicesPage.InvoicesPageScreen
@@ -55,6 +57,7 @@ import com.mdcapp.ui.utils.closeApp
 import com.mdcapp.ui.utils.showToast
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.parameter.parametersOf
@@ -62,7 +65,8 @@ import org.koin.core.parameter.parametersOf
 @OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
 fun MainScreen(
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    refreshController: RefreshController = koinInject()
 ) {
     val navController = rememberNavController()
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -149,6 +153,9 @@ fun MainScreen(
                             }
 
                         if (currentRoute == AppRoute.InvoicesPaged.route) {
+                            IconButton(onClick = { refreshController.triggerRefresh() }) {
+                                Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
+                            }
                             Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
                                 IconButton(onClick = { showMenu = true }) {
                                     Icon(

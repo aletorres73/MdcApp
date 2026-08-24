@@ -1,5 +1,6 @@
 package com.mdcapp
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -12,6 +13,7 @@ import com.mdcapp.di.initKoin
 import com.mdcapp.ui.PlatformNavigation
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
+import org.koin.java.KoinJavaComponent.get
 
 fun main() {
     try {
@@ -37,6 +39,17 @@ fun main() {
                     position = WindowPosition(Alignment.CenterStart)
                 )
             ) {
+                // Refresco por foco de ventana para Desktop
+                LaunchedEffect(window.isActive) {
+                    if (window.isActive) {
+                        Napier.i("🪟 [Desktop] Window Focused - Refreshing data")
+                        try {
+                            get<com.mdcapp.domain.service.RefreshController>(com.mdcapp.domain.service.RefreshController::class.java).triggerRefresh()
+                        } catch (e: Exception) {
+                            Napier.e("Error triggering focus refresh", e)
+                        }
+                    }
+                }
                 PlatformNavigation()
             }
         }

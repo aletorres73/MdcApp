@@ -44,4 +44,6 @@ interface IDatabaseRepository {
         serializer: KSerializer<T>,
         query: DatabaseQuery? = null
     ): List<T>
+
+    fun refresh() {}
 }

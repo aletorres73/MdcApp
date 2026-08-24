@@ -35,6 +35,10 @@ class OrderService(
     private fun clientOrdersPath(clientId: String) =
         "$userPath/clients/$clientId/$BUY_ORDERS"
 
+    fun refresh() {
+        db.refresh()
+    }
+
     suspend fun fetchAllOrders(): List<RemoteResultOrder> {
         return try {
             val documents = db.getCollection(ordersPath, RemoteResultOrder.serializer())
