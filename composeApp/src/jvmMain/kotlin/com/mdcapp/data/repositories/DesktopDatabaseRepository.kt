@@ -169,7 +169,12 @@ class DesktopDatabaseRepository(
                         put("fieldFilter", buildJsonObject {
                             put(
                                 "field",
-                                buildJsonObject { put("fieldPath", JsonPrimitive(query.filterBy)) })
+                                buildJsonObject {
+                                    put(
+                                        "fieldPath",
+                                        JsonPrimitive(quoteFieldPath(query.filterBy))
+                                    )
+                                })
                             put("op", JsonPrimitive("EQUAL"))
                             put("value", wrapValue(JsonPrimitive(query.equalTo)))
                         })
@@ -181,7 +186,12 @@ class DesktopDatabaseRepository(
                         add(buildJsonObject {
                             put(
                                 "field",
-                                buildJsonObject { put("fieldPath", JsonPrimitive(query.orderBy)) })
+                                buildJsonObject {
+                                    put(
+                                        "fieldPath",
+                                        JsonPrimitive(quoteFieldPath(query.orderBy))
+                                    )
+                                })
                             put(
                                 "direction",
                                 JsonPrimitive(if (query.descending) "DESCENDING" else "ASCENDING")
@@ -194,6 +204,17 @@ class DesktopDatabaseRepository(
                     put("limit", JsonPrimitive(query.limit))
                 }
             })
+        }
+    }
+
+    private fun quoteFieldPath(path: String): String {
+        val segments = path.split('.')
+        return segments.joinToString(".") { segment ->
+            if (segment.matches(Regex("[a-zA-Z_][a-zA-Z_0-9]*"))) {
+                segment
+            } else {
+                "`$segment`"
+            }
         }
     }
 
@@ -292,7 +313,13 @@ class DesktopDatabaseRepository(
             val fields = JsonObject(jsonElement.jsonObject.mapValues { wrapValue(it.value) })
             val firestoreDoc = JsonObject(mapOf("fields" to fields))
             val updateMaskParams =
-                jsonElement.jsonObject.keys.joinToString("&") { "updateMask.fieldPaths=$it" }
+                jsonElement.jsonObject.keys.joinToString("&") {
+                    "updateMask.fieldPaths=${
+                        quoteFieldPath(
+                            it
+                        )
+                    }"
+                }
 
             client.patch("$baseUrl/$path?$updateMaskParams") {
                 applyAuth(token)
