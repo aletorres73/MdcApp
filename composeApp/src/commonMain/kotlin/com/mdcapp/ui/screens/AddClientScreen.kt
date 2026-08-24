@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mdcapp.ui.composables.common.LoadingOverlay
 import com.mdcapp.ui.viewmodels.AddClientViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -110,5 +111,7 @@ fun AddClientScreen(
             }
         }
     }
+
+    LoadingOverlay(state.isLoading)
 }
 

@@ -59,6 +59,7 @@ import com.mdcapp.domain.entities.PaymentRegisterModel
 import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.domain.entities.toPrint
 import com.mdcapp.ui.composables.common.DatePicker
+import com.mdcapp.ui.composables.common.LoadingOverlay
 import com.mdcapp.ui.screens.orders.OrderCard
 import com.mdcapp.ui.utils.AppBackHandler
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
@@ -448,6 +449,8 @@ fun DetailInvoiceScreen(
             editingPayment = null
         }
     }
+
+    LoadingOverlay(state.isLoading || state.isProcessingPayment)
 }
 
 @Composable

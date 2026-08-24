@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.ClientModel
+import com.mdcapp.ui.composables.common.LoadingOverlay
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -147,4 +148,6 @@ fun ClientsListScreen(
             }
         )
     }
+
+    LoadingOverlay(state.isLoading && state.clients.isNotEmpty())
 }

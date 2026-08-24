@@ -2,6 +2,8 @@ package com.mdcapp.data.service
 
 import com.mdcapp.data.remote.RemoteResultBillingModel
 import com.mdcapp.domain.entities.InvoicePage
+import com.mdcapp.domain.repositories.DatabaseQuery
+import com.mdcapp.domain.repositories.Filter
 import com.mdcapp.domain.repositories.IDatabaseRepository
 
 class BillingPaginationService(
@@ -24,23 +26,25 @@ class BillingPaginationService(
         direction: String = "desc"
     ): InvoicePage {
         return try {
-            val filters = mutableListOf<com.mdcapp.domain.repositories.Filter>()
+            val filters = mutableListOf<Filter>()
 
             if (!state.isNullOrBlank() && state != "Todas") {
-                filters.add(com.mdcapp.domain.repositories.Filter("Estado", "EQUAL", state))
+                filters.add(Filter("Estado", "EQUAL", state))
             }
 
             // Búsqueda por prefijo para cliente
+            var activeOrderBy = "Timestamp"
             if (!client.isNullOrBlank()) {
+                activeOrderBy = "Razon Social"
                 filters.add(
-                    com.mdcapp.domain.repositories.Filter(
+                    Filter(
                         "Razon Social",
                         "GREATER_THAN_OR_EQUAL",
                         client
                     )
                 )
                 filters.add(
-                    com.mdcapp.domain.repositories.Filter(
+                    Filter(
                         "Razon Social",
                         "LESS_THAN",
                         client + "\uf8ff"
@@ -50,15 +54,16 @@ class BillingPaginationService(
 
             // Búsqueda por prefijo para número
             if (!number.isNullOrBlank()) {
+                activeOrderBy = "Numero"
                 filters.add(
-                    com.mdcapp.domain.repositories.Filter(
+                    Filter(
                         "Numero",
                         "GREATER_THAN_OR_EQUAL",
                         number
                     )
                 )
                 filters.add(
-                    com.mdcapp.domain.repositories.Filter(
+                    Filter(
                         "Numero",
                         "LESS_THAN",
                         number + "\uf8ff"
@@ -66,9 +71,9 @@ class BillingPaginationService(
                 )
             }
 
-            val query = com.mdcapp.domain.repositories.DatabaseQuery(
+            val query = DatabaseQuery(
                 filters = filters,
-                orderBy = "Timestamp",
+                orderBy = activeOrderBy,
                 descending = direction == "desc",
                 limit = limit.toInt(),
                 startAfter = startAfterId
@@ -85,7 +90,8 @@ class BillingPaginationService(
             InvoicePage(
                 items = pagedItems,
                 nextCursor = pagedItems.lastOrNull()?.timeStamp?.toString(),
-                quantity = pagedItems.size // En paginación real, quantity representa los items traídos o se requiere otra query para el total.
+                quantity = pagedItems.size,
+                endReached = pagedItems.size < limit.toInt()
             )
         } catch (e: Exception) {
             println("Error en fetchBillingsPaged: ${e.message}")

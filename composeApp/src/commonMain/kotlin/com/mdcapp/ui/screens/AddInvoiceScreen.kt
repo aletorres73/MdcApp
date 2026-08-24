@@ -40,6 +40,7 @@ import com.mdcapp.domain.entities.toEpochMillis
 import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.domain.entities.toLocalDate
 import com.mdcapp.ui.composables.common.DatePicker
+import com.mdcapp.ui.composables.common.LoadingOverlay
 import com.mdcapp.ui.viewmodels.invoices.AddInvoiceViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -215,4 +216,6 @@ fun AddInvoiceScreen(
             }
         }
     }
+
+    LoadingOverlay(state.isLoading)
 }

@@ -50,6 +50,10 @@ fun ClientOrdersScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.loadOrders(clientId)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(

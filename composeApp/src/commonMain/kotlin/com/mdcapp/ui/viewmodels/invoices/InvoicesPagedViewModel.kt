@@ -62,7 +62,6 @@ class InvoicesPagedViewModel(
         val selectedSuggestion: String? = null,
         val updateState: UpdateState = UpdateState.OK,
         val message: String? = null,
-        val stateCounts: Map<String, Int> = emptyMap(),
         val invoicesWithPending: Set<String> = emptySet(),
         val displayInvoices: List<BillingModel> = emptyList(),
         val isSearchMode: Boolean = false
@@ -78,7 +77,7 @@ class InvoicesPagedViewModel(
         initConfig()
         loadAllClients()
         observePayments()
-        loadNextPage(reset = true)
+        // No cargamos aquí para evitar duplicados con el LaunchedEffect de la Screen
     }
 
     private fun observePayments() {
@@ -97,48 +96,71 @@ class InvoicesPagedViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val current = _uiState.value
-            val cursor = if (reset) null else current.cursor
+            try {
+                val current = _uiState.value
+                val cursor = if (reset) null else current.cursor
 
-            val query = current.searchQuery.text
-            val isNumber = query.any { it.isDigit() }
+                val query = current.searchQuery.text
+                // Consideramos número solo si es puramente digital o tiene guiones/barras
+                val isNumber =
+                    query.isNotEmpty() && query.all { it.isDigit() || it == '-' || it == '/' }
 
-            val (page, nextCursor) = getInvoicePaged.loadNextPage(
-                limit = 20,
-                state = current.selectedState,
-                cursor = cursor,
-                client = if (current.isSearchMode && query.isNotEmpty() && !isNumber) query else null,
-                number = if (current.isSearchMode && query.isNotEmpty() && isNumber) query else null
-            )
+                val (page, nextCursor) = getInvoicePaged.loadNextPage(
+                    limit = 20,
+                    state = current.selectedState,
+                    cursor = cursor,
+                    client = if (current.isSearchMode && query.isNotEmpty() && !isNumber) query else null,
+                    number = if (current.isSearchMode && query.isNotEmpty() && isNumber) query else null
+                )
 
-            val newItems = page.items.map { it.toBillingDomain().recalculate() }
+                var items = page.items
 
-            // Silent Sync for visible items
-            newItems.forEach { billing ->
-                val original = page.items.find { it.billingNumber == billing.billingNumber }
-                if (original != null && original.stateBilling != billing.stateBilling) {
-                    viewModelScope.launch {
-                        updateInvoiceUseCase(
-                            billing.clientId,
-                            billing.orderId,
-                            billing.billingNumber,
-                            billing
+                // Si no hay resultados y es búsqueda por nombre, intentamos con Capitalización
+                if (items.isEmpty() && current.isSearchMode && query.isNotEmpty() && !isNumber) {
+                    val capitalizedQuery = query.lowercase().replaceFirstChar { it.uppercase() }
+                    if (capitalizedQuery != query) {
+                        val (secondPage, _) = getInvoicePaged.loadNextPage(
+                            limit = 20,
+                            state = current.selectedState,
+                            cursor = null,
+                            client = capitalizedQuery
                         )
+                        items = secondPage.items
                     }
                 }
-            }
 
-            _uiState.update {
-                val updatedInvoices = if (reset) newItems else (it.displayInvoices + newItems)
-                // Asegurar que no haya duplicados por número de factura
-                val distinctInvoices = updatedInvoices.distinctBy { b -> b.billingNumber }
+                val newItems = items.map { it.toBillingDomain().recalculate() }
 
-                it.copy(
-                    displayInvoices = distinctInvoices.sortedByDescending { b -> b.timeStamp },
-                    cursor = nextCursor,
-                    endReached = page.endReached,
-                    isLoading = false
-                )
+                // Silent Sync for visible items
+                newItems.forEach { billing ->
+                    val original = page.items.find { it.billingNumber == billing.billingNumber }
+                    if (original != null && original.stateBilling != billing.stateBilling) {
+                        viewModelScope.launch {
+                            updateInvoiceUseCase(
+                                billing.clientId,
+                                billing.orderId,
+                                billing.billingNumber,
+                                billing
+                            )
+                        }
+                    }
+                }
+
+                _uiState.update {
+                    val updatedInvoices = if (reset) newItems else (it.displayInvoices + newItems)
+                    // Asegurar que no haya duplicados por número de factura
+                    val distinctInvoices = updatedInvoices.distinctBy { b -> b.billingNumber }
+
+                    it.copy(
+                        displayInvoices = distinctInvoices.sortedByDescending { b -> b.timeStamp },
+                        cursor = nextCursor,
+                        endReached = page.endReached,
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                Napier.e("Error loading invoices page", e)
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }

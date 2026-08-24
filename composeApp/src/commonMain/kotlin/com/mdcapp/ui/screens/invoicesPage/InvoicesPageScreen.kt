@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.UpdateState
+import com.mdcapp.ui.composables.common.LoadingOverlay
 import com.mdcapp.ui.composables.common.SearchBar
 import com.mdcapp.ui.utils.AppBackHandler
 import com.mdcapp.ui.utils.getAppInstaller
@@ -38,6 +39,10 @@ fun InvoicesPageScreen(
     onNavigationInvoice: (String) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.loadNextPage(reset = true)
+    }
 
     // Bloqueo de botón atrás si hay actualización forzada
     if (state.updateState == UpdateState.FORCE_UPDATE) {
@@ -94,7 +99,6 @@ fun InvoicesPageScreen(
                     StateFilter(
                         states = state.availableStates,
                         selected = state.selectedState,
-                        counts = state.stateCounts,
                         onSelected = {
                             viewModel.stateSelected(it)
                         }
@@ -131,4 +135,6 @@ fun InvoicesPageScreen(
             }
         }
     }
+
+    LoadingOverlay(state.isLoading && state.displayInvoices.isEmpty())
 }

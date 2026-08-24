@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.ClientModel
 import com.mdcapp.domain.entities.FactoryModel
 import com.mdcapp.domain.entities.PaymentCondition
+import com.mdcapp.ui.composables.common.LoadingOverlay
 import com.mdcapp.ui.viewmodels.orders.CreateOrderViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -219,6 +220,8 @@ fun CreateOrderScreen(
             }
         )
     }
+
+    LoadingOverlay(state.isLoading)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
