@@ -16,7 +16,7 @@ import org.koin.compose.koinInject
 @Composable
 actual fun PlatformNavigation() {
     val authRepo: AuthRepository = koinInject()
-    val startRoute = if (authRepo.isLogged()) AppRoute.InvoicesPaged.route else AppRoute.Login.route
+    val startRoute = if (authRepo.isLogged()) AppRoute.Home.route else AppRoute.Login.route
 
     val view = LocalView.current
     if (!view.isInEditMode) {
