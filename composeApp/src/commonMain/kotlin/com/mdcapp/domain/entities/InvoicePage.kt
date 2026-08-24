@@ -5,5 +5,6 @@ import com.mdcapp.data.remote.RemoteResultBillingModel
 data class InvoicePage(
     val items: List<RemoteResultBillingModel>,
     val nextCursor: String?,
-    val quantity: Int
+    val quantity: Int,
+    val endReached: Boolean = false
 )

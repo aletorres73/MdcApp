@@ -164,21 +164,29 @@ class DesktopDatabaseRepository(
                     })
                 })
 
+                val allFilters = mutableListOf<JsonObject>()
+
+                // Filtro antiguo (compatibilidad)
                 if (query.filterBy != null && query.equalTo != null) {
-                    put("where", buildJsonObject {
-                        put("fieldFilter", buildJsonObject {
-                            put(
-                                "field",
-                                buildJsonObject {
-                                    put(
-                                        "fieldPath",
-                                        JsonPrimitive(quoteFieldPath(query.filterBy))
-                                    )
-                                })
-                            put("op", JsonPrimitive("EQUAL"))
-                            put("value", wrapValue(JsonPrimitive(query.equalTo)))
+                    allFilters.add(buildFieldFilter(query.filterBy, "EQUAL", query.equalTo))
+                }
+
+                // Nuevos filtros
+                query.filters.forEach { filter ->
+                    allFilters.add(buildFieldFilter(filter.field, filter.operator, filter.value))
+                }
+
+                if (allFilters.isNotEmpty()) {
+                    if (allFilters.size == 1) {
+                        put("where", allFilters.first())
+                    } else {
+                        put("where", buildJsonObject {
+                            put("compositeFilter", buildJsonObject {
+                                put("op", JsonPrimitive("AND"))
+                                put("filters", JsonArray(allFilters))
+                            })
                         })
-                    })
+                    }
                 }
 
                 if (query.orderBy != null) {
@@ -200,9 +208,36 @@ class DesktopDatabaseRepository(
                     })
                 }
 
+                if (query.startAfter != null) {
+                    val numericValue =
+                        query.startAfter.toLongOrNull() ?: query.startAfter.toDoubleOrNull()
+                    put("startAt", buildJsonObject {
+                        put("values", buildJsonArray {
+                            if (numericValue != null) {
+                                add(wrapValue(JsonPrimitive(numericValue)))
+                            } else {
+                                add(wrapValue(JsonPrimitive(query.startAfter)))
+                            }
+                        })
+                        put("before", JsonPrimitive(false))
+                    })
+                }
+
                 if (query.limit != null) {
                     put("limit", JsonPrimitive(query.limit))
                 }
+            })
+        }
+    }
+
+    private fun buildFieldFilter(field: String, op: String, value: String): JsonObject {
+        return buildJsonObject {
+            put("fieldFilter", buildJsonObject {
+                put(
+                    "field",
+                    buildJsonObject { put("fieldPath", JsonPrimitive(quoteFieldPath(field))) })
+                put("op", JsonPrimitive(op))
+                put("value", wrapValue(JsonPrimitive(value)))
             })
         }
     }

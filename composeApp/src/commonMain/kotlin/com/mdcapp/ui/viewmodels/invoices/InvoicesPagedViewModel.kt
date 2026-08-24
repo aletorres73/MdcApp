@@ -3,6 +3,7 @@ package com.mdcapp.ui.viewmodels.invoices
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mdcapp.data.remote.toBillingDomain
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.ClientModel
 import com.mdcapp.domain.entities.MovementStatus
@@ -14,17 +15,19 @@ import com.mdcapp.domain.usescases.InitConfigUseCase
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.ui.utils.AppInstaller
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class InvoicesPagedViewModel(
     private val getClients: InvoiceUseCase.GetAllClients,
     private val initConfigUseCase: InitConfigUseCase,
-    private val observeAllBillingsUseCase: InvoiceUseCase.ObserveAllBillings,
+    private val getInvoicePaged: InvoiceUseCase.GetInvoicePaged,
     private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
     private val observeAllPaymentsUseCase: InvoiceUseCase.ObserveAllPayments,
     private val analytics: AnalyticsService
@@ -32,6 +35,8 @@ class InvoicesPagedViewModel(
 
     private val _uiState = MutableStateFlow(InvoiceUiState())
     val uiState: StateFlow<InvoiceUiState> = _uiState
+
+    private var searchJob: Job? = null
 
     data class InvoiceUiState(
         val overlay: Overlay = Overlay.None,
@@ -58,7 +63,6 @@ class InvoicesPagedViewModel(
         val updateState: UpdateState = UpdateState.OK,
         val message: String? = null,
         val stateCounts: Map<String, Int> = emptyMap(),
-        val allInvoices: List<BillingModel> = emptyList(),
         val invoicesWithPending: Set<String> = emptySet(),
         val displayInvoices: List<BillingModel> = emptyList(),
         val isSearchMode: Boolean = false
@@ -73,19 +77,45 @@ class InvoicesPagedViewModel(
         analytics.logScreenView("InvoicesPaged")
         initConfig()
         loadAllClients()
-        observeAllBillings()
+        observePayments()
+        loadNextPage(reset = true)
     }
 
-    private fun observeAllBillings() {
-        combine(
-            observeAllBillingsUseCase(),
-            observeAllPaymentsUseCase()
-        ) { billings, payments ->
-            val recalculated = billings.map { it.recalculate() }
+    private fun observePayments() {
+        observeAllPaymentsUseCase()
+            .onEach { payments ->
+                val pendingInvoices = payments
+                    .filter { it.status == MovementStatus.PENDIENTE.name }
+                    .map { it.documentNumber }
+                    .toSet()
+                _uiState.update { it.copy(invoicesWithPending = pendingInvoices) }
+            }.launchIn(viewModelScope)
+    }
 
-            // Silent Sync
-            recalculated.forEach { billing ->
-                val original = billings.find { it.billingNumber == billing.billingNumber }
+    fun loadNextPage(reset: Boolean = false) {
+        if (_uiState.value.isLoading || (_uiState.value.endReached && !reset)) return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val current = _uiState.value
+            val cursor = if (reset) null else current.cursor
+
+            val query = current.searchQuery.text
+            val isNumber = query.any { it.isDigit() }
+
+            val (page, nextCursor) = getInvoicePaged.loadNextPage(
+                limit = 20,
+                state = current.selectedState,
+                cursor = cursor,
+                client = if (current.isSearchMode && query.isNotEmpty() && !isNumber) query else null,
+                number = if (current.isSearchMode && query.isNotEmpty() && isNumber) query else null
+            )
+
+            val newItems = page.items.map { it.toBillingDomain().recalculate() }
+
+            // Silent Sync for visible items
+            newItems.forEach { billing ->
+                val original = page.items.find { it.billingNumber == billing.billingNumber }
                 if (original != null && original.stateBilling != billing.stateBilling) {
                     viewModelScope.launch {
                         updateInvoiceUseCase(
@@ -98,27 +128,19 @@ class InvoicesPagedViewModel(
                 }
             }
 
-            val pendingInvoices = payments
-                .filter { it.status == MovementStatus.PENDIENTE.name }
-                .map { it.documentNumber }
-                .toSet()
-
-            val counts = recalculated.groupBy { it.stateBilling }
-                .mapValues { it.value.size }
-                .toMutableMap()
-
-            counts["Todas"] = recalculated.size
-
             _uiState.update {
+                val updatedInvoices = if (reset) newItems else (it.displayInvoices + newItems)
+                // Asegurar que no haya duplicados por número de factura
+                val distinctInvoices = updatedInvoices.distinctBy { b -> b.billingNumber }
+
                 it.copy(
-                    stateCounts = counts,
-                    allInvoices = recalculated,
-                    invoicesWithPending = pendingInvoices
+                    displayInvoices = distinctInvoices.sortedByDescending { b -> b.timeStamp },
+                    cursor = nextCursor,
+                    endReached = page.endReached,
+                    isLoading = false
                 )
             }
-
-            applyFilters()
-        }.launchIn(viewModelScope)
+        }
     }
 
     private fun initConfig() {
@@ -135,34 +157,13 @@ class InvoicesPagedViewModel(
         }
     }
 
-    private fun applyFilters() {
-        val current = _uiState.value
-        val query = current.searchQuery.text.lowercase()
-        val state = current.selectedState
-
-        val result = if (current.isSearchMode && query.isNotEmpty()) {
-            // Modo Búsqueda Global: Filtra en toda la base por Razón Social O Número (WhatsApp Style)
-            current.allInvoices.filter { billing ->
-                billing.clientName.lowercase().contains(query) ||
-                        billing.billingNumber.lowercase().contains(query)
-            }
-        } else {
-            // Modo Navegación: Filtrar por estado
-            if (state == "Todas") {
-                current.allInvoices
-            } else {
-                current.allInvoices.filter { it.stateBilling == state }
-            }
-        }
-
-        _uiState.update {
-            it.copy(displayInvoices = result.sortedByDescending { b -> b.timeStamp })
-        }
-    }
-
     fun onQueryChange(value: String) {
         _uiState.update { it.copy(searchQuery = TextFieldValue(value)) }
-        applyFilters()
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            delay(500)
+            loadNextPage(reset = true)
+        }
     }
 
     fun setSearchMode(enabled: Boolean) {
@@ -170,7 +171,7 @@ class InvoicesPagedViewModel(
         if (!enabled) {
             _uiState.update { it.copy(searchQuery = TextFieldValue("")) }
         }
-        applyFilters()
+        loadNextPage(reset = true)
     }
 
     fun selectSuggestion(value: String) {
@@ -180,7 +181,7 @@ class InvoicesPagedViewModel(
                 searchQuery = TextFieldValue(value)
             )
         }
-        applyFilters()
+        loadNextPage(reset = true)
     }
 
 
@@ -194,12 +195,11 @@ class InvoicesPagedViewModel(
         _uiState.update {
             it.copy(selectedState = state)
         }
-        applyFilters()
+        loadNextPage(reset = true)
     }
 
     fun refresh() {
-        // Al ser reactivo, Firestore notificará cualquier cambio automáticamente.
-        // No se requiere lógica manual de refresh aquí.
+        loadNextPage(reset = true)
     }
 
     fun clearQuery() {
@@ -208,7 +208,7 @@ class InvoicesPagedViewModel(
                 searchQuery = TextFieldValue("")
             )
         }
-        applyFilters()
+        loadNextPage(reset = true)
     }
 
     fun closeOverlay() {

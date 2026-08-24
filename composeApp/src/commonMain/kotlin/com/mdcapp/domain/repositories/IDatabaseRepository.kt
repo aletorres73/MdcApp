@@ -7,9 +7,18 @@ import kotlinx.serialization.KSerializer
 data class DatabaseQuery(
     val filterBy: String? = null,
     val equalTo: String? = null,
+    val filters: List<Filter> = emptyList(),
     val orderBy: String? = null,
     val descending: Boolean = false,
-    val limit: Int? = null
+    val limit: Int? = null,
+    val startAfter: String? = null
+)
+
+@kotlinx.serialization.Serializable
+data class Filter(
+    val field: String,
+    val operator: String, // "EQUAL", "GREATER_THAN_OR_EQUAL", "LESS_THAN"
+    val value: String
 )
 
 interface IDatabaseRepository {

@@ -52,19 +52,42 @@ class AndroidDatabaseRepository(private val db: FirebaseFirestore) : IDatabaseRe
     private fun applyQuery(base: Query, query: DatabaseQuery?): Query {
         var q = base
         query?.let {
+            // Compatibilidad con filtros antiguos
             if (it.filterBy != null && it.equalTo != null) {
                 val field = it.filterBy
                 val value = it.equalTo
                 q = q.where { field.equalTo(value) }
             }
+
+            // Nuevos filtros
+            it.filters.forEach { filter ->
+                val field = filter.field
+                val value = filter.value
+                q = when (filter.operator) {
+                    "EQUAL" -> q.where { field.equalTo(value) }
+                    "GREATER_THAN_OR_EQUAL" -> q.where { field.greaterThanOrEqualTo(value) }
+                    "LESS_THAN" -> q.where { field.lessThan(value) }
+                    "LESS_THAN_OR_EQUAL" -> q.where { field.lessThanOrEqualTo(value) }
+                    "GREATER_THAN" -> q.where { field.greaterThan(value) }
+                    else -> q
+                }
+            }
+
             if (it.orderBy != null) {
                 q = q.orderBy(
                     it.orderBy,
                     if (it.descending) Direction.DESCENDING else Direction.ASCENDING
                 )
             }
+
             if (it.limit != null) {
                 q = q.limit(it.limit.toLong())
+            }
+
+            if (it.startAfter != null) {
+                // Intentamos convertir a número si es posible para coincidir con el tipo en Firestore
+                val numericValue = it.startAfter.toLongOrNull() ?: it.startAfter.toDoubleOrNull()
+                q = q.startAfter(numericValue ?: it.startAfter)
             }
         }
         return q

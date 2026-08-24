@@ -24,44 +24,68 @@ class BillingPaginationService(
         direction: String = "desc"
     ): InvoicePage {
         return try {
-            val allBillings = db.getCollection(
-                "users/$userId/allBillings",
-                RemoteResultBillingModel.serializer()
+            val filters = mutableListOf<com.mdcapp.domain.repositories.Filter>()
+
+            if (!state.isNullOrBlank() && state != "Todas") {
+                filters.add(com.mdcapp.domain.repositories.Filter("Estado", "EQUAL", state))
+            }
+
+            // Búsqueda por prefijo para cliente
+            if (!client.isNullOrBlank()) {
+                filters.add(
+                    com.mdcapp.domain.repositories.Filter(
+                        "Razon Social",
+                        "GREATER_THAN_OR_EQUAL",
+                        client
+                    )
+                )
+                filters.add(
+                    com.mdcapp.domain.repositories.Filter(
+                        "Razon Social",
+                        "LESS_THAN",
+                        client + "\uf8ff"
+                    )
+                )
+            }
+
+            // Búsqueda por prefijo para número
+            if (!number.isNullOrBlank()) {
+                filters.add(
+                    com.mdcapp.domain.repositories.Filter(
+                        "Numero",
+                        "GREATER_THAN_OR_EQUAL",
+                        number
+                    )
+                )
+                filters.add(
+                    com.mdcapp.domain.repositories.Filter(
+                        "Numero",
+                        "LESS_THAN",
+                        number + "\uf8ff"
+                    )
+                )
+            }
+
+            val query = com.mdcapp.domain.repositories.DatabaseQuery(
+                filters = filters,
+                orderBy = "Timestamp",
+                descending = direction == "desc",
+                limit = limit.toInt(),
+                startAfter = startAfterId
             )
 
-            var filtered = allBillings.asSequence()
+            println("🔍 [BillingPagination] Fetching from server. Query: $query")
 
-            if (!state.isNullOrBlank()) {
-                filtered = filtered.filter { it.stateBilling == state }
-            }
-
-            if (!client.isNullOrBlank()) {
-                filtered = filtered.filter { it.clientName == client }
-            }
-
-            if (!number.isNullOrBlank()) {
-                filtered = filtered.filter { it.billingNumber == number }
-            }
-
-            val sorted = if (direction == "desc") {
-                filtered.sortedByDescending { it.timeStamp }
-            } else {
-                filtered.sortedBy { it.timeStamp }
-            }
-
-            val sortedList = sorted.toList()
-
-            val startIndex = if (startAfterId.isNullOrBlank()) 0 else {
-                val index = sortedList.indexOfFirst { it.billingNumber == startAfterId }
-                if (index == -1) 0 else index + 1
-            }
-
-            val pagedItems = sortedList.drop(startIndex).take(limit.toInt())
+            val pagedItems = db.getCollection(
+                "users/$userId/allBillings",
+                RemoteResultBillingModel.serializer(),
+                query
+            )
 
             InvoicePage(
                 items = pagedItems,
-                nextCursor = pagedItems.lastOrNull()?.billingNumber,
-                quantity = sortedList.size
+                nextCursor = pagedItems.lastOrNull()?.timeStamp?.toString(),
+                quantity = pagedItems.size // En paginación real, quantity representa los items traídos o se requiere otra query para el total.
             )
         } catch (e: Exception) {
             println("Error en fetchBillingsPaged: ${e.message}")
