@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 fun StateFilter(
     states: List<String>,
     selected: String,
-    counts: Map<String, Int> = emptyMap(),
     onSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -38,7 +37,7 @@ fun StateFilter(
             InputChip(
                 selected = false,
                 onClick = { expanded = true },
-                label = { Text("$selected (${counts[selected] ?: 0})") },
+                label = { Text(selected) },
                 modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable, true)
             )
 
@@ -48,11 +47,10 @@ fun StateFilter(
                 modifier = Modifier.widthIn(min = 160.dp)
             ) {
                 states.forEach { state ->
-                    val count = counts[state] ?: 0
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "$state ($count)",
+                                text = state,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
