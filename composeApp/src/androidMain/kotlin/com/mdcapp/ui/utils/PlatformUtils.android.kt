@@ -47,3 +47,5 @@ class AndroidAppInstaller(private val context: Context) : AppInstaller {
 actual fun getAppInstaller(context: Any?): AppInstaller {
     return AndroidAppInstaller(context as Context)
 }
+
+actual val isAndroid: Boolean = true

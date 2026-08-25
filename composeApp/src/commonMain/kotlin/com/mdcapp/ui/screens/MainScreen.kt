@@ -54,6 +54,7 @@ import com.mdcapp.ui.screens.invoicesClientDetail.InvoicesScreen
 import com.mdcapp.ui.screens.invoicesPage.InvoicesPageScreen
 import com.mdcapp.ui.utils.AppBackHandler
 import com.mdcapp.ui.utils.closeApp
+import com.mdcapp.ui.utils.isAndroid
 import com.mdcapp.ui.utils.showToast
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
@@ -144,17 +145,25 @@ fun MainScreen(
                                 )
                             }
                         }
-                        if (currentRoute == AppRoute.Clients.route)
+                        if (currentRoute == AppRoute.Clients.route) {
+                            if (!isAndroid) {
+                                IconButton(onClick = { refreshController.triggerRefresh() }) {
+                                    Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
+                                }
+                            }
                             IconButton(onClick = { navController.navigate(AppRoute.Factories.route) }) {
                                 Icon(
                                     Icons.Default.Settings,
                                     contentDescription = "Gestionar Fábricas"
                                 )
                             }
+                        }
 
                         if (currentRoute == AppRoute.InvoicesPaged.route) {
-                            IconButton(onClick = { refreshController.triggerRefresh() }) {
-                                Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
+                            if (!isAndroid) {
+                                IconButton(onClick = { refreshController.triggerRefresh() }) {
+                                    Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
+                                }
                             }
                             Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
                                 IconButton(onClick = { showMenu = true }) {

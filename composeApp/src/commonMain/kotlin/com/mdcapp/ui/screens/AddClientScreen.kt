@@ -31,8 +31,9 @@ import androidx.compose.ui.unit.dp
 import com.mdcapp.ui.composables.common.LoadingOverlay
 import com.mdcapp.ui.viewmodels.AddClientViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
 fun AddClientScreen(
     initialId: String? = null,

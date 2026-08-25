@@ -3,6 +3,5 @@ package com.mdcapp.ui.composables.common
 import androidx.compose.runtime.Composable
 
 @Composable
-expect fun LoadingOverlay(
-    isLoading: Boolean
-)
+actual fun LoadingOverlay(isLoading: Boolean) {
+}

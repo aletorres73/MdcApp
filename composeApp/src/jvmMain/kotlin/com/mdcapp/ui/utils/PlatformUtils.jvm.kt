@@ -40,3 +40,5 @@ class DesktopAppInstaller : AppInstaller {
 actual fun getAppInstaller(context: Any?): AppInstaller {
     return DesktopAppInstaller()
 }
+
+actual val isAndroid: Boolean = false

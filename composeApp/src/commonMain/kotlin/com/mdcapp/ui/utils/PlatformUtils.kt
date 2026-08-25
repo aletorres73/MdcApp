@@ -16,3 +16,5 @@ interface AppInstaller {
 }
 
 expect fun getAppInstaller(context: Any? = null): AppInstaller
+
+expect val isAndroid: Boolean

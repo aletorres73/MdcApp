@@ -9,11 +9,14 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ClientsViewModel(
     private val getClientsUseCase: GetClientsUseCase,
+    refreshController: com.mdcapp.domain.service.RefreshController,
     private val analytics: AnalyticsService
 ) : ViewModel() {
 
@@ -31,6 +34,10 @@ class ClientsViewModel(
     init {
         analytics.logScreenView("Clients")
         loadClients()
+
+        refreshController.refreshFlow
+            .onEach { loadClients() }
+            .launchIn(viewModelScope)
     }
 
     fun loadClients() {
@@ -70,10 +77,6 @@ class ClientsViewModel(
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
         }
-    }
-
-    fun clearMessage() {
-        _state.update { it.copy(message = null) }
     }
 }
 

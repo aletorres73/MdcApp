@@ -24,7 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.UpdateState
-import com.mdcapp.ui.composables.common.LoadingOverlay
+import com.mdcapp.ui.composables.common.RefreshContainer
 import com.mdcapp.ui.composables.common.SearchBar
 import com.mdcapp.ui.utils.AppBackHandler
 import com.mdcapp.ui.utils.getAppInstaller
@@ -40,9 +40,9 @@ fun InvoicesPageScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    androidx.compose.runtime.LaunchedEffect(Unit) {
-        viewModel.loadNextPage(reset = true)
-    }
+    /*    androidx.compose.runtime.LaunchedEffect(Unit) {
+            viewModel.loadNextPage(reset = true)
+        }*/
 
     // Bloqueo de botón atrás si hay actualización forzada
     if (state.updateState == UpdateState.FORCE_UPDATE) {
@@ -106,35 +106,39 @@ fun InvoicesPageScreen(
                 }
             }
         }
+        RefreshContainer(
+            isRefreshing = state.isLoading,
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier.weight(1f)
+        ) {
+            InvoiceList(
+                invoices = state.displayInvoices,
+                isLoading = state.isLoading,
+                onLoadMore = { viewModel.loadNextPage() },
+                onNavigationInvoice = onNavigationInvoice,
+                invoicesWithPending = state.invoicesWithPending
+            )
+        }
+    }
 
-        InvoiceList(
-            invoices = state.displayInvoices,
-            isLoading = state.isLoading,
-            onLoadMore = { viewModel.loadNextPage() },
-            onNavigationInvoice = onNavigationInvoice,
-            invoicesWithPending = state.invoicesWithPending
-        )
+    // ----- overlays -----
 
-        // ----- overlays -----
-
-        when (val overlay = state.overlay) {
-            InvoicesPagedViewModel.Overlay.None -> {}
-            is InvoicesPagedViewModel.Overlay.UpdateApp -> {
-                when (val updateState = overlay.state) {
-                    UpdateState.OK -> {}
-                    UpdateState.OPTIONAL_UPDATE, UpdateState.FORCE_UPDATE -> {
-                        val installer = getAppInstaller()
-                        UpdateDialog(
-                            type = updateState,
-                            releaseNotes = overlay.releasesNotes,
-                            onUpdate = { viewModel.updateApk(installer) },
-                            onDismiss = { viewModel.closeOverlay() }
-                        )
-                    }
+    when (val overlay = state.overlay) {
+        InvoicesPagedViewModel.Overlay.None -> {}
+        is InvoicesPagedViewModel.Overlay.UpdateApp -> {
+            when (val updateState = overlay.state) {
+                UpdateState.OK -> {}
+                UpdateState.OPTIONAL_UPDATE, UpdateState.FORCE_UPDATE -> {
+                    val installer = getAppInstaller()
+                    UpdateDialog(
+                        type = updateState,
+                        releaseNotes = overlay.releasesNotes,
+                        onUpdate = { viewModel.updateApk(installer) },
+                        onDismiss = { viewModel.closeOverlay() }
+                    )
                 }
             }
         }
     }
-
-    LoadingOverlay(state.isLoading && state.displayInvoices.isEmpty())
 }
+

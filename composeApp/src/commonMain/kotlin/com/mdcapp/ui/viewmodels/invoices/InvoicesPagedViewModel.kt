@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class InvoicesPagedViewModel(
     private val getClients: InvoiceUseCase.GetAllClients,
@@ -31,8 +32,8 @@ class InvoicesPagedViewModel(
     private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
     private val observeAllPaymentsUseCase: InvoiceUseCase.ObserveAllPayments,
     private val refreshDatabaseUseCase: InvoiceUseCase.RefreshDatabase,
-    private val refreshController: com.mdcapp.domain.service.RefreshController,
-    private val analytics: AnalyticsService
+    refreshController: com.mdcapp.domain.service.RefreshController,
+    analytics: AnalyticsService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InvoiceUiState())
@@ -79,6 +80,7 @@ class InvoicesPagedViewModel(
         initConfig()
         loadAllClients()
         observePayments()
+        loadNextPage(reset = true)
         // Escuchar refrescos globales (Botón UI o Foco de ventana)
         refreshController.refreshFlow
             .onEach { refresh() }
@@ -188,7 +190,7 @@ class InvoicesPagedViewModel(
         _uiState.update { it.copy(searchQuery = TextFieldValue(value)) }
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            delay(500)
+            delay(500.milliseconds)
             loadNextPage(reset = true)
         }
     }
@@ -200,17 +202,6 @@ class InvoicesPagedViewModel(
         }
         loadNextPage(reset = true)
     }
-
-    fun selectSuggestion(value: String) {
-        _uiState.update {
-            it.copy(
-                selectedSuggestion = value,
-                searchQuery = TextFieldValue(value)
-            )
-        }
-        loadNextPage(reset = true)
-    }
-
 
     private fun loadAllClients() {
         viewModelScope.launch {
@@ -265,10 +256,6 @@ class InvoicesPagedViewModel(
                 }
             }
         }
-    }
-
-    fun clearMessage() {
-        _uiState.value = _uiState.value.copy(message = null)
     }
 
 }
