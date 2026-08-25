@@ -2,10 +2,12 @@ package com.mdcapp.ui.utils
 
 import androidx.compose.runtime.Composable
 
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
+
 @Composable
 actual fun AppBackHandler(enabled: Boolean, onBack: () -> Unit) {
     // Desktop no suele tener un botón de "atrás" de hardware. 
-    // Se podría implementar el manejo de la tecla ESC si fuera necesario.
 }
 
 actual fun showToast(message: String) {
@@ -14,6 +16,17 @@ actual fun showToast(message: String) {
 
 actual fun closeApp() {
     System.exit(0)
+}
+
+actual fun shareText(text: String, title: String) {
+    try {
+        val selection = StringSelection(text)
+        val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+        clipboard.setContents(selection, selection)
+        showToast("Copiado al portapapeles: $title")
+    } catch (e: Exception) {
+        println("Error al copiar al portapapeles: ${e.message}")
+    }
 }
 
 class DesktopAppInstaller : AppInstaller {

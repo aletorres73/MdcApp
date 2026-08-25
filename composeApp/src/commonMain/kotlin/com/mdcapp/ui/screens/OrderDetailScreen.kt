@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
@@ -47,7 +48,9 @@ import com.mdcapp.domain.entities.ArticleOrderModel
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.domain.entities.toPrint
+import com.mdcapp.domain.logic.ReportGenerator
 import com.mdcapp.ui.theme.getBillingStatusColor
+import com.mdcapp.ui.utils.shareText
 import com.mdcapp.ui.viewmodels.buyorders.BuyOrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -85,17 +88,15 @@ fun OrderDetailScreen(
                         }) {
                             Icon(Icons.Default.Edit, contentDescription = "Editar Pedido")
                         }
-                        // TODO: Implement multiplatform sharing
-                        /*IconButton(onClick = {
+                        IconButton(onClick = {
                             val report = ReportGenerator.generateOrderReport(state.buyOrder)
-                            ShareUtils.shareText(
-                                context,
+                            shareText(
                                 report,
                                 "Nota de Pedido N° ${state.buyOrder.order}"
                             )
                         }) {
                             Icon(Icons.Default.Share, contentDescription = "Compartir")
-                        }*/
+                        }
                     }
                 }
             )
