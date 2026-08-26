@@ -6,14 +6,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.BillingModel
-import com.mdcapp.ui.composables.common.LoadingOverlay
 import com.mdcapp.ui.composables.invoicePage.InvoiceRow
 
 @Composable
@@ -32,7 +31,10 @@ fun InvoiceList(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            itemsIndexed(invoices) { index, invoice ->
+            items(
+                items = invoices,
+                key = { it.billingNumber }
+            ) { invoice ->
 
                 InvoiceRow(
                     invoice = invoice,
@@ -40,13 +42,12 @@ fun InvoiceList(
                     hasPendingReconciliation = invoicesWithPending.contains(invoice.billingNumber)
                 )
 
-                if (index == invoices.lastIndex && !isLoading) {
-                    LaunchedEffect(Unit) {
+                if (invoices.lastOrNull()?.billingNumber == invoice.billingNumber && !isLoading) {
+                    LaunchedEffect(invoice.billingNumber) {
                         onLoadMore()
                     }
                 }
             }
         }
-        LoadingOverlay(isLoading)
     }
 }

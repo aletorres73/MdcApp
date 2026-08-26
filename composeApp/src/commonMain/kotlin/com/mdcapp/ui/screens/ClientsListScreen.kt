@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,6 +20,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -57,69 +59,84 @@ fun ClientsListScreen(
         }
     */
     Box(modifier = Modifier.fillMaxSize()) {
-        RefreshContainer(
-            isRefreshing = state.isLoading,
-            onRefresh = { viewModel.loadClients() },
-            modifier = Modifier.fillMaxSize()
-        ) {
-            if (state.clients.isEmpty() && !state.isLoading) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Text(
-                        text = "No tienes clientes registrados.",
-                        modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.clients) { client ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
-                            onClick = { onEditClientClick(client.clientId, client.clientName) }
-                        ) {
-                            Column {
-                                ListItem(
-                                    headlineContent = {
-                                        Text(
-                                            text = client.clientName,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    },
-                                    supportingContent = { Text("ID: ${client.clientId}") },
-                                    trailingContent = {
-                                        IconButton(onClick = { clientToDelete = client }) {
-                                            Icon(
-                                                Icons.Default.Delete,
-                                                contentDescription = "Eliminar",
-                                                tint = MaterialTheme.colorScheme.error
+        Column(modifier = Modifier.fillMaxSize()) {
+            if (state.isLoading && state.clients.isNotEmpty()) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                )
+            }
+
+            RefreshContainer(
+                isRefreshing = state.isLoading,
+                onRefresh = { viewModel.loadClients() },
+                modifier = Modifier.weight(1f)
+            ) {
+                if (state.clients.isEmpty() && !state.isLoading) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Text(
+                            text = "No tienes clientes registrados.",
+                            modifier = Modifier.align(Alignment.Center),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(
+                            items = state.clients,
+                            key = { it.clientId }
+                        ) { client ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp),
+                                onClick = { onEditClientClick(client.clientId, client.clientName) }
+                            ) {
+                                Column {
+                                    ListItem(
+                                        headlineContent = {
+                                            Text(
+                                                text = client.clientName,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.primary
                                             )
+                                        },
+                                        supportingContent = { Text("ID: ${client.clientId}") },
+                                        trailingContent = {
+                                            IconButton(onClick = { clientToDelete = client }) {
+                                                Icon(
+                                                    Icons.Default.Delete,
+                                                    contentDescription = "Eliminar",
+                                                    tint = MaterialTheme.colorScheme.error
+                                                )
+                                            }
                                         }
-                                    }
-                                )
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    thickness = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant
-                                )
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                                    horizontalArrangement = Arrangement.End
-                                ) {
-                                    TextButton(onClick = { onOrdersClick(client.clientId) }) {
-                                        Text("PEDIDOS")
-                                    }
-                                    Spacer(modifier = Modifier.padding(horizontal = 4.dp))
-                                    TextButton(onClick = { onCurrentAccountClick(client.clientId) }) {
-                                        Text("CTA. CTE.")
+                                    )
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        thickness = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant
+                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                                        horizontalArrangement = Arrangement.End
+                                    ) {
+                                        TextButton(onClick = { onOrdersClick(client.clientId) }) {
+                                            Text("PEDIDOS")
+                                        }
+                                        Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                                        TextButton(onClick = { onCurrentAccountClick(client.clientId) }) {
+                                            Text("CTA. CTE.")
+                                        }
                                     }
                                 }
                             }
@@ -128,7 +145,7 @@ fun ClientsListScreen(
                 }
             }
         }
-        LoadingOverlay(state.isLoading)
+        LoadingOverlay(state.isLoading && state.clients.isEmpty())
     }
 
     clientToDelete?.let { client ->

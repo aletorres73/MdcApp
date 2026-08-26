@@ -2,7 +2,6 @@ package com.mdcapp.ui.screens.invoicesClientDetail
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +37,7 @@ import com.mdcapp.domain.logic.ReportGenerator
 import com.mdcapp.ui.composables.common.LoadingIndicator
 import com.mdcapp.ui.screens.invoicesPage.DetailClientBalance
 import com.mdcapp.ui.utils.AppBackHandler
+import com.mdcapp.ui.utils.getScreenWidthDp
 import com.mdcapp.ui.utils.shareText
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 
@@ -101,10 +101,11 @@ fun InvoicesScreen(
             )
         }
     ) { paddingValues ->
-        BoxWithConstraints(
+        val isWide = getScreenWidthDp() > 800.dp
+
+        Box(
             modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
-            val isWide = this.maxWidth > 800.dp
             when {
                 state.isLoading -> {
                     Box(

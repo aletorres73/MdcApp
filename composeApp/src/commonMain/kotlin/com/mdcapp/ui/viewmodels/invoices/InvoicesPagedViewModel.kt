@@ -43,7 +43,6 @@ class InvoicesPagedViewModel(
 
     data class InvoiceUiState(
         val overlay: Overlay = Overlay.None,
-        val invoices: List<BillingModel> = emptyList(),
         val clientNameList: List<ClientModel> = emptyList(),
         val isLoading: Boolean = false,
         val selectedState: String = "Todas",
@@ -138,21 +137,6 @@ class InvoicesPagedViewModel(
 
                 val newItems = items.map { it.toBillingDomain().recalculate() }
 
-                // Silent Sync for visible items
-                newItems.forEach { billing ->
-                    val original = page.items.find { it.billingNumber == billing.billingNumber }
-                    if (original != null && original.stateBilling != billing.stateBilling) {
-                        viewModelScope.launch {
-                            updateInvoiceUseCase(
-                                billing.clientId,
-                                billing.orderId,
-                                billing.billingNumber,
-                                billing
-                            )
-                        }
-                    }
-                }
-
                 _uiState.update {
                     val updatedInvoices = if (reset) newItems else (it.displayInvoices + newItems)
                     // Asegurar que no haya duplicados por número de factura
@@ -164,6 +148,21 @@ class InvoicesPagedViewModel(
                         endReached = page.endReached,
                         isLoading = false
                     )
+                }
+
+                // Silent Sync for visible items in background
+                viewModelScope.launch {
+                    newItems.forEach { billing ->
+                        val original = page.items.find { it.billingNumber == billing.billingNumber }
+                        if (original != null && original.stateBilling != billing.stateBilling) {
+                            updateInvoiceUseCase(
+                                billing.clientId,
+                                billing.orderId,
+                                billing.billingNumber,
+                                billing
+                            )
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Napier.e("Error loading invoices page", e)

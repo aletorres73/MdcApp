@@ -1,5 +1,6 @@
 package com.mdcapp.ui.viewmodels.orders
 
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.ArticleOrderModel
@@ -49,8 +50,8 @@ class CreateOrderViewModel(
         val isSuccess: Boolean = false,
         val error: String? = null,
         // Dialog state
-        val dialogArticleName: String = "",
-        val dialogArticleColor: String = "",
+        val dialogArticleName: TextFieldValue = TextFieldValue(""),
+        val dialogArticleColor: TextFieldValue = TextFieldValue(""),
         val dialogArticlePairs: String = "12",
         val dialogError: String? = null,
         val isDialogSuccess: Boolean = false
@@ -164,23 +165,24 @@ class CreateOrderViewModel(
 
     fun addArticleAndContinue() {
         val currentState = _state.value
+        val name = currentState.dialogArticleName.text
+        val color = currentState.dialogArticleColor.text
         val pairs = currentState.dialogArticlePairs.toIntOrNull() ?: 0
 
-        if (currentState.dialogArticleName.isBlank() || currentState.dialogArticleColor.isBlank() || pairs <= 0) {
+        if (name.isBlank() || color.isBlank() || pairs <= 0) {
             _state.update { it.copy(dialogError = "Complete todos los campos del artículo") }
             return
         }
 
         val newArticle = ArticleOrderModel(
-            name = currentState.dialogArticleName,
-            color = currentState.dialogArticleColor,
+            name = name,
+            color = color,
             pairs = pairs
         )
         _state.update {
             it.copy(
                 articles = it.articles + newArticle,
-                // dialogArticleName = currentState.dialogArticleName, // Keep name for next color
-                dialogArticleColor = "",
+                dialogArticleColor = TextFieldValue(""),
                 dialogArticlePairs = "12",
                 dialogError = null
             )
@@ -190,8 +192,8 @@ class CreateOrderViewModel(
     fun resetDialog() {
         _state.update {
             it.copy(
-                dialogArticleName = "",
-                dialogArticleColor = "",
+                dialogArticleName = TextFieldValue(""),
+                dialogArticleColor = TextFieldValue(""),
                 dialogArticlePairs = "12",
                 dialogError = null,
                 isDialogSuccess = false
@@ -199,11 +201,11 @@ class CreateOrderViewModel(
         }
     }
 
-    fun onDialogNameChange(name: String) {
+    fun onDialogNameChange(name: TextFieldValue) {
         _state.update { it.copy(dialogArticleName = name, dialogError = null) }
     }
 
-    fun onDialogColorChange(color: String) {
+    fun onDialogColorChange(color: TextFieldValue) {
         _state.update { it.copy(dialogArticleColor = color, dialogError = null) }
     }
 

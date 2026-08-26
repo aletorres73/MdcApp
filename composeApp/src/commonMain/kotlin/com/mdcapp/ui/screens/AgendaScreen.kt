@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -52,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.toPrint
 import com.mdcapp.ui.theme.getBillingStatusColor
+import com.mdcapp.ui.utils.getScreenWidthDp
 import com.mdcapp.ui.viewmodels.AgendaViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -68,9 +68,9 @@ fun AgendaScreen(
     val state by viewModel.uiState.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val isWideScreen = maxWidth > 800.dp
+    val isWideScreen = getScreenWidthDp() > 800.dp
 
+    Box(modifier = Modifier.fillMaxSize()) {
         if (isWideScreen) {
             Row(modifier = Modifier.fillMaxSize()) {
                 // Panel Izquierdo: Calendario y Alertas

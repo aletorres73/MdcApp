@@ -255,8 +255,8 @@ fun MainScreen(
             navController = navController,
             startDestination = AppRoute.InvoicesPaged.route,
             enterTransition = {
-                if (targetState.destination.route in tabRoutes) {
-                    fadeIn(animationSpec = tween(300))
+                if (targetState.destination.route in tabRoutes || !isAndroid) {
+                    fadeIn(animationSpec = tween(if (isAndroid) 300 else 150))
                 } else {
                     slideIntoContainer(
                         AnimatedContentTransitionScope.SlideDirection.Left,
@@ -265,8 +265,8 @@ fun MainScreen(
                 }
             },
             exitTransition = {
-                if (initialState.destination.route in tabRoutes) {
-                    fadeOut(animationSpec = tween(300))
+                if (initialState.destination.route in tabRoutes || !isAndroid) {
+                    fadeOut(animationSpec = tween(if (isAndroid) 300 else 150))
                 } else {
                     slideOutOfContainer(
                         AnimatedContentTransitionScope.SlideDirection.Left,
@@ -275,8 +275,8 @@ fun MainScreen(
                 }
             },
             popEnterTransition = {
-                if (targetState.destination.route in tabRoutes) {
-                    fadeIn(animationSpec = tween(300))
+                if (targetState.destination.route in tabRoutes || !isAndroid) {
+                    fadeIn(animationSpec = tween(if (isAndroid) 300 else 150))
                 } else {
                     slideIntoContainer(
                         AnimatedContentTransitionScope.SlideDirection.Right,
@@ -285,8 +285,8 @@ fun MainScreen(
                 }
             },
             popExitTransition = {
-                if (initialState.destination.route in tabRoutes) {
-                    fadeOut(animationSpec = tween(300))
+                if (initialState.destination.route in tabRoutes || !isAndroid) {
+                    fadeOut(animationSpec = tween(if (isAndroid) 300 else 150))
                 } else {
                     slideOutOfContainer(
                         AnimatedContentTransitionScope.SlideDirection.Right,

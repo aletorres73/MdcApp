@@ -4,12 +4,20 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.config.downloadInstaller
 import org.koin.java.KoinJavaComponent.get
 
 @Composable
 actual fun AppBackHandler(enabled: Boolean, onBack: () -> Unit) {
     BackHandler(enabled, onBack)
+}
+
+@Composable
+actual fun getScreenWidthDp(): Dp {
+    return LocalConfiguration.current.screenWidthDp.dp
 }
 
 actual fun showToast(message: String) {

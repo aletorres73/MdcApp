@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.ClientModel
@@ -196,30 +196,29 @@ fun CreateOrderScreen(
         }
     }
 
-    if (showAddArticleDialog) {
-        AddArticleDialog(
-            state = state,
-            onNameChange = { viewModel.onDialogNameChange(it) },
-            onColorChange = { viewModel.onDialogColorChange(it) },
-            onPairsChange = { viewModel.onDialogPairsChange(it) },
-            onIncrement = { viewModel.incrementPairs() },
-            onDecrement = { viewModel.decrementPairs() },
-            onClearName = { viewModel.onDialogNameChange("") },
-            onClearColor = { viewModel.onDialogColorChange("") },
-            onConfirm = {
-                viewModel.addArticle(
-                    state.dialogArticleName,
-                    state.dialogArticleColor,
-                    state.dialogArticlePairs.toIntOrNull() ?: 0
-                )
-            },
-            onConfirmAndContinue = { viewModel.addArticleAndContinue() },
-            onDismiss = {
-                showAddArticleDialog = false
-                viewModel.resetDialog()
-            }
-        )
-    }
+    AddArticleOverlay(
+        state = state,
+        onNameChange = { viewModel.onDialogNameChange(it) },
+        onColorChange = { viewModel.onDialogColorChange(it) },
+        onPairsChange = { viewModel.onDialogPairsChange(it) },
+        onIncrement = { viewModel.incrementPairs() },
+        onDecrement = { viewModel.decrementPairs() },
+        onClearName = { viewModel.onDialogNameChange(TextFieldValue("")) },
+        onClearColor = { viewModel.onDialogColorChange(TextFieldValue("")) },
+        onConfirm = {
+            viewModel.addArticle(
+                state.dialogArticleName.text,
+                state.dialogArticleColor.text,
+                state.dialogArticlePairs.toIntOrNull() ?: 0
+            )
+        },
+        onConfirmAndContinue = { viewModel.addArticleAndContinue() },
+        onDismiss = {
+            showAddArticleDialog = false
+            viewModel.resetDialog()
+        },
+        isVisible = showAddArticleDialog
+    )
 
     LoadingOverlay(state.isLoading)
 }
@@ -384,10 +383,93 @@ fun ConditionSelector(
 }
 
 @Composable
-fun AddArticleDialog(
+fun AddArticleContent(
     state: CreateOrderViewModel.UiState,
-    onNameChange: (String) -> Unit,
-    onColorChange: (String) -> Unit,
+    onNameChange: (TextFieldValue) -> Unit,
+    onColorChange: (TextFieldValue) -> Unit,
+    onPairsChange: (String) -> Unit,
+    onIncrement: () -> Unit,
+    onDecrement: () -> Unit,
+    onClearName: () -> Unit,
+    onClearColor: () -> Unit
+) {
+    Column {
+        if (state.dialogError != null) {
+            Text(
+                text = state.dialogError,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+        OutlinedTextField(
+            value = state.dialogArticleName,
+            onValueChange = onNameChange,
+            label = { Text("Artículo") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            isError = state.dialogError != null && state.dialogArticleName.text.isBlank(),
+            trailingIcon = {
+                if (state.dialogArticleName.text.isNotEmpty()) {
+                    IconButton(onClick = onClearName) {
+                        Icon(Icons.Default.Clear, contentDescription = "Limpiar")
+                    }
+                }
+            }
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
+            value = state.dialogArticleColor,
+            onValueChange = onColorChange,
+            label = { Text("Color") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            isError = state.dialogError != null && state.dialogArticleColor.text.isBlank(),
+            trailingIcon = {
+                if (state.dialogArticleColor.text.isNotEmpty()) {
+                    IconButton(onClick = onClearColor) {
+                        Icon(Icons.Default.Clear, contentDescription = "Limpiar")
+                    }
+                }
+            }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Cantidad de Pares", style = MaterialTheme.typography.labelMedium)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            IconButton(onClick = onDecrement) {
+                Text("-", style = MaterialTheme.typography.titleLarge)
+            }
+            OutlinedTextField(
+                value = state.dialogArticlePairs,
+                onValueChange = onPairsChange,
+                modifier = Modifier.weight(1f),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                isError = state.dialogError != null && (state.dialogArticlePairs.toIntOrNull()
+                    ?: 0) <= 0,
+                textStyle = TextStyle(textAlign = TextAlign.Center)
+            )
+            IconButton(onClick = onIncrement) {
+                Icon(Icons.Default.Add, contentDescription = "Más")
+            }
+        }
+        Text(
+            "Múltiplos de 12 (Docena)",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 48.dp)
+        )
+    }
+}
+
+@Composable
+expect fun AddArticleOverlay(
+    state: CreateOrderViewModel.UiState,
+    onNameChange: (TextFieldValue) -> Unit,
+    onColorChange: (TextFieldValue) -> Unit,
     onPairsChange: (String) -> Unit,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
@@ -395,96 +477,7 @@ fun AddArticleDialog(
     onConfirmAndContinue: () -> Unit,
     onDismiss: () -> Unit,
     onClearName: () -> Unit,
-    onClearColor: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Agregar Artículo") },
-        text = {
-            Column {
-                if (state.dialogError != null) {
-                    Text(
-                        text = state.dialogError,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-                OutlinedTextField(
-                    value = state.dialogArticleName,
-                    onValueChange = onNameChange,
-                    label = { Text("Artículo") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = state.dialogError != null && state.dialogArticleName.isBlank(),
-                    trailingIcon = {
-                        if (state.dialogArticleName.isNotEmpty()) {
-                            IconButton(onClick = onClearName) {
-                                Icon(Icons.Default.Clear, contentDescription = "Limpiar")
-                            }
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = state.dialogArticleColor,
-                    onValueChange = onColorChange,
-                    label = { Text("Color") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = state.dialogError != null && state.dialogArticleColor.isBlank(),
-                    trailingIcon = {
-                        if (state.dialogArticleColor.isNotEmpty()) {
-                            IconButton(onClick = onClearColor) {
-                                Icon(Icons.Default.Clear, contentDescription = "Limpiar")
-                            }
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Cantidad de Pares", style = MaterialTheme.typography.labelMedium)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    IconButton(onClick = onDecrement) {
-                        Text("-", style = MaterialTheme.typography.titleLarge)
-                    }
-                    OutlinedTextField(
-                        value = state.dialogArticlePairs,
-                        onValueChange = onPairsChange,
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        isError = state.dialogError != null && (state.dialogArticlePairs.toIntOrNull()
-                            ?: 0) <= 0,
-                        textStyle = TextStyle(textAlign = TextAlign.Center)
-                    )
-                    IconButton(onClick = onIncrement) {
-                        Icon(Icons.Default.Add, contentDescription = "Más")
-                    }
-                }
-                Text(
-                    "Múltiplos de 12 (Docena)",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 48.dp)
-                )
-            }
-        },
-        confirmButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = onConfirmAndContinue) {
-                    Text("Continuar")
-                }
-                Button(onClick = onConfirm) {
-                    Text("Cerrar")
-                }
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        }
-    )
-}
+    onClearColor: () -> Unit,
+    isVisible: Boolean
+)
 
