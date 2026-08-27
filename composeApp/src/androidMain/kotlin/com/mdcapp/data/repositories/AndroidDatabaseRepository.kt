@@ -112,4 +112,8 @@ class AndroidDatabaseRepository(private val db: FirebaseFirestore) : IDatabaseRe
         val q = applyQuery(db.collection(path), query)
         return q.get().documents.map { it.data(serializer) }
     }
+
+    override suspend fun getCollectionIds(path: String): List<String> {
+        return db.collection(path).get().documents.map { it.id }
+    }
 }

@@ -23,6 +23,7 @@ class AddInvoiceViewModel(
     private val getBuyOrderUseCase: BuyOrderUseCase.GetBuyOrderById,
     private val getPaymentConditionUseCase: InvoiceUseCase.GetPaymentCondition,
     private val getClientNameUseCase: InvoiceUseCase.GetClientName,
+    private val checkInvoiceUseCase: InvoiceUseCase.GetInvoiceByNumber,
     private val repository: com.mdcapp.domain.repositories.OrderRepository,
     private val analytics: AnalyticsService
 ) : ViewModel() {
@@ -45,8 +46,25 @@ class AddInvoiceViewModel(
         val branches: List<String> = emptyList(),
         val selectedBranch: String = "",
         val isSuccess: Boolean = false,
+        val isExistingInvoice: Boolean = false,
         val error: String? = null
     )
+
+    fun onNumberChange(number: String) {
+        if (number.isBlank()) {
+            _state.update { it.copy(isExistingInvoice = false) }
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val existing = checkInvoiceUseCase(number)
+                _state.update { it.copy(isExistingInvoice = existing.billingNumber.isNotEmpty()) }
+            } catch (e: Exception) {
+                _state.update { it.copy(isExistingInvoice = false) }
+            }
+        }
+    }
 
     fun loadData(clientId: String, orderId: String) {
         viewModelScope.launch {

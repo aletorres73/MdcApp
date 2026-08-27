@@ -45,6 +45,18 @@ fun AddClientScreen(
     var name by remember { mutableStateOf(initialName ?: "") }
     var clientId by remember { mutableStateOf(initialId ?: "") }
 
+    LaunchedEffect(initialId) {
+        if (initialId == null) {
+            viewModel.loadNextId()
+        }
+    }
+
+    LaunchedEffect(state.suggestedId) {
+        if (initialId == null && state.suggestedId.isNotEmpty()) {
+            clientId = state.suggestedId
+        }
+    }
+
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
             onBack()
@@ -81,11 +93,20 @@ fun AddClientScreen(
 
             OutlinedTextField(
                 value = clientId,
-                onValueChange = { clientId = it },
+                onValueChange = {},
                 label = { Text("ID Cliente") },
-                enabled = initialId == null,
+                readOnly = true,
+                placeholder = { if (initialId == null) Text("Generando...") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                trailingIcon = {
+                    if (initialId == null && state.isLoading && clientId.isEmpty()) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -96,8 +117,12 @@ fun AddClientScreen(
             }
 
             Button(
-                onClick = { viewModel.saveClient(name, clientId) },
-                enabled = !state.isLoading,
+                onClick = {
+                    // Para clientes nuevos, enviamos el ID vacío al ViewModel/Service
+                    // para que se genere y consuma el contador solo al guardar con éxito.
+                    viewModel.saveClient(name, if (initialId == null) "" else clientId)
+                },
+                enabled = !state.isLoading && name.isNotBlank() && (initialId != null || clientId.isNotBlank()),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (state.isLoading) {

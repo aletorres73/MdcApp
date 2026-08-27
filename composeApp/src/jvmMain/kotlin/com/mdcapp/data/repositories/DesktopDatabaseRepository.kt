@@ -436,4 +436,26 @@ class DesktopDatabaseRepository(
             emit(getCollection(path, serializer, query))
         }
     }
+
+    override suspend fun getCollectionIds(path: String): List<String> {
+        val token = authRepository.idToken
+        return try {
+            val response = client.get("$baseUrl/$path") {
+                applyAuth(token)
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                val root = response.body<JsonObject>()
+                val documents = root["documents"]?.jsonArray ?: emptyList()
+                documents.map { doc ->
+                    val name = doc.jsonObject["name"]?.jsonPrimitive?.content ?: ""
+                    name.substringAfterLast("/")
+                }
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 }

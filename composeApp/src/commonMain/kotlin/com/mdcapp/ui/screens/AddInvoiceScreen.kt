@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -159,10 +160,22 @@ fun AddInvoiceScreen(
 
             OutlinedTextField(
                 value = number,
-                onValueChange = { number = it },
+                onValueChange = {
+                    number = it
+                    viewModel.onNumberChange(it)
+                },
                 label = { Text("Número de Factura / Remito") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = state.isExistingInvoice,
+                supportingText = {
+                    if (state.isExistingInvoice) {
+                        Text(
+                            "Este número ya existe. Si continúas, se actualizará la factura existente.",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -238,9 +251,12 @@ fun AddInvoiceScreen(
                 },
                 enabled = !state.isLoading && number.isNotBlank() && amount.isNotBlank() &&
                         (state.orderId.isNotEmpty() || state.selectedBranch.isNotEmpty()),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = if (state.isExistingInvoice) ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                ) else ButtonDefaults.buttonColors()
             ) {
-                Text("Guardar Factura")
+                Text(if (state.isExistingInvoice) "Actualizar Factura" else "Guardar Factura")
             }
         }
     }

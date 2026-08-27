@@ -155,6 +155,7 @@ val viewModelModule = module {
             getBuyOrderUseCase = get(),
             getPaymentConditionUseCase = get(),
             getClientNameUseCase = get(),
+            checkInvoiceUseCase = get(),
             repository = get(),
             analytics = get()
         )

@@ -276,6 +276,7 @@ class DetailInvoiceViewModel(
                             isProcessingPayment = false
                         )
                     }
+                    saveBilling()
                 } else {
                     _state.update {
                         it.copy(
@@ -402,7 +403,7 @@ class DetailInvoiceViewModel(
 
     private fun saveBilling() {
         viewModelScope.launch {
-            val billing = _state.value.billing
+            val billing = _state.value.billing.copy(timeStamp = System.currentTimeMillis())
             val result = updateInvoiceUseCase(
                 billing.clientId,
                 billing.orderId,
@@ -412,6 +413,7 @@ class DetailInvoiceViewModel(
 
             _state.update {
                 it.copy(
+                    billing = billing,
                     message = if (result) "Actualizado" else "Error al guardar"
                 )
             }

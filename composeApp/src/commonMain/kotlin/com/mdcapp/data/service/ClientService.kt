@@ -100,22 +100,73 @@ class ClientService(
         }
     }
 
+    suspend fun getNextClientNumber(): String {
+        val path = "users/$userId/config/counters"
+        return try {
+            val config = db.getDocument(path, CounterConfig.serializer())
+
+            // 🛡️ REFUERZO: Si el documento no existe O si el contador está en 0, 
+            // forzamos un escaneo de la base de datos para sincronizar.
+            val next = if (config == null || config.lastClientNumber == 0) {
+                Napier.w("Contador no inicializado (valor 0 o null). Sincronizando con clientes existentes...")
+
+                val allModels = fetchAllClientsName()
+                val allIds = db.getCollectionIds(clientsPath)
+
+                val modelIds = allModels.mapNotNull { it.clientId.trim().toIntOrNull() }
+                val docIds = allIds.mapNotNull { it.trim().toIntOrNull() }
+
+                val maxId = (modelIds + docIds).maxOrNull() ?: 0
+
+                val startFrom = maxId + 1
+                Napier.i("Sincronización: Máximo ID detectado: $maxId. Próximo ID: $startFrom")
+                startFrom
+            } else {
+                config.lastClientNumber + 1
+            }
+
+            db.setDocument(path, CounterConfig(lastClientNumber = next), CounterConfig.serializer())
+            next.toString()
+        } catch (e: Exception) {
+            Napier.e("Error crítico en getNextClientNumber", e)
+            "1" // Fallback mínimo
+        }
+    }
+
+    suspend fun peekNextClientNumber(): String {
+        val path = "users/$userId/config/counters"
+        return try {
+            val config = db.getDocument(path, CounterConfig.serializer())
+
+            // Si no existe o es 0, hacemos el peek basado en el escaneo real
+            if (config == null || config.lastClientNumber == 0) {
+                val allModels = fetchAllClientsName()
+                val allIds = db.getCollectionIds(clientsPath)
+                val maxId = (allModels.mapNotNull { it.clientId.trim().toIntOrNull() } +
+                        allIds.mapNotNull { it.trim().toIntOrNull() }).maxOrNull() ?: 0
+                (maxId + 1).toString()
+            } else {
+                (config.lastClientNumber + 1).toString()
+            }
+        } catch (e: Exception) {
+            "..."
+        }
+    }
+
     suspend fun saveClient(client: RemoteResultClientModel): Boolean {
         return try {
-            if (client.clientId.isEmpty()) {
-                val newId =
-                    db.addDocument(clientsPath, client, RemoteResultClientModel.serializer())
-                db.updateDocument<Any>(
-                    "$clientsPath/$newId",
-                    mapOf("Cliente Id" to newId)
-                )
+            val finalClient = if (client.clientId.isEmpty()) {
+                val newId = getNextClientNumber()
+                client.copy(clientId = newId)
             } else {
-                db.setDocument(
-                    "$clientsPath/${client.clientId}",
-                    client,
-                    RemoteResultClientModel.serializer()
-                )
+                client
             }
+
+            db.setDocument(
+                "$clientsPath/${finalClient.clientId}",
+                finalClient,
+                RemoteResultClientModel.serializer()
+            )
             true
         } catch (e: Exception) {
             Napier.e("Error saving client", e)
@@ -123,9 +174,28 @@ class ClientService(
         }
     }
 
+    @kotlinx.serialization.Serializable
+    private data class CounterConfig(val lastClientNumber: Int = 0)
+
     suspend fun deleteClient(clientId: String): Boolean {
         return try {
             db.deleteDocument("$clientsPath/$clientId")
+
+            // Intentar disminuir el contador si el cliente eliminado era el último
+            val path = "users/$userId/config/counters"
+            val config = db.getDocument(path, CounterConfig.serializer())
+            val currentLast = config?.lastClientNumber ?: 0
+            val deletedIdInt = clientId.toIntOrNull()
+
+            if (deletedIdInt != null && deletedIdInt == currentLast) {
+                val newLast = (currentLast - 1).coerceAtLeast(0)
+                db.setDocument(
+                    path,
+                    CounterConfig(lastClientNumber = newLast),
+                    CounterConfig.serializer()
+                )
+            }
+
             true
         } catch (e: Exception) {
             Napier.e("Error deleting client", e)

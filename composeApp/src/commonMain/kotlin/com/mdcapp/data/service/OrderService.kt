@@ -377,7 +377,7 @@ class OrderService(
         return db.observeCollection(
             allBillingsPath,
             RemoteResultBillingModel.serializer(),
-            DatabaseQuery(orderBy = "Timestamp", descending = true, limit = 100)
+            DatabaseQuery(orderBy = "Timestamp", descending = true, limit = 500)
         )
     }
 
@@ -386,7 +386,7 @@ class OrderService(
         return db.observeCollection(
             paymentsRegisterPath,
             RemotePaymentRegisterResult.serializer(),
-            DatabaseQuery(orderBy = "Fecha", descending = true, limit = 100)
+            DatabaseQuery(orderBy = "Fecha", descending = true, limit = 500)
         )
     }
 

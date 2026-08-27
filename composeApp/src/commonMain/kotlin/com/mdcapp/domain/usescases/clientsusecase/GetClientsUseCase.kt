@@ -48,5 +48,9 @@ class GetClientsUseCase(
     suspend fun getAll(): List<ClientModel> {
         return service.fetchAllClientsName().map { it.toClientDomain() }
     }
+
+    suspend fun getNextId(): String {
+        return service.peekNextClientNumber()
+    }
 }
 

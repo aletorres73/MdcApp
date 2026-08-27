@@ -45,5 +45,7 @@ interface IDatabaseRepository {
         query: DatabaseQuery? = null
     ): List<T>
 
+    suspend fun getCollectionIds(path: String): List<String>
+
     fun refresh() {}
 }
