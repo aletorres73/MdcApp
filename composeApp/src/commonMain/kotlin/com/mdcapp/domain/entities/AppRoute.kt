@@ -31,10 +31,14 @@ sealed class AppRoute(val route: String) {
 
     data object Factories : AppRoute("Factories")
 
-    data class AddInvoice(val clientId: String, val orderId: String) : AppRoute("AddInvoice") {
+    data class AddInvoice(val clientId: String? = null, val orderId: String? = null) :
+        AppRoute("AddInvoice") {
         companion object {
-            const val BASE_ROUTE = "AddInvoice/{clientId}/{orderId}"
-            fun createRoute(clientId: String, orderId: String) = "AddInvoice/$clientId/$orderId"
+            const val BASE_ROUTE = "AddInvoice?clientId={clientId}&orderId={orderId}"
+            fun createRoute(clientId: String, orderId: String? = null): String {
+                return if (orderId != null) "AddInvoice?clientId=$clientId&orderId=$orderId"
+                else "AddInvoice?clientId=$clientId"
+            }
         }
     }
 

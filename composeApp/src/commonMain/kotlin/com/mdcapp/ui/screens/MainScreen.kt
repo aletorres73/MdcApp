@@ -395,12 +395,12 @@ fun MainScreen(
             composable(
                 route = AppRoute.AddInvoice.BASE_ROUTE,
                 arguments = listOf(
-                    navArgument("clientId") { type = NavType.StringType },
-                    navArgument("orderId") { type = NavType.StringType }
+                    navArgument("clientId") { type = NavType.StringType; nullable = true },
+                    navArgument("orderId") { type = NavType.StringType; nullable = true }
                 )
             ) {
                 val clientId = it.arguments?.getString("clientId") ?: return@composable
-                val orderId = it.arguments?.getString("orderId") ?: return@composable
+                val orderId = it.arguments?.getString("orderId")
                 AddInvoiceScreen(
                     clientId = clientId,
                     orderId = orderId,

@@ -59,7 +59,7 @@ class DetailInvoiceViewModel(
     private fun loadData(invoiceNumber: String) {
         observeInvoiceUseCase(invoiceNumber)
             .onEach { billing ->
-                if (billing.orderId.isEmpty()) {
+                if (billing.billingNumber.isEmpty()) {
                     _state.update {
                         it.copy(
                             isLoading = false,
@@ -69,34 +69,46 @@ class DetailInvoiceViewModel(
                     return@onEach
                 }
 
-                // Cargar BuyOrder solo si cambia o si aún no se tiene
-                if (_state.value.buyOrder.id != billing.orderId) {
-                    viewModelScope.launch {
-                        try {
-                            val buyOrder = getBuyOrderUseCase(billing.clientId, billing.orderId)
-                            _state.update { it.copy(buyOrder = buyOrder) }
+                // Cargar BuyOrder solo si existe orderId y cambia o si aún no se tiene
+                if (billing.orderId.isNotEmpty()) {
+                    if (_state.value.buyOrder.id != billing.orderId) {
+                        viewModelScope.launch {
+                            try {
+                                val buyOrder = getBuyOrderUseCase(billing.clientId, billing.orderId)
+                                _state.update { it.copy(buyOrder = buyOrder) }
 
-                            // Si aún no tenemos condiciones, intentar cargarlas con la fábrica del pedido
-                            if (_state.value.paymentConditionList.isEmpty()) {
-                                val paymentConditions =
-                                    getPaymentConditionUseCase(billing.brand, buyOrder.factory)
-                                _state.update { it.copy(paymentConditionList = paymentConditions) }
+                                // Si aún no tenemos condiciones, intentar cargarlas con la fábrica del pedido
+                                if (_state.value.paymentConditionList.isEmpty()) {
+                                    val paymentConditions =
+                                        getPaymentConditionUseCase(billing.brand, buyOrder.factory)
+                                    _state.update { it.copy(paymentConditionList = paymentConditions) }
+                                }
+                            } catch (e: Exception) {
+                                Napier.e("Error loading BuyOrder or Conditions", e)
                             }
-                        } catch (e: Exception) {
-                            Napier.e("Error loading BuyOrder or Conditions", e)
+                        }
+                    } else if (_state.value.paymentConditionList.isEmpty()) {
+                        // Si ya tenemos el BuyOrder pero no las condiciones
+                        viewModelScope.launch {
+                            try {
+                                val paymentConditions = getPaymentConditionUseCase(
+                                    billing.brand,
+                                    _state.value.buyOrder.factory
+                                )
+                                _state.update { it.copy(paymentConditionList = paymentConditions) }
+                            } catch (e: Exception) {
+                                Napier.e("Error loading PaymentConditions", e)
+                            }
                         }
                     }
                 } else if (_state.value.paymentConditionList.isEmpty()) {
-                    // Si ya tenemos el BuyOrder pero no las condiciones
+                    // Factura sin pedido: cargar condiciones usando solo la marca
                     viewModelScope.launch {
                         try {
-                            val paymentConditions = getPaymentConditionUseCase(
-                                billing.brand,
-                                _state.value.buyOrder.factory
-                            )
+                            val paymentConditions = getPaymentConditionUseCase(billing.brand, "")
                             _state.update { it.copy(paymentConditionList = paymentConditions) }
                         } catch (e: Exception) {
-                            Napier.e("Error loading PaymentConditions", e)
+                            Napier.e("Error loading PaymentConditions for direct invoice", e)
                         }
                     }
                 }

@@ -64,6 +64,12 @@ fun ClientOrdersScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { onAssignInvoice("") }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.List,
+                            contentDescription = "Facturar sin pedido"
+                        )
+                    }
                     IconButton(onClick = { onAddOrder(clientId) }) {
                         Icon(Icons.Default.Add, contentDescription = "Nuevo Pedido")
                     }

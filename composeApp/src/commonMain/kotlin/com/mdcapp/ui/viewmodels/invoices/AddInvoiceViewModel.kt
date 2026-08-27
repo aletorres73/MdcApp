@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingComments
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.BuyOrderModel
+import com.mdcapp.domain.entities.FactoryModel
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.entities.recalculate
 import com.mdcapp.domain.service.AnalyticsService
@@ -21,6 +22,8 @@ class AddInvoiceViewModel(
     private val createInvoiceUseCase: InvoiceUseCase.CreateInvoice,
     private val getBuyOrderUseCase: BuyOrderUseCase.GetBuyOrderById,
     private val getPaymentConditionUseCase: InvoiceUseCase.GetPaymentCondition,
+    private val getClientNameUseCase: InvoiceUseCase.GetClientName,
+    private val repository: com.mdcapp.domain.repositories.OrderRepository,
     private val analytics: AnalyticsService
 ) : ViewModel() {
 
@@ -37,6 +40,10 @@ class AddInvoiceViewModel(
         val buyOrder: BuyOrderModel = BuyOrderModel(),
         val paymentConditionList: List<PaymentCondition> = emptyList(),
         val selectedCondition: PaymentCondition? = null,
+        val factories: List<FactoryModel> = emptyList(),
+        val selectedFactory: FactoryModel? = null,
+        val branches: List<String> = emptyList(),
+        val selectedBranch: String = "",
         val isSuccess: Boolean = false,
         val error: String? = null
     )
@@ -45,30 +52,70 @@ class AddInvoiceViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
-                val buyOrder = getBuyOrderUseCase(clientId, orderId)
-                val conditions = getPaymentConditionUseCase(buyOrder.branch, buyOrder.factory)
+                val factories = repository.getFactories()
+                if (orderId.isNotBlank()) {
+                    val buyOrder = getBuyOrderUseCase(clientId, orderId)
+                    val conditions = getPaymentConditionUseCase(buyOrder.branch, buyOrder.factory)
 
-                val inheritedCondition = if (buyOrder.paymentCondition.isNotEmpty()) {
-                    PaymentCondition(
-                        paymentName = buyOrder.paymentCondition,
-                        discount = buyOrder.discount,
-                        expiration = buyOrder.expirationDays
-                    )
-                } else null
+                    val inheritedCondition = if (buyOrder.paymentCondition.isNotEmpty()) {
+                        PaymentCondition(
+                            paymentName = buyOrder.paymentCondition,
+                            discount = buyOrder.discount,
+                            expiration = buyOrder.expirationDays
+                        )
+                    } else null
 
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        buyOrder = buyOrder,
-                        paymentConditionList = conditions,
-                        selectedCondition = inheritedCondition
-                    )
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            buyOrder = buyOrder,
+                            paymentConditionList = conditions,
+                            selectedCondition = inheritedCondition,
+                            selectedFactory = factories.find { f -> f.name == buyOrder.factory },
+                            selectedBranch = buyOrder.branch,
+                            factories = factories
+                        )
+                    }
+                } else {
+                    val client = getClientNameUseCase(clientId)
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            buyOrder = BuyOrderModel(
+                                clientId = clientId,
+                                client = client.clientName
+                            ),
+                            factories = factories
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 Napier.e("Error loading data for AddInvoice", e)
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
         }
+    }
+
+    fun onFactorySelected(factory: FactoryModel) {
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    selectedFactory = factory,
+                    selectedBranch = "",
+                    isLoading = true
+                )
+            }
+            try {
+                val conditions = getPaymentConditionUseCase("", factory.name)
+                _state.update { it.copy(paymentConditionList = conditions, isLoading = false) }
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    fun onBranchSelected(branch: String) {
+        _state.update { it.copy(selectedBranch = branch) }
     }
 
     fun saveInvoice(
@@ -93,8 +140,8 @@ class AddInvoiceViewModel(
                     billingNumber = number,
                     orderId = _state.value.orderId,
                     total = amount,
-                    brand = _state.value.buyOrder.factory,
-                    branch = _state.value.buyOrder.branch,
+                    brand = _state.value.selectedFactory?.name ?: "",
+                    branch = _state.value.selectedBranch,
                     clientId = _state.value.buyOrder.clientId,
                     clientName = _state.value.buyOrder.client,
                     payDate = payDate,

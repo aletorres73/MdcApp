@@ -1,6 +1,7 @@
 package com.mdcapp.ui.screens.invoicesClientDetail
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -162,97 +165,137 @@ fun DetailInvoiceScreen(
             )
         }
     ) { padding ->
-        Column(
-            modifier = modifier
-                .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            DatesCard(billing = state.billing) { showDatePicker = true }
+        if (state.error != null) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(state.error!!, color = MaterialTheme.colorScheme.error)
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = onBack) { Text("Volver") }
+                }
+            }
+        } else {
+            Column(
+                modifier = modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 4.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                DatesCard(billing = state.billing) { showDatePicker = true }
 
-            TotalsCard(billing = state.billing)
+                TotalsCard(billing = state.billing)
 
-            /*            ArticlesCard(
-                            articles = state.billing.articles,
-                            expanded = showArticles,
-                            onToggle = { showArticles = !showArticles }
-                        )*/
-
-            PaymentConditionCard(billing = state.billing) { showSheet = true }
-
-            // Sugerencia de Descuento
-            val hasProntoPago = state.payments.any { it.method == MovementMethod.PRONTO_PAGO.name }
-            if (state.billing.expectedDiscount > 0 && !hasProntoPago) {
-                val discountValue = state.billing.total * state.billing.expectedDiscount
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                if (state.billing.orderId.isEmpty()) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Descuento Sugerido", style = MaterialTheme.typography.titleSmall)
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(12.dp))
                             Text(
-                                "Se sugiere aplicar un pronto pago de ${discountValue.toPrint()}",
-                                style = MaterialTheme.typography.bodySmall
+                                "Esta factura fue creada sin un pedido previo",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                        }
-                        TextButton(onClick = {
-                            vm.registerMovement(
-                                amount = discountValue,
-                                notes = "Aplicado según condición: ${state.billing.paymentCondition}",
-                                method = MovementMethod.PRONTO_PAGO
-                            )
-                        }) {
-                            Text("APLICAR")
                         }
                     }
                 }
-            }
 
-            OrderCard(
-                order = buyOrder,
-                expanded = showOrder,
-                onToggle = { showOrder = !showOrder }
-            )
+                PaymentConditionCard(billing = state.billing) { showSheet = true }
 
-            // Nueva sección de Pagos
-            PaymentsSection(
-                payments = state.payments,
-                onAddPayment = {
-                    editingPayment = null
-                    paymentAmount = ""
-                    paymentNotes = ""
-                    paymentMethod = MovementMethod.EFECTIVO
-                    showPaymentDialog = true
-                },
-                onEditPayment = { payment ->
-                    editingPayment = payment
-                    paymentAmount = payment.total.toString()
-                    paymentNotes = payment.notes
-                    paymentMethod = MovementMethod.fromName(payment.method)
-                    showPaymentDialog = true
-                },
-                onReconcile = { vm.reconcileMovement(it) }
-            )
+                // Sugerencia de Descuento
+                val hasProntoPago =
+                    state.payments.any { it.method == MovementMethod.PRONTO_PAGO.name }
+                if (state.billing.expectedDiscount > 0 && !hasProntoPago) {
+                    val discountValue = state.billing.total * state.billing.expectedDiscount
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Descuento Sugerido",
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                Text(
+                                    "Se sugiere aplicar un pronto pago de ${discountValue.toPrint()}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                            TextButton(onClick = {
+                                vm.registerMovement(
+                                    amount = discountValue,
+                                    notes = "Aplicado según condición: ${state.billing.paymentCondition}",
+                                    method = MovementMethod.PRONTO_PAGO
+                                )
+                            }) {
+                                Text("APLICAR")
+                            }
+                        }
+                    }
+                }
 
-            // Nueva sección de Comentarios
-            CommentsSection(
-                comments = state.billing.comments,
-                onAddComment = { showCommentDialog = true }
-            )
+                if (state.billing.orderId.isNotEmpty()) {
+                    OrderCard(
+                        order = buyOrder,
+                        expanded = showOrder,
+                        onToggle = { showOrder = !showOrder }
+                    )
+                }
 
-            // Nueva sección de Cambio de Estado
-            Button(
-                onClick = { showStateDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-            ) {
-                Text("Cambiar Estado (${state.billing.stateBilling})")
+                // Nueva sección de Pagos
+                PaymentsSection(
+                    payments = state.payments,
+                    onAddPayment = {
+                        editingPayment = null
+                        paymentAmount = ""
+                        paymentNotes = ""
+                        paymentMethod = MovementMethod.EFECTIVO
+                        showPaymentDialog = true
+                    },
+                    onEditPayment = { payment ->
+                        editingPayment = payment
+                        paymentAmount = payment.total.toString()
+                        paymentNotes = payment.notes
+                        paymentMethod = MovementMethod.fromName(payment.method)
+                        showPaymentDialog = true
+                    },
+                    onReconcile = { vm.reconcileMovement(it) }
+                )
+
+                // Nueva sección de Comentarios
+                CommentsSection(
+                    comments = state.billing.comments,
+                    onAddComment = { showCommentDialog = true }
+                )
+
+                // Nueva sección de Cambio de Estado
+                Button(
+                    onClick = { showStateDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                ) {
+                    Text("Cambiar Estado (${state.billing.stateBilling})")
+                }
             }
         }
     }

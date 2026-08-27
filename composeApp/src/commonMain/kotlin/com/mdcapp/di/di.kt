@@ -148,13 +148,15 @@ val viewModelModule = module {
             analytics = get()
         )
     }
-    viewModel { (orderId: String) ->
+    viewModel { (orderId: String?) ->
         AddInvoiceViewModel(
-            orderId,
-            get(),
-            get(),
-            get(),
-            get()
+            orderId = orderId ?: "",
+            createInvoiceUseCase = get(),
+            getBuyOrderUseCase = get(),
+            getPaymentConditionUseCase = get(),
+            getClientNameUseCase = get(),
+            repository = get(),
+            analytics = get()
         )
     }
     viewModel { (invoiceNumber: String) ->

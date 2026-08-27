@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,18 +51,18 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun AddInvoiceScreen(
     clientId: String,
-    orderId: String,
+    orderId: String?,
     onBack: () -> Unit,
-    viewModel: AddInvoiceViewModel = koinViewModel(parameters = { parametersOf(orderId) })
+    viewModel: AddInvoiceViewModel = koinViewModel(parameters = { parametersOf(orderId ?: "") })
 ) {
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(clientId, orderId) {
-        viewModel.loadData(clientId, orderId)
+        viewModel.loadData(clientId, orderId ?: "")
     }
     var number by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
-    var deliveryDate by remember { mutableStateOf(0L) }
+    var deliveryDate by remember { mutableLongStateOf(0L) }
     var selectedCondition by remember { mutableStateOf<PaymentCondition?>(null) }
     var selectedType by remember { mutableStateOf("Factura") }
 
@@ -93,7 +94,7 @@ fun AddInvoiceScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Asignar Factura a Pedido") },
+                title = { Text("Crear nueva facturación") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
@@ -109,10 +110,36 @@ fun AddInvoiceScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            Text("Pedido ID: ${state.orderId}", style = MaterialTheme.typography.bodyLarge)
+            if (state.orderId.isNotEmpty()) {
+                Text("Pedido ID: ${state.orderId}", style = MaterialTheme.typography.bodyLarge)
+            } else {
+                Text(
+                    "Facturación sin pedido previo",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
             Text("Cliente: ${state.buyOrder.client}", style = MaterialTheme.typography.bodyMedium)
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            if (state.orderId.isEmpty()) {
+                FactorySelector(
+                    factories = state.factories,
+                    selectedFactory = state.selectedFactory,
+                    onFactorySelected = { viewModel.onFactorySelected(it) }
+                )
+
+                if (state.selectedFactory != null && state.selectedFactory!!.branchList.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SegmentSelector(
+                        segments = state.selectedFactory!!.branchList,
+                        selectedSegment = state.selectedBranch,
+                        onSegmentSelected = { viewModel.onBranchSelected(it) }
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             Text("Tipo de documento", style = MaterialTheme.typography.titleSmall)
             Row(
@@ -209,7 +236,8 @@ fun AddInvoiceScreen(
                         notes = notes
                     )
                 },
-                enabled = !state.isLoading && number.isNotBlank() && amount.isNotBlank(),
+                enabled = !state.isLoading && number.isNotBlank() && amount.isNotBlank() &&
+                        (state.orderId.isNotEmpty() || state.selectedBranch.isNotEmpty()),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Guardar Factura")
