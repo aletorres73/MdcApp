@@ -8,6 +8,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    id("com.google.gms.google-services")
+    alias(libs.plugins.firebaseCrashlytics)
 }
 
 kotlin {
@@ -84,7 +86,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "4.3.4"
+        versionName = "4.3.5"
     }
     buildFeatures {
         compose = true
@@ -142,6 +144,4 @@ compose.desktop {
     }
 }
 
-// apply(plugin = "com.google.gms.google-services")
-// apply(plugin = "com.google.firebase.crashlytics")
 
