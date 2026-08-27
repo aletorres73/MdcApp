@@ -100,6 +100,10 @@ class ClientService(
         }
     }
 
+    fun observeAllClients(): kotlinx.coroutines.flow.Flow<List<RemoteResultClientModel>> {
+        return db.observeCollection(clientsPath, RemoteResultClientModel.serializer())
+    }
+
     suspend fun getNextClientNumber(): String {
         val path = "users/$userId/config/counters"
         return try {

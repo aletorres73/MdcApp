@@ -249,8 +249,7 @@ fun AddInvoiceScreen(
                         notes = notes
                     )
                 },
-                enabled = !state.isLoading && number.isNotBlank() && amount.isNotBlank() &&
-                        (state.orderId.isNotEmpty() || state.selectedBranch.isNotEmpty()),
+                enabled = !state.isLoading && number.isNotBlank() && amount.isNotBlank(),
                 modifier = Modifier.fillMaxWidth(),
                 colors = if (state.isExistingInvoice) ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error

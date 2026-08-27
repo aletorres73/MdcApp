@@ -1,6 +1,7 @@
 package com.mdcapp.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -42,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.ClientModel
 import com.mdcapp.ui.composables.common.LoadingOverlay
 import com.mdcapp.ui.composables.common.RefreshContainer
+import com.mdcapp.ui.composables.common.SearchBar
+import com.mdcapp.ui.utils.AppBackHandler
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -57,14 +61,41 @@ fun ClientsListScreen(
     val state by viewModel.state.collectAsState()
     var clientToDelete by remember { mutableStateOf<ClientModel?>(null) }
 
-    /*
-        // Forzar recarga de clientes al entrar a la pantalla
-        LaunchedEffect(Unit) {
-            viewModel.loadClients()
+    if (state.isSearchMode) {
+        AppBackHandler {
+            viewModel.setSearchMode(false)
         }
-    */
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
+            if (state.isSearchMode) {
+                SearchBar(
+                    query = state.searchQuery.text,
+                    onQueryChange = { viewModel.onQueryChange(it) },
+                    onCleanQuery = { viewModel.clearQuery() },
+                    onBack = { viewModel.setSearchMode(false) },
+                    searchText = "Buscar cliente por nombre o ID..."
+                )
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Mis Clientes (${state.amountClients})",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    IconButton(onClick = { viewModel.setSearchMode(true) }) {
+                        Icon(Icons.Default.Search, contentDescription = "Buscar")
+                    }
+                }
+            }
+
             if (state.isLoading && state.clients.isNotEmpty()) {
                 LinearProgressIndicator(
                     modifier = Modifier

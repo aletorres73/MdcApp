@@ -5,6 +5,7 @@ import com.mdcapp.data.remote.toClientRemote
 import com.mdcapp.data.service.ClientService
 import com.mdcapp.data.service.OrderService
 import com.mdcapp.domain.entities.ClientModel
+import kotlinx.coroutines.flow.map
 
 class GetClientsUseCase(
     private val service: ClientService,
@@ -47,6 +48,10 @@ class GetClientsUseCase(
 
     suspend fun getAll(): List<ClientModel> {
         return service.fetchAllClientsName().map { it.toClientDomain() }
+    }
+
+    fun observeAll(): kotlinx.coroutines.flow.Flow<List<ClientModel>> {
+        return service.observeAllClients().map { list -> list.map { it.toClientDomain() } }
     }
 
     suspend fun getNextId(): String {

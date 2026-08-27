@@ -8,8 +8,10 @@ import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.service.AnalyticsService
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class FactoryViewModel(
@@ -17,8 +19,27 @@ class FactoryViewModel(
     private val analytics: AnalyticsService
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(UiState())
-    val state = _state.asStateFlow()
+    private val _isLoading = MutableStateFlow(false)
+    private val _error = MutableStateFlow<String?>(null)
+    private val _message = MutableStateFlow<String?>(null)
+
+    val state: StateFlow<UiState> = combine(
+        repository.observeFactories(),
+        _isLoading,
+        _error,
+        _message
+    ) { factories, loading, err, msg ->
+        UiState(
+            isLoading = loading,
+            factories = factories.sortedBy { it.name },
+            error = err,
+            message = msg
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = UiState(isLoading = true)
+    )
 
     data class UiState(
         val isLoading: Boolean = false,
@@ -29,20 +50,10 @@ class FactoryViewModel(
 
     init {
         analytics.logScreenView("Factories")
-        loadFactories()
     }
 
     fun loadFactories() {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            try {
-                val factories = repository.getFactories()
-                _state.update { it.copy(isLoading = false, factories = factories) }
-            } catch (e: Exception) {
-                Napier.e("Error loading factories", e)
-                _state.update { it.copy(isLoading = false, error = e.message) }
-            }
-        }
+        // Obsoleto con Flow
     }
 
     fun saveFactory(
@@ -53,7 +64,8 @@ class FactoryViewModel(
         segmentCommissions: Map<String, Double>
     ) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            _isLoading.value = true
+            _error.value = null
             try {
                 val factory = FactoryModel(
                     name = name,
@@ -65,39 +77,43 @@ class FactoryViewModel(
                 val success = repository.saveFactory(factory)
                 if (success) {
                     analytics.logEvent("save_factory_success", mapOf("factory_name" to name))
-                    _state.update { it.copy(message = "Fábrica guardada") }
-                    loadFactories()
+                    _message.value = "Fábrica guardada"
+                    _isLoading.value = false
                 } else {
-                    _state.update { it.copy(isLoading = false, error = "Error al guardar") }
+                    _isLoading.value = false
+                    _error.value = "Error al guardar"
                 }
             } catch (e: Exception) {
                 Napier.e("Error saving factory", e)
-                _state.update { it.copy(isLoading = false, error = e.message) }
+                _isLoading.value = false
+                _error.value = e.message
             }
         }
     }
 
     fun deleteFactory(name: String) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            _isLoading.value = true
+            _error.value = null
             try {
                 val success = repository.deleteFactory(name)
                 if (success) {
                     analytics.logEvent("delete_factory_success", mapOf("factory_name" to name))
-                    _state.update { it.copy(message = "Fábrica eliminada") }
-                    loadFactories()
+                    _message.value = "Fábrica eliminada"
+                    _isLoading.value = false
                 } else {
-                    _state.update { it.copy(isLoading = false, error = "Error al eliminar") }
+                    _isLoading.value = false
+                    _error.value = "Error al eliminar"
                 }
             } catch (e: Exception) {
                 Napier.e("Error deleting factory", e)
-                _state.update { it.copy(isLoading = false, error = e.message) }
+                _isLoading.value = false
+                _error.value = e.message
             }
         }
     }
 
     fun clearMessage() {
-        _state.update { it.copy(message = null) }
+        _message.value = null
     }
 }
-
