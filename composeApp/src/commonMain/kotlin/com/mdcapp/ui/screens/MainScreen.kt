@@ -60,6 +60,7 @@ import com.mdcapp.ui.utils.isAndroid
 import com.mdcapp.ui.utils.showToast
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
+import com.mdcapp.ui.viewmodels.invoices.InvoicesPagedViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -71,13 +72,15 @@ import org.koin.core.parameter.parametersOf
 fun MainScreen(
     onLogout: () -> Unit,
     refreshController: RefreshController = koinInject(),
-    clientsViewModel: ClientsViewModel = koinViewModel()
+    clientsViewModel: ClientsViewModel = koinViewModel(),
+    invoicesPagedViewModel: InvoicesPagedViewModel = koinViewModel()
 ) {
     val navController = rememberNavController()
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
     val clientsState by clientsViewModel.state.collectAsState()
+    val invoicesPagedState by invoicesPagedViewModel.uiState.collectAsState()
 
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
 
@@ -130,7 +133,12 @@ fun MainScreen(
 
     Scaffold(
         topBar = {
-            if (isTabActive && !(currentRoute == AppRoute.Clients.route && clientsState.isSearchMode)) {
+            val isClientsSearch =
+                currentRoute == AppRoute.Clients.route && clientsState.isSearchMode
+            val isInvoicesSearch =
+                currentRoute == AppRoute.InvoicesPaged.route && invoicesPagedState.isSearchMode
+
+            if (isTabActive && !isClientsSearch && !isInvoicesSearch) {
                 TopAppBar(
                     title = {
                         val title = when (currentRoute) {
@@ -169,6 +177,9 @@ fun MainScreen(
                         }
 
                         if (currentRoute == AppRoute.InvoicesPaged.route) {
+                            IconButton(onClick = { invoicesPagedViewModel.setSearchMode(true) }) {
+                                Icon(Icons.Default.Search, contentDescription = "Buscar")
+                            }
                             if (!isAndroid) {
                                 IconButton(onClick = { refreshController.triggerRefresh() }) {
                                     Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
@@ -307,6 +318,7 @@ fun MainScreen(
             composable(AppRoute.InvoicesPaged.route) {
                 Box(modifier = Modifier.padding(innerPadding)) {
                     InvoicesPageScreen(
+                        viewModel = invoicesPagedViewModel,
                         onNavigationInvoice = { num ->
                             navController.navigate(
                                 AppRoute.DetailInvoice.createRoute(

@@ -12,15 +12,20 @@ import com.mdcapp.domain.usescases.InitConfigUseCase
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.ui.utils.AppInstaller
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@OptIn(FlowPreview::class)
 class InvoicesPagedViewModel(
     private val getClients: InvoiceUseCase.GetAllClients,
     private val initConfigUseCase: InitConfigUseCase,
@@ -40,36 +45,49 @@ class InvoicesPagedViewModel(
     private val _updateState = MutableStateFlow(UpdateState.OK)
     private val _overlay = MutableStateFlow<Overlay>(Overlay.None)
 
+    private val debouncedQuery = _searchQuery
+        .map { it.text }
+        .distinctUntilChanged()
+        .debounce { if (it.isEmpty()) 0 else 300 }
+
+    private data class Status(
+        val loading: Boolean,
+        val msg: String?,
+        val upState: UpdateState,
+        val overlay: Overlay,
+        val state: String,
+        val isSearch: Boolean
+    )
+
+    private val status = combine(
+        _isLoading, _message, _updateState, _overlay, _selectedState, _isSearchMode
+    ) { args ->
+        Status(
+            loading = args[0] as Boolean,
+            msg = args[1] as String?,
+            upState = args[2] as UpdateState,
+            overlay = args[3] as Overlay,
+            state = args[4] as String,
+            isSearch = args[5] as Boolean
+        )
+    }
+
     val uiState: StateFlow<InvoiceUiState> = combine(
         observeBillingsUseCase(),
         observeAllPaymentsUseCase(),
-        _selectedState,
         _searchQuery,
-        _isSearchMode,
-        _isLoading,
-        _message,
-        _updateState,
-        _overlay
-    ) { args ->
-        val billings = args[0] as List<BillingModel>
-        val payments = args[1] as List<com.mdcapp.domain.entities.PaymentRegisterModel>
-        val state = args[2] as String
-        val query = args[3] as TextFieldValue
-        val isSearch = args[4] as Boolean
-        val loading = args[5] as Boolean
-        val msg = args[6] as String?
-        val upState = args[7] as UpdateState
-        val overlay = args[8] as Overlay
-
+        debouncedQuery,
+        status
+    ) { billings, payments, rawQuery, query, status ->
         val pendingInvoices = payments
             .filter { it.status == MovementStatus.PENDIENTE.name }
             .map { it.documentNumber }
             .toSet()
 
         val filteredBillings = billings.map { it.recalculate() }.filter { b ->
-            val matchesState = if (state == "Todas") true else b.stateBilling == state
-            val matchesSearch = if (isSearch && query.text.isNotBlank()) {
-                val term = query.text.lowercase().trim()
+            val matchesState = if (status.state == "Todas") true else b.stateBilling == status.state
+            val matchesSearch = if (status.isSearch && query.isNotBlank()) {
+                val term = query.lowercase().trim()
                 b.clientName.lowercase().contains(term) || b.billingNumber.lowercase()
                     .contains(term)
             } else true
@@ -80,15 +98,14 @@ class InvoicesPagedViewModel(
         InvoiceUiState(
             displayInvoices = filteredBillings.sortedByDescending { it.timeStamp },
             invoicesWithPending = pendingInvoices,
-            selectedState = state,
-            searchQuery = query,
-            isSearchMode = isSearch,
-            isLoading = loading,
-            message = msg,
-            updateState = upState,
-            overlay = overlay,
+            selectedState = status.state,
+            searchQuery = rawQuery,
+            isSearchMode = status.isSearch,
+            isLoading = status.loading,
+            message = status.msg,
+            updateState = status.upState,
+            overlay = status.overlay,
             availableStates = listOf(
-                "Todas",
                 "Pendiente",
                 "Cobrado",
                 "Vencido",

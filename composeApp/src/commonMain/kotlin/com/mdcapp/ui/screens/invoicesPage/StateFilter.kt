@@ -34,10 +34,17 @@ fun StateFilter(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
         ) {
+            val label = if (selected == "Todas") "Filtrar por..." else selected
             InputChip(
-                selected = false,
+                selected = selected != "Todas",
                 onClick = { expanded = true },
-                label = { Text(selected) },
+                label = {
+                    Text(
+                        text = label,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable, true)
             )
 
