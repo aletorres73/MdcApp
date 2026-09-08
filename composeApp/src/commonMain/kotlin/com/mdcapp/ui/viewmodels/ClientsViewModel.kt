@@ -174,6 +174,10 @@ class ClientsViewModel(
         }
     }
 
+    fun setShowInactive(show: Boolean) {
+        _showInactive.value = show
+    }
+
     fun toggleShowInactive() {
         _showInactive.value = !_showInactive.value
     }

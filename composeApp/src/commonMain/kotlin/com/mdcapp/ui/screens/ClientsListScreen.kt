@@ -89,12 +89,19 @@ fun ClientsListScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.End
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 FilterChip(
+                    selected = !state.showInactive,
+                    onClick = { viewModel.setShowInactive(false) },
+                    label = { Text("Activos (${state.amountClients})") }
+                )
+
+                FilterChip(
                     selected = state.showInactive,
-                    onClick = { viewModel.toggleShowInactive() },
+                    onClick = { viewModel.setShowInactive(true) },
                     label = { Text("Ver inactivos") },
                     leadingIcon = if (state.showInactive) {
                         {
