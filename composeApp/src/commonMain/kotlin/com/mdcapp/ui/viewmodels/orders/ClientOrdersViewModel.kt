@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class ClientOrdersViewModel(
     clientId: String,
@@ -43,6 +44,14 @@ class ClientOrdersViewModel(
         } catch (e: Exception) {
             Napier.e("Error observing client orders", e)
             _state.update { it.copy(isLoading = false, error = e.message) }
+        }
+    }
+
+    fun refresh(clientId: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            kotlinx.coroutines.delay(800)
+            _state.update { it.copy(isLoading = false) }
         }
     }
 }

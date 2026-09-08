@@ -159,6 +159,7 @@ class InvoicesPagedViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             refreshDatabaseUseCase()
+            kotlinx.coroutines.delay(800) // Feedback visual
             _isLoading.value = false
         }
     }

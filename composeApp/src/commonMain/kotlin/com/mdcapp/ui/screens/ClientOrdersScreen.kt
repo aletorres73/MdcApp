@@ -17,7 +17,6 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,6 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.entities.toFormattedDate
+import com.mdcapp.ui.composables.common.LoadingOverlay
+import com.mdcapp.ui.composables.common.RefreshContainer
 import com.mdcapp.ui.viewmodels.orders.ClientOrdersViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -77,70 +78,69 @@ fun ClientOrdersScreen(
             )
         }
     ) { padding ->
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+            RefreshContainer(
+                isRefreshing = state.isLoading,
+                onRefresh = { viewModel.refresh(clientId) },
+                modifier = Modifier.fillMaxSize()
             ) {
-                CircularProgressIndicator()
-            }
-        } else if (state.orders.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Este cliente no tiene pedidos registrados.")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                this.items(items = state.orders) { order ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = { onOrderClick(order.id, order.factory) }
+                if (state.orders.isEmpty() && !state.isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        ListItem(
-                            headlineContent = { Text("Pedido N° ${order.id}") },
-                            supportingContent = {
-                                Column {
-                                    Text("Fábrica: ${order.factory}")
-                                    if (order.branch.isNotEmpty()) {
-                                        Text(
-                                            "Segmento: ${order.branch}",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.secondary
-                                        )
+                        Text("Este cliente no tiene pedidos registrados.")
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        this.items(items = state.orders) { order ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = { onOrderClick(order.id, order.factory) }
+                            ) {
+                                ListItem(
+                                    headlineContent = { Text("Pedido N° ${order.id}") },
+                                    supportingContent = {
+                                        Column {
+                                            Text("Fábrica: ${order.factory}")
+                                            if (order.branch.isNotEmpty()) {
+                                                Text(
+                                                    "Segmento: ${order.branch}",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.secondary
+                                                )
+                                            }
+                                            Text(
+                                                "Artículos: ${order.articles.size}",
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
+                                            Text(
+                                                "Fecha: ${order.loadedDate.toFormattedDate()}",
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
+                                        }
+                                    },
+                                    trailingContent = {
+                                        Button(onClick = { onAssignInvoice(order.id) }) {
+                                            Icon(
+                                                Icons.AutoMirrored.Filled.List,
+                                                contentDescription = null
+                                            )
+                                            Spacer(Modifier.width(4.dp))
+                                            Text("Facturar")
+                                        }
                                     }
-                                    Text(
-                                        "Artículos: ${order.articles.size}",
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                    Text(
-                                        "Fecha: ${order.loadedDate.toFormattedDate()}",
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
-                            },
-                            trailingContent = {
-                                Button(onClick = { onAssignInvoice(order.id) }) {
-                                    Icon(Icons.AutoMirrored.Filled.List, contentDescription = null)
-                                    Spacer(Modifier.width(4.dp))
-                                    Text("Facturar")
-                                }
+                                )
                             }
-                        )
+                        }
                     }
                 }
             }
+            LoadingOverlay(state.isLoading && state.orders.isEmpty())
         }
     }
 }

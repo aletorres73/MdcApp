@@ -81,7 +81,7 @@ class CreateOrderViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, orderId = orderId) }
             try {
-                val clients = getClientsUseCase.getAll()
+                val clients = getClientsUseCase.getAll().filter { it.isActive }
                 var selectedClient =
                     if (clientId != null) clients.find { it.clientId == clientId } else null
 

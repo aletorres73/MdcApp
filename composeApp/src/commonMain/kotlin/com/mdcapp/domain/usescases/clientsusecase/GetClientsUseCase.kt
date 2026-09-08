@@ -3,13 +3,11 @@ package com.mdcapp.domain.usescases.clientsusecase
 import com.mdcapp.data.remote.toClientDomain
 import com.mdcapp.data.remote.toClientRemote
 import com.mdcapp.data.service.ClientService
-import com.mdcapp.data.service.OrderService
 import com.mdcapp.domain.entities.ClientModel
 import kotlinx.coroutines.flow.map
 
 class GetClientsUseCase(
-    private val service: ClientService,
-    private val orderService: OrderService
+    private val service: ClientService
 ) {
     private var currentPage = 0
 
@@ -40,10 +38,12 @@ class GetClientsUseCase(
     }
 
     suspend fun delete(clientId: String): Boolean {
-        // Primero borramos todos los datos asociados (pedidos, facturas, pagos)
-        orderService.deleteAllClientData(clientId)
-        // Finalmente borramos al cliente
+        // Marcamos al cliente como inactivo
         return service.deleteClient(clientId)
+    }
+
+    suspend fun restore(clientId: String): Boolean {
+        return service.restoreClient(clientId)
     }
 
     suspend fun getAll(): List<ClientModel> {

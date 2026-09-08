@@ -8,18 +8,21 @@ import kotlinx.serialization.Serializable
 data class RemoteResultClientModel(
     @SerialName("Cliente Id") val clientId: String = "",
     @SerialName("Razón Social") val clientName: String = "",
+    @SerialName("Activo") val isActive: Boolean = true,
 )
 
 fun RemoteResultClientModel.toClientDomain() =
     ClientModel(
         clientId = clientId,
         clientName = clientName,
+        isActive = isActive
     )
 
 fun ClientModel.toClientRemote() =
     RemoteResultClientModel(
         clientId = clientId,
         clientName = clientName,
+        isActive = isActive
     )
 
 @Serializable

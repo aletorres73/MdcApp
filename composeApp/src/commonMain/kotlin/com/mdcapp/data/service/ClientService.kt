@@ -183,27 +183,27 @@ class ClientService(
 
     suspend fun deleteClient(clientId: String): Boolean {
         return try {
-            db.deleteDocument("$clientsPath/$clientId")
-
-            // Intentar disminuir el contador si el cliente eliminado era el último
-            val path = "users/$userId/config/counters"
-            val config = db.getDocument(path, CounterConfig.serializer())
-            val currentLast = config?.lastClientNumber ?: 0
-            val deletedIdInt = clientId.toIntOrNull()
-
-            if (deletedIdInt != null && deletedIdInt == currentLast) {
-                val newLast = (currentLast - 1).coerceAtLeast(0)
-                db.setDocument(
-                    path,
-                    CounterConfig(lastClientNumber = newLast),
-                    CounterConfig.serializer()
-                )
-            }
-
+            db.updateDocument<RemoteResultClientModel>(
+                "$clientsPath/$clientId",
+                mapOf("Activo" to false)
+            )
             true
         } catch (e: Exception) {
-            Napier.e("Error deleting client", e)
+            Napier.e("Error deactivating client", e)
+            false
+        }
+    }
+
+    suspend fun restoreClient(clientId: String): Boolean {
+        return try {
+            db.updateDocument<RemoteResultClientModel>(
+                "$clientsPath/$clientId",
+                mapOf("Activo" to true)
+            )
             true
+        } catch (e: Exception) {
+            Napier.e("Error restoring client", e)
+            false
         }
     }
 }

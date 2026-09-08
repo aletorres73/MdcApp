@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
@@ -32,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +58,7 @@ import com.mdcapp.ui.utils.AppBackHandler
 import com.mdcapp.ui.utils.closeApp
 import com.mdcapp.ui.utils.isAndroid
 import com.mdcapp.ui.utils.showToast
+import com.mdcapp.ui.viewmodels.ClientsViewModel
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 import org.koin.compose.koinInject
@@ -67,11 +70,14 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun MainScreen(
     onLogout: () -> Unit,
-    refreshController: RefreshController = koinInject()
+    refreshController: RefreshController = koinInject(),
+    clientsViewModel: ClientsViewModel = koinViewModel()
 ) {
     val navController = rememberNavController()
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+
+    val clientsState by clientsViewModel.state.collectAsState()
 
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
 
@@ -124,7 +130,7 @@ fun MainScreen(
 
     Scaffold(
         topBar = {
-            if (isTabActive) {
+            if (isTabActive && !(currentRoute == AppRoute.Clients.route && clientsState.isSearchMode)) {
                 TopAppBar(
                     title = {
                         val title = when (currentRoute) {
@@ -146,6 +152,9 @@ fun MainScreen(
                             }
                         }
                         if (currentRoute == AppRoute.Clients.route) {
+                            IconButton(onClick = { clientsViewModel.setSearchMode(true) }) {
+                                Icon(Icons.Default.Search, contentDescription = "Buscar")
+                            }
                             if (!isAndroid) {
                                 IconButton(onClick = { refreshController.triggerRefresh() }) {
                                     Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
@@ -311,6 +320,7 @@ fun MainScreen(
             composable(AppRoute.Clients.route) {
                 Box(modifier = Modifier.padding(innerPadding)) {
                     ClientsListScreen(
+                        viewModel = clientsViewModel,
                         onOrdersClick = { id ->
                             navController.navigate(
                                 AppRoute.ClientOrders.createRoute(
