@@ -1,5 +1,6 @@
 package com.mdcapp.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +33,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.mdcapp.domain.config.appVersion
 import com.mdcapp.ui.viewmodels.LoginViewModel
+import mdcapp.composeapp.generated.resources.Res
+import mdcapp.composeapp.generated.resources.logo_app
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
@@ -58,7 +62,13 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("MDC App - Vendedores", style = MaterialTheme.typography.headlineMedium)
+        Image(
+            painter = painterResource(Res.drawable.logo_app),
+            contentDescription = "App Logo",
+            modifier = Modifier.size(200.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Gestión - Vendedores", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
