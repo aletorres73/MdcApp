@@ -1,6 +1,7 @@
 package com.mdcapp.di
 
 import android.content.Context
+import com.mdcapp.BuildKonfig
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.FirebaseOptions
 import dev.gitlive.firebase.initialize
@@ -11,9 +12,9 @@ actual fun initFirebaseApp(context: Any?) {
         val appContext = context as? Context ?: return
 
         val firebaseOptions = FirebaseOptions(
-            projectId = "database-rw-60033",
-            apiKey = "AIzaSyC9N_Nnpz0w4YK0VEsHTr7lUok4Xja9X1M",
-            applicationId = "1:905643704793:web:db86558483e42ac480d9c8",
+            projectId = BuildKonfig.FIREBASE_PROJECT_ID,
+            apiKey = BuildKonfig.FIREBASE_API_KEY,
+            applicationId = BuildKonfig.FIREBASE_APP_ID_ANDROID,
         )
 
         // Using GitLive initialization with explicit options to ensure it works without google-services plugin

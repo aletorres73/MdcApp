@@ -1,5 +1,6 @@
 package com.mdcapp.data.repositories
 
+import com.mdcapp.BuildKonfig
 import com.mdcapp.domain.repositories.IStorageRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -16,9 +17,9 @@ class DesktopStorageRepository(
     private val authRepository: DesktopAuthRepository
 ) : IStorageRepository {
 
-    private val bucket = "database-rw-60033.firebasestorage.app"
+    private val bucket = BuildKonfig.FIREBASE_STORAGE_BUCKET
     private val baseUrl = "https://firebasestorage.googleapis.com/v0/b/$bucket/o"
-    private val apiKey = "AIzaSyC8RSmswZFBr4IhOgjtTyxH0GojOtu9F8k"
+    private val apiKey = BuildKonfig.FIREBASE_API_KEY
 
     private fun HttpRequestBuilder.applyAuth(token: String?) {
         // La API Key identifica el proyecto en Firebase Storage REST

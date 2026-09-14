@@ -1,5 +1,6 @@
 package com.mdcapp.data.repositories
 
+import com.mdcapp.BuildKonfig
 import com.mdcapp.domain.model.AppUser
 import com.mdcapp.domain.repositories.IAuthRepository
 import io.ktor.client.HttpClient
@@ -20,7 +21,7 @@ import java.util.prefs.Preferences
 
 class DesktopAuthRepository(private val client: HttpClient) : IAuthRepository {
     // Unificada con google-services.json para asegurar compatibilidad con Firestore
-    private val apiKey = "AIzaSyC8RSmswZFBr4IhOgjtTyxH0GojOtu9F8k"
+    private val apiKey = BuildKonfig.FIREBASE_API_KEY
 
     private val prefs = Preferences.userRoot().node("com.mdcapp.auth")
 

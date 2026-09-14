@@ -1,6 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -10,6 +11,42 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     id("com.google.gms.google-services")
     alias(libs.plugins.firebaseCrashlytics)
+    alias(libs.plugins.buildkonfig)
+}
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+buildkonfig {
+    packageName = "com.mdcapp"
+    objectName = "BuildKonfig"
+    exposeObjectWithName = "BuildKonfig"
+    defaultConfigs {
+        buildConfigField(
+            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
+            "FIREBASE_API_KEY",
+            localProperties.getProperty("firebase.api.key") ?: ""
+        )
+        buildConfigField(
+            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
+            "FIREBASE_PROJECT_ID",
+            localProperties.getProperty("firebase.project.id") ?: ""
+        )
+        buildConfigField(
+            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
+            "FIREBASE_STORAGE_BUCKET",
+            localProperties.getProperty("firebase.storage.bucket") ?: ""
+        )
+        buildConfigField(
+            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
+            "FIREBASE_APP_ID_ANDROID",
+            localProperties.getProperty("firebase.app.id.android") ?: ""
+        )
+    }
 }
 
 kotlin {

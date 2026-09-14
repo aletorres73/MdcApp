@@ -1,5 +1,6 @@
 package com.mdcapp.data.repositories
 
+import com.mdcapp.BuildKonfig
 import com.mdcapp.domain.repositories.DatabaseQuery
 import com.mdcapp.domain.repositories.IDatabaseRepository
 import io.ktor.client.HttpClient
@@ -38,8 +39,8 @@ class DesktopDatabaseRepository(
     private val authRepository: DesktopAuthRepository
 ) : IDatabaseRepository {
 
-    private val projectId = "database-rw-60033"
-    private val apiKey = "AIzaSyC8RSmswZFBr4IhOgjtTyxH0GojOtu9F8k"
+    private val projectId = BuildKonfig.FIREBASE_PROJECT_ID
+    private val apiKey = BuildKonfig.FIREBASE_API_KEY
     private val baseUrl =
         "https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents"
     private val json = Json {
