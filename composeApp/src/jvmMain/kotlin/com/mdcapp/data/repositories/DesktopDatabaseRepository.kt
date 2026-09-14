@@ -183,7 +183,15 @@ class DesktopDatabaseRepository(
 
                 // Nuevos filtros
                 query.filters.forEach { filter ->
-                    allFilters.add(buildFieldFilter(filter.field, filter.operator, filter.value))
+                    allFilters.add(
+                        buildFieldFilter(
+                            filter.field,
+                            filter.operator,
+                            filter.value,
+                            filter.values,
+                            filter.isNumeric
+                        )
+                    )
                 }
 
                 if (allFilters.isNotEmpty()) {
@@ -240,14 +248,46 @@ class DesktopDatabaseRepository(
         }
     }
 
-    private fun buildFieldFilter(field: String, op: String, value: String): JsonObject {
+    private fun buildFieldFilter(
+        field: String,
+        op: String,
+        value: String,
+        values: List<String>? = null,
+        isNumeric: Boolean = false
+    ): JsonObject {
+        val mappedOp = when (op) {
+            "ARRAY_CONTAINS" -> "ARRAY_CONTAINS"
+            "IN" -> "IN"
+            else -> op
+        }
         return buildJsonObject {
             put("fieldFilter", buildJsonObject {
                 put(
                     "field",
                     buildJsonObject { put("fieldPath", JsonPrimitive(quoteFieldPath(field))) })
-                put("op", JsonPrimitive(op))
-                put("value", wrapValue(JsonPrimitive(value)))
+                put("op", JsonPrimitive(mappedOp))
+                if (mappedOp == "IN" && values != null) {
+                    put("value", wrapValue(buildJsonArray {
+                        values.forEach { v ->
+                            if (isNumeric) {
+                                val num = v.toLongOrNull() ?: v.toDoubleOrNull()
+                                if (num != null) add(JsonPrimitive(num)) else add(JsonPrimitive(v))
+                            } else {
+                                add(JsonPrimitive(v))
+                            }
+                        }
+                    }))
+                } else {
+                    if (isNumeric) {
+                        val num = value.toLongOrNull() ?: value.toDoubleOrNull()
+                        put(
+                            "value",
+                            wrapValue(if (num != null) JsonPrimitive(num) else JsonPrimitive(value))
+                        )
+                    } else {
+                        put("value", wrapValue(JsonPrimitive(value)))
+                    }
+                }
             })
         }
     }

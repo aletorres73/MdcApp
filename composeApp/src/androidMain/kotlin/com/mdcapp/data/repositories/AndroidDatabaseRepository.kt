@@ -62,13 +62,29 @@ class AndroidDatabaseRepository(private val db: FirebaseFirestore) : IDatabaseRe
             // Nuevos filtros
             it.filters.forEach { filter ->
                 val field = filter.field
-                val value = filter.value
+                val rawValue = filter.value
+                val isNumeric = filter.isNumeric
+
+                val value: Any = if (isNumeric) {
+                    rawValue.toLongOrNull() ?: rawValue.toDoubleOrNull() ?: rawValue
+                } else rawValue
+
                 q = when (filter.operator) {
                     "EQUAL" -> q.where { field.equalTo(value) }
                     "GREATER_THAN_OR_EQUAL" -> q.where { field.greaterThanOrEqualTo(value) }
                     "LESS_THAN" -> q.where { field.lessThan(value) }
                     "LESS_THAN_OR_EQUAL" -> q.where { field.lessThanOrEqualTo(value) }
                     "GREATER_THAN" -> q.where { field.greaterThan(value) }
+                    "ARRAY_CONTAINS" -> q.where { field.contains(value) }
+                    "IN" -> {
+                        val rawValues = filter.values ?: emptyList()
+                        if (rawValues.isNotEmpty()) {
+                            val values: List<Any> = if (isNumeric) {
+                                rawValues.map { v -> v.toLongOrNull() ?: v.toDoubleOrNull() ?: v }
+                            } else rawValues
+                            q.where { field.inArray(values) }
+                        } else q
+                    }
                     else -> q
                 }
             }

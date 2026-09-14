@@ -137,6 +137,15 @@ class OrderRepository(private val service: OrderService) {
         return service.deleteFactory(factoryName)
     }
 
+    suspend fun fetchAgendaBillings(dateFrom: Long, dateTo: Long) =
+        service.fetchAgendaBillings(dateFrom, dateTo).map { it.toBillingDomain() }
+
+    suspend fun fetchPaymentsByDateRange(start: Long, end: Long) =
+        service.fetchPaymentsByDateRange(start, end).map { it.toPaymentDomain() }
+
+    suspend fun fetchBillingsByNumbers(numbers: List<String>) =
+        service.fetchBillingsByNumbers(numbers).map { it.toBillingDomain() }
+
     suspend fun getFactories(): List<FactoryModel> {
         return service.fetchAllFactories().map { it.toFactoryDomain() }
     }

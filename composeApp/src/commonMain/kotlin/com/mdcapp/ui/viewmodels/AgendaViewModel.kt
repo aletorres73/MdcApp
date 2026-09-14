@@ -5,18 +5,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.toLocalDate
-import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.service.AnalyticsService
+import com.mdcapp.domain.usescases.agendausecase.AgendaUseCase
 import com.mdcapp.ui.theme.getBillingStatusColor
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
 
 class AgendaViewModel(
-    private val repository: OrderRepository,
+    private val fetchAgenda: AgendaUseCase.FetchAgenda,
     private val analytics: AnalyticsService
 ) : ViewModel() {
 
@@ -33,8 +38,19 @@ class AgendaViewModel(
 
     private val _isFilteringUrgent = MutableStateFlow(false)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val _billings = _currentWeekStart.flatMapLatest { weekStart ->
+        flow {
+            emit(emptyList<BillingModel>()) // Loading state placeholder
+            val dateFrom = weekStart.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val dateTo = weekStart.plusDays(6).atTime(LocalTime.MAX).atZone(ZoneId.systemDefault())
+                .toInstant().toEpochMilli()
+            emit(fetchAgenda(dateFrom, dateTo))
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val uiState: StateFlow<UiState> = combine(
-        repository.observeAllBillings(),
+        _billings,
         _selectedDate,
         _currentWeekStart,
         _isFilteringUrgent

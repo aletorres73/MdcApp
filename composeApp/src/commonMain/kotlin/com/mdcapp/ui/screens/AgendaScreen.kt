@@ -442,13 +442,13 @@ fun DayItem(
         )
 
         Row(
-            modifier = Modifier.height(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
+            modifier = Modifier.height(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
         ) {
             indicators.take(3).forEach { color ->
                 Box(
                     modifier = Modifier
-                        .size(4.dp)
+                        .size(5.dp)
                         .clip(CircleShape)
                         .background(color)
                 )

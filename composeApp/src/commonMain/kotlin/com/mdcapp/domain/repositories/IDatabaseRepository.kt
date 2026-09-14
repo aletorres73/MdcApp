@@ -17,8 +17,10 @@ data class DatabaseQuery(
 @kotlinx.serialization.Serializable
 data class Filter(
     val field: String,
-    val operator: String, // "EQUAL", "GREATER_THAN_OR_EQUAL", "LESS_THAN"
-    val value: String
+    val operator: String, // "EQUAL", "GREATER_THAN_OR_EQUAL", "LESS_THAN", "ARRAY_CONTAINS", "IN"
+    val value: String = "",
+    val values: List<String>? = null,
+    val isNumeric: Boolean = false
 )
 
 interface IDatabaseRepository {

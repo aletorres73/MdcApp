@@ -120,7 +120,6 @@ class InvoiceUseCase(
             limit: Long,
             state: String,
             cursor: String? = null,
-            direction: String = "desc",
             client: String? = null,
             number: String? = null
         ): Pair<InvoicePage, String?> {
@@ -128,7 +127,6 @@ class InvoiceUseCase(
                 state = state,
                 limit = limit,
                 startAfterId = cursor,
-                direction = direction,
                 client = client,
                 number = number
             )

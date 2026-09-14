@@ -4,20 +4,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.CommissionConfig
-import com.mdcapp.domain.entities.FactoryModel
-import com.mdcapp.domain.entities.MovementMethod
 import com.mdcapp.domain.entities.PaymentRegisterModel
-import com.mdcapp.domain.logic.CommissionCalculator
 import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.service.AnalyticsService
+import com.mdcapp.domain.usescases.commissionusecase.CommissionUseCase
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
 class CommissionsViewModel(
+    private val getCommissions: CommissionUseCase.GetCommissions,
     private val repository: OrderRepository,
     private val analytics: AnalyticsService
 ) : ViewModel() {
@@ -29,58 +31,41 @@ class CommissionsViewModel(
         analytics.logScreenView("Commissions")
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val _commissionResults = _filterState.flatMapLatest { filters ->
+        flow {
+            if (filters.startDate != null && filters.endDate != null) {
+                emit(getCommissions(filters.startDate, filters.endDate, filters.config))
+            } else {
+                emit(emptyList<CommissionUseCase.CommissionResult>())
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val state: StateFlow<UiState> = combine(
-        repository.observeAllBillings(),
-        repository.observeAllPayments(),
+        _commissionResults,
         repository.observeFactories(),
         _filterState
-    ) { billings, payments, factories, filters ->
+    ) { results, factories, filters ->
 
-        val filteredPayments = payments.filter { payment ->
-            val inRange = if (filters.startDate != null && filters.endDate != null) {
-                // Ajustar el fin del día para incluir los pagos del último día seleccionado
-                val adjustedEndDate = filters.endDate + (24 * 60 * 60 * 1000) - 1
-                payment.date in filters.startDate..adjustedEndDate
+        val items = results.mapNotNull { result ->
+            val billing = result.billing
+            val payment = result.payment
+
+            val matchesFactory = if (filters.selectedFactory != null) {
+                billing.brand.equals(filters.selectedFactory, ignoreCase = true)
             } else true
 
-            val isRealPayment = !MovementMethod.fromName(payment.method).isVirtual
+            val matchesSegment = if (filters.selectedSegment != null) {
+                billing.branch.equals(filters.selectedSegment, ignoreCase = true)
+            } else true
 
-            inRange && isRealPayment
-        }
+            val matchesType = if (filters.selectedType != null) {
+                billing.type.contains(filters.selectedType, ignoreCase = true)
+            } else true
 
-        val items = filteredPayments.mapNotNull { payment ->
-            // Buscar la factura asociada al pago para obtener los metadatos (Sucursal, Tipo, Fábrica)
-            val billing = billings.find { it.billingNumber == payment.documentNumber }
-
-            if (billing != null) {
-                val matchesFactory = if (filters.selectedFactory != null) {
-                    billing.brand.equals(filters.selectedFactory, ignoreCase = true)
-                } else true
-
-                val matchesSegment = if (filters.selectedSegment != null) {
-                    billing.branch.equals(filters.selectedSegment, ignoreCase = true)
-                } else true
-
-                val matchesType = if (filters.selectedType != null) {
-                    billing.type.contains(filters.selectedType, ignoreCase = true)
-                } else true
-
-                if (matchesFactory && matchesSegment && matchesType) {
-                    // Buscar configuración de fábrica (insensible a mayúsculas para asegurar match)
-                    val factory =
-                        factories.find { it.name.equals(billing.brand, ignoreCase = true) }
-                            ?: FactoryModel(billing.brand, emptyList(), emptyList())
-
-                    val commission = CommissionCalculator.calculate(
-                        amount = payment.total,
-                        factory = factory,
-                        branch = billing.branch,
-                        docType = billing.type,
-                        config = filters.config
-                    )
-
-                    CommissionItem(payment, billing, commission)
-                } else null
+            if (matchesFactory && matchesSegment && matchesType) {
+                CommissionItem(payment, billing, result.commission)
             } else null
         }
 

@@ -30,23 +30,23 @@ class ClientService(
         return try {
             if (!hasMore) return emptyList<RemoteResultClientModel>() to false
 
-            val allClients = db.getCollection(clientsPath, RemoteResultClientModel.serializer())
-                .sortedBy { it.clientName }
+            val query = com.mdcapp.domain.repositories.DatabaseQuery(
+                orderBy = "Razón Social",
+                descending = false,
+                limit = limit.toInt(),
+                startAfter = lastDocumentId
+            )
 
-            val startIndex = if (lastDocumentId == null) 0 else {
-                val index = allClients.indexOfFirst { it.clientId == lastDocumentId }
-                if (index == -1) 0 else index + 1
-            }
-
-            val pagedItems = allClients.drop(startIndex).take(limit.toInt())
+            val pagedItems =
+                db.getCollection(clientsPath, RemoteResultClientModel.serializer(), query)
 
             if (pagedItems.isEmpty()) {
                 hasMore = false
                 return emptyList<RemoteResultClientModel>() to false
             }
 
-            lastDocumentId = pagedItems.lastOrNull()?.clientId
-            hasMore = allClients.size > startIndex + pagedItems.size
+            lastDocumentId = pagedItems.lastOrNull()?.clientName
+            hasMore = pagedItems.size == limit.toInt()
 
             pagedItems to hasMore
         } catch (e: Exception) {
@@ -66,16 +66,22 @@ class ClientService(
 
     suspend fun searchClientsByName(query: String): List<RemoteResultClientModel> {
         val searchTerm = query.trim().lowercase()
+        if (searchTerm.isEmpty()) return emptyList()
 
         return try {
-            val allClients = db.getCollection(clientsPath, RemoteResultClientModel.serializer())
-
-            allClients.filter { client ->
-                if (searchTerm.isEmpty()) true
-                else client.clientName.lowercase().contains(searchTerm)
-            }
+            val dbQuery = com.mdcapp.domain.repositories.DatabaseQuery(
+                filters = listOf(
+                    com.mdcapp.domain.repositories.Filter(
+                        "searchTerms",
+                        "ARRAY_CONTAINS",
+                        searchTerm
+                    )
+                ),
+                limit = 20
+            )
+            db.getCollection(clientsPath, RemoteResultClientModel.serializer(), dbQuery)
         } catch (e: Exception) {
-            Napier.e("Error fetching clients", e)
+            Napier.e("Error searching clients", e)
             emptyList()
         }
     }

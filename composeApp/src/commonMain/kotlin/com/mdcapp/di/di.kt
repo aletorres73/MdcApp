@@ -14,7 +14,9 @@ import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.service.RefreshController
 import com.mdcapp.domain.usescases.InitConfigUseCase
+import com.mdcapp.domain.usescases.agendausecase.AgendaUseCase
 import com.mdcapp.domain.usescases.clientsusecase.GetClientsUseCase
+import com.mdcapp.domain.usescases.commissionusecase.CommissionUseCase
 import com.mdcapp.domain.usescases.homeusescases.HomeUseCase
 import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
@@ -90,6 +92,9 @@ val appModule = module {
     single<InvoiceUseCase.CreateInvoice> { get<InvoiceUseCase>().CreateInvoice() }
     single<InvoiceUseCase.DeleteInvoice> { get<InvoiceUseCase>().DeleteInvoice() }
     single<InvoiceUseCase.RefreshDatabase> { get<InvoiceUseCase>().RefreshDatabase() }
+
+    single<AgendaUseCase.FetchAgenda> { get<AgendaUseCase>().FetchAgenda() }
+    single<CommissionUseCase.GetCommissions> { get<CommissionUseCase>().GetCommissions() }
 }
 
 
@@ -118,6 +123,8 @@ val dataModule = module {
     factoryOf(::GetFactoriesListUseCase)
     factoryOf(::GetClientsUseCase)
     factoryOf(::InvoiceUseCase)
+    factoryOf(::AgendaUseCase)
+    factoryOf(::CommissionUseCase)
 }
 
 val viewModelModule = module {

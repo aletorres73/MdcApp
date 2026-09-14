@@ -7,6 +7,7 @@ import com.mdcapp.data.remote.RemoteResultFactoryModel
 import com.mdcapp.data.remote.RemoteResultOrder
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.repositories.DatabaseQuery
+import com.mdcapp.domain.repositories.Filter
 import com.mdcapp.domain.repositories.IDatabaseRepository
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.Flow
@@ -116,16 +117,11 @@ class OrderService(
 
     suspend fun fetchBuyOrdersByClient(clientId: String): List<RemoteResultBuyOrder> {
         return try {
-            db.getCollection(clientOrdersPath(clientId), RemoteResultBuyOrder.serializer())
-                .map { data ->
-                    if (data.id.isEmpty() || data.order.isEmpty()) {
-                        // We don't have the doc.id here easily with getCollection unless the repo provides it.
-                        // Assuming it's part of the data or we just return it.
-                        data
-                    } else {
-                        data
-                    }
-                }
+            val query = DatabaseQuery(
+                orderBy = "Fecha de carga",
+                descending = true
+            )
+            db.getCollection(clientOrdersPath(clientId), RemoteResultBuyOrder.serializer(), query)
         } catch (e: Exception) {
             Napier.e("Error fetchBuyOrdersByClient", e)
             emptyList()
@@ -300,6 +296,111 @@ class OrderService(
                 .map { it.name }
         } catch (e: Exception) {
             Napier.e("firestore --- on fetchFactoriesLisName: $e ")
+            emptyList()
+        }
+    }
+
+    suspend fun fetchAgendaBillings(dateFrom: Long, dateTo: Long): List<RemoteResultBillingModel> {
+        return try {
+            // Consulta 1: Programados de la semana
+            val queryWeek = DatabaseQuery(
+                filters = listOf(
+                    Filter(
+                        field = "Estado",
+                        operator = "IN",
+                        values = listOf("Pendiente", "Por vencer", "Vencido")
+                    ),
+                    Filter(
+                        field = "Fecha Pago",
+                        operator = "GREATER_THAN_OR_EQUAL",
+                        value = dateFrom.toString(),
+                        isNumeric = true
+                    ),
+                    Filter(
+                        field = "Fecha Pago",
+                        operator = "LESS_THAN_OR_EQUAL",
+                        value = dateTo.toString(),
+                        isNumeric = true
+                    )
+                )
+            )
+
+            // Consulta 2: Urgentes sin límite de fecha
+            val queryUrgent = DatabaseQuery(
+                filters = listOf(
+                    Filter(
+                        field = "Estado",
+                        operator = "IN",
+                        values = listOf("Vencido", "Por vencer")
+                    )
+                )
+            )
+
+            val weekBillings =
+                db.getCollection(allBillingsPath, RemoteResultBillingModel.serializer(), queryWeek)
+            val urgentBillings = db.getCollection(
+                allBillingsPath,
+                RemoteResultBillingModel.serializer(),
+                queryUrgent
+            )
+
+            // Merge y filtrado inicial (duplicados por Numero)
+            (weekBillings + urgentBillings).distinctBy { it.billingNumber }
+        } catch (e: Exception) {
+            Napier.e("OrderService: Error fetchAgendaBillings", e)
+            emptyList()
+        }
+    }
+
+    suspend fun fetchPaymentsByDateRange(
+        start: Long,
+        end: Long
+    ): List<RemotePaymentRegisterResult> {
+        return try {
+            val query = DatabaseQuery(
+                filters = listOf(
+                    Filter(
+                        field = "Fecha",
+                        operator = "GREATER_THAN_OR_EQUAL",
+                        value = start.toString(),
+                        isNumeric = true
+                    ),
+                    Filter(
+                        field = "Fecha",
+                        operator = "LESS_THAN_OR_EQUAL",
+                        value = end.toString(),
+                        isNumeric = true
+                    )
+                )
+            )
+            db.getCollection(paymentsRegisterPath, RemotePaymentRegisterResult.serializer(), query)
+        } catch (e: Exception) {
+            Napier.e("OrderService: Error fetchPaymentsByDateRange", e)
+            emptyList()
+        }
+    }
+
+    suspend fun fetchBillingsByNumbers(numbers: List<String>): List<RemoteResultBillingModel> {
+        if (numbers.isEmpty()) return emptyList()
+        return try {
+            val results = mutableListOf<RemoteResultBillingModel>()
+            numbers.chunked(30).forEach { chunk ->
+                val query = DatabaseQuery(
+                    filters = listOf(
+                        Filter(field = "Numero", operator = "IN", values = chunk)
+                    )
+                )
+                results.addAll(
+                    db.getCollection(
+                        allBillingsPath,
+                        RemoteResultBillingModel.serializer(),
+                        query
+                    )
+                )
+            }
+            results
+        } catch (e: Exception) {
+            Napier.e("OrderService: Error fetchBillingsByNumbers", e)
             emptyList()
         }
     }

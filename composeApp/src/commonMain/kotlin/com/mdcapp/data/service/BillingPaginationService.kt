@@ -22,8 +22,7 @@ class BillingPaginationService(
         client: String?,
         number: String?,
         limit: Long,
-        startAfterId: String?,
-        direction: String = "desc"
+        startAfterId: String?
     ): InvoicePage {
         return try {
             val filters = mutableListOf<Filter>()
@@ -32,49 +31,16 @@ class BillingPaginationService(
                 filters.add(Filter("Estado", "EQUAL", state))
             }
 
-            // Búsqueda por prefijo para cliente
-            var activeOrderBy = "Timestamp"
-            if (!client.isNullOrBlank()) {
-                activeOrderBy = "Razon Social"
-                filters.add(
-                    Filter(
-                        "Razon Social",
-                        "GREATER_THAN_OR_EQUAL",
-                        client
-                    )
-                )
-                filters.add(
-                    Filter(
-                        "Razon Social",
-                        "LESS_THAN",
-                        client + "\uf8ff"
-                    )
-                )
-            }
-
-            // Búsqueda por prefijo para número
-            if (!number.isNullOrBlank()) {
-                activeOrderBy = "Numero"
-                filters.add(
-                    Filter(
-                        "Numero",
-                        "GREATER_THAN_OR_EQUAL",
-                        number
-                    )
-                )
-                filters.add(
-                    Filter(
-                        "Numero",
-                        "LESS_THAN",
-                        number + "\uf8ff"
-                    )
-                )
+            // Búsqueda escalable usando searchTerms
+            val searchValue = client ?: number
+            if (!searchValue.isNullOrBlank()) {
+                filters.add(Filter("searchTerms", "ARRAY_CONTAINS", searchValue.lowercase()))
             }
 
             val query = DatabaseQuery(
                 filters = filters,
-                orderBy = activeOrderBy,
-                descending = direction == "desc",
+                orderBy = "Timestamp",
+                descending = true,
                 limit = limit.toInt(),
                 startAfter = startAfterId
             )
