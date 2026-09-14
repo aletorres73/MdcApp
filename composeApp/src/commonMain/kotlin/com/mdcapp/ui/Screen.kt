@@ -1,13 +1,13 @@
 package com.mdcapp.ui
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import com.mdcapp.ui.theme.AppTheme
 
 @Composable
 fun Screen(
     content: @Composable () -> Unit
 ) {
-    MaterialTheme {
+    AppTheme {
         content()
     }
 }
