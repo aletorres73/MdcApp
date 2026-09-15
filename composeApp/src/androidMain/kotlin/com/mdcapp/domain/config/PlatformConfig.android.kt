@@ -46,7 +46,7 @@ actual fun checkUpdate(remote: RemoteInitConfig): Pair<UpdateState, String> {
 }
 
 
-actual fun downloadInstaller(context: Any, url: String): Boolean {
+actual fun downloadInstaller(context: Any, url: String, version: String): Boolean {
     val crashlytics = Firebase.crashlytics
     val analytics = GlobalContext.get().get<AnalyticsService>()
 
@@ -70,7 +70,7 @@ actual fun downloadInstaller(context: Any, url: String): Boolean {
 
         setDestinationInExternalPublicDir(
             Environment.DIRECTORY_DOWNLOADS,
-            "mdcApp.apk"
+            "MdcApp-v$version.apk"
         )
 
         setMimeType("application/vnd.android.package-archive")

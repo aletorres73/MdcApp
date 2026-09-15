@@ -41,10 +41,10 @@ actual fun shareText(text: String, title: String) {
 }
 
 class DesktopAppInstaller : AppInstaller {
-    override fun downloadAndInstall(url: String) {
+    override fun downloadAndInstall(url: String, version: String) {
         // En desktop la actualización automática suele ser distinta (Sparkle, etc.)
         // Por ahora lo dejamos vacío o abriendo el navegador.
-        println("Actualización no implementada en Desktop para la URL: $url")
+        println("Actualización no implementada en Desktop para la URL: $url (version: $version)")
     }
 }
 

@@ -6,7 +6,7 @@ import com.mdcapp.domain.entities.UpdateState
 
 expect fun checkUpdate(remote: RemoteInitConfig): Pair<UpdateState, String>
 
-expect fun downloadInstaller(context: Any, url: String): Boolean
+expect fun downloadInstaller(context: Any, url: String, version: String): Boolean
 
 expect val appVersion: String
 

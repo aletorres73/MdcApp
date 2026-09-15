@@ -16,7 +16,7 @@ expect fun closeApp()
 expect fun shareText(text: String, title: String = "Compartir")
 
 interface AppInstaller {
-    fun downloadAndInstall(url: String)
+    fun downloadAndInstall(url: String, version: String)
 }
 
 expect fun getAppInstaller(context: Any? = null): AppInstaller

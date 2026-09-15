@@ -13,9 +13,11 @@ class InitConfigUseCase(private val initService: InitService) {
     }
 
     suspend fun download(installer: AppInstaller): Boolean {
-        val url = initService.init().apkUrl
-        Napier.i("download: $url")
-        installer.downloadAndInstall(url)
+        val config = initService.init()
+        val url = config.apkUrl
+        val version = config.versionName
+        Napier.i("download: $url, version: $version")
+        installer.downloadAndInstall(url, version)
         return true
     }
 }

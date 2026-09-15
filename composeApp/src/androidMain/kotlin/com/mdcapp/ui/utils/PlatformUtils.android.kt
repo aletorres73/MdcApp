@@ -47,8 +47,8 @@ actual fun shareText(text: String, title: String) {
 }
 
 class AndroidAppInstaller(private val context: Context) : AppInstaller {
-    override fun downloadAndInstall(url: String) {
-        downloadInstaller(context, url)
+    override fun downloadAndInstall(url: String, version: String) {
+        downloadInstaller(context, url, version)
     }
 }
 

@@ -7,7 +7,7 @@ actual fun checkUpdate(remote: RemoteInitConfig): Pair<UpdateState, String> {
     return UpdateState.OK to ""
 }
 
-actual fun downloadInstaller(context: Any, url: String): Boolean {
+actual fun downloadInstaller(context: Any, url: String, version: String): Boolean {
     return false
 }
 
