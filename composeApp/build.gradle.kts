@@ -73,7 +73,12 @@ kotlin {
             implementation(libs.gitlive.firebase.analytics)
             implementation(libs.gitlive.firebase.firestore)
             implementation(libs.gitlive.auth)
+            implementation(project.dependencies.platform(libs.android.firebase.bom))
+            implementation("com.google.firebase:firebase-appcheck-playintegrity")
+            implementation("com.google.firebase:firebase-appcheck-debug")
+            implementation("com.google.firebase:firebase-vertexai:16.5.0")
             implementation(libs.gitlive.firebase.storage)
+            implementation(libs.ktor.client.okhttp)
         }
         commonMain.dependencies {
             implementation(compose.runtime)

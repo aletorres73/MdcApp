@@ -14,8 +14,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -34,6 +37,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -47,6 +51,7 @@ import com.mdcapp.ui.viewmodels.invoices.AddInvoiceViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.parameter.parametersOf
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
@@ -63,6 +68,7 @@ fun AddInvoiceScreen(
     }
     var number by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
+    var issueDate by remember { mutableLongStateOf(0L) }
     var deliveryDate by remember { mutableLongStateOf(0L) }
     var selectedCondition by remember { mutableStateOf<PaymentCondition?>(null) }
     var selectedType by remember { mutableStateOf("Factura") }
@@ -72,7 +78,8 @@ fun AddInvoiceScreen(
     }
     var notes by remember { mutableStateOf("") }
 
-    var showDatePicker by remember { mutableStateOf(false) }
+    var showIssueDatePicker by remember { mutableStateOf(false) }
+    var showDeliveryDatePicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
@@ -80,14 +87,42 @@ fun AddInvoiceScreen(
         }
     }
 
-    if (showDatePicker) {
+    LaunchedEffect(state.scannedDocumentResult) {
+        state.scannedDocumentResult?.let { result ->
+            result["number"]?.let { if (it.isNotBlank()) number = it }
+            result["total"]?.let { if (it.isNotBlank()) amount = it }
+            result["type"]?.let { if (it.isNotBlank()) selectedType = it }
+            result["date"]?.let { dateStr ->
+                try {
+                    issueDate = LocalDate.parse(dateStr).toEpochMillis()
+                } catch (e: Exception) {
+                    // Ignore parsing error
+                }
+            }
+            viewModel.onScannedDocumentResultConsumed()
+        }
+    }
+
+    if (showIssueDatePicker) {
         DatePicker(
-            onDismissRequest = { showDatePicker = false },
+            onDismissRequest = { showIssueDatePicker = false },
+            onDateSelected = { millis ->
+                issueDate = millis
+                showIssueDatePicker = false
+            },
+            onDismissButton = { showIssueDatePicker = false },
+            enable = true
+        )
+    }
+
+    if (showDeliveryDatePicker) {
+        DatePicker(
+            onDismissRequest = { showDeliveryDatePicker = false },
             onDateSelected = { millis ->
                 deliveryDate = millis
-                showDatePicker = false
+                showDeliveryDatePicker = false
             },
-            onDismissButton = { showDatePicker = false },
+            onDismissButton = { showDeliveryDatePicker = false },
             enable = true
         )
     }
@@ -111,6 +146,31 @@ fun AddInvoiceScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
+            if (state.pendingDocument != null) {
+                AssistChip(
+                    onClick = { },
+                    label = { Text("Documento adjunto: ${state.pendingDocument?.fileName}") },
+                    leadingIcon = {
+                        Icon(Icons.Filled.Info, contentDescription = "Documento")
+                    },
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            if (state.scanningDocument) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CircularProgressIndicator()
+                    Text(
+                        "Analizando documento adjunto con IA...",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
             if (state.orderId.isNotEmpty()) {
                 Text("Pedido ID: ${state.orderId}", style = MaterialTheme.typography.bodyLarge)
             } else {
@@ -192,14 +252,32 @@ fun AddInvoiceScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = deliveryDate.toFormattedDate(),
+                value = if (issueDate != 0L) issueDate.toFormattedDate() else "Sin especificar",
+                onValueChange = {},
+                readOnly = true,
+                enabled = false,
+                label = { Text("Fecha de Emisión") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showIssueDatePicker = true },
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = if (deliveryDate != 0L) deliveryDate.toFormattedDate() else "Sin especificar",
                 onValueChange = {},
                 readOnly = true,
                 enabled = false,
                 label = { Text("Fecha de Recepción") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showDatePicker = true },
+                    .clickable { showDeliveryDatePicker = true },
                 colors = OutlinedTextFieldDefaults.colors(
                     disabledTextColor = MaterialTheme.colorScheme.onSurface,
                     disabledBorderColor = MaterialTheme.colorScheme.outline,
@@ -234,8 +312,9 @@ fun AddInvoiceScreen(
 
             Button(
                 onClick = {
-                    val payDate = if (deliveryDate != 0L && selectedCondition != null) {
-                        deliveryDate.toLocalDate()
+                    val baseDate = if (deliveryDate != 0L) deliveryDate else issueDate
+                    val payDate = if (baseDate != 0L && selectedCondition != null) {
+                        baseDate.toLocalDate()
                             .plusDays(selectedCondition?.expiration?.toLong() ?: 0)
                             .toEpochMillis()
                     } else 0L
@@ -243,6 +322,7 @@ fun AddInvoiceScreen(
                         number = number,
                         amount = amount.toDoubleOrNull() ?: 0.0,
                         condition = selectedCondition,
+                        issueDate = issueDate,
                         deliveryDate = deliveryDate,
                         payDate = payDate,
                         type = selectedType,

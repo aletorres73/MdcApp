@@ -5,6 +5,7 @@ import com.mdcapp.domain.repositories.IStorageRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -65,6 +66,40 @@ class DesktopStorageRepository(
         } catch (e: Exception) {
             println("💥 [Storage JVM] Exception fetching metadata: ${e.message}")
             ""
+        }
+    }
+
+    private fun extractStoragePath(pathOrUrl: String): String {
+        if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) {
+            val pathPart = pathOrUrl.substringAfter("/o/").substringBefore("?")
+            return pathPart.replace("%2F", "/").replace("%20", " ")
+        }
+        return pathOrUrl
+    }
+
+    override suspend fun deleteFile(pathOrUrl: String): Boolean {
+        val rawPath = extractStoragePath(pathOrUrl)
+        if (rawPath.isBlank()) return false
+
+        val encodedPath = rawPath.replace("/", "%2F")
+        val token = authRepository.idToken
+
+        return try {
+            println("🔍 [Storage JVM] Deleting file: $rawPath")
+            val response = client.delete("$baseUrl/$encodedPath") {
+                applyAuth(token)
+            }
+
+            if (response.status == HttpStatusCode.OK || response.status == HttpStatusCode.NoContent) {
+                println("✅ [Storage JVM] File Deleted Successfully")
+                true
+            } else {
+                println("❌ [Storage JVM] Error deleting file: ${response.status}")
+                false
+            }
+        } catch (e: Exception) {
+            println("💥 [Storage JVM] Exception deleting file: ${e.message}")
+            false
         }
     }
 }

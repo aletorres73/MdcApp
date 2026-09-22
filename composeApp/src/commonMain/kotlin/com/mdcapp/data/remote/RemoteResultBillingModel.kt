@@ -32,7 +32,8 @@ data class RemoteResultBillingModel(
     @SerialName("Comentarios") var comments: List<RemoteBillingComments> = emptyList(),
     @SerialName("Razon Social") var clientName: String = "",
     @Serializable(with = FirestoreDateSerializer::class)
-    @SerialName("Timestamp") var timeStamp: Long = 0L
+    @SerialName("Timestamp") var timeStamp: Long = 0L,
+    @SerialName("documentUrl") var documentUrl: String = ""
 )
 
 @Serializable
@@ -85,7 +86,8 @@ fun RemoteResultBillingModel.toBillingDomain(): BillingModel {
         branch = branch,
         comments = comments.map { BillingComments(it.comments, it.date) },
         clientName = clientName,
-        timeStamp = timeStamp
+        timeStamp = timeStamp,
+        documentUrl = documentUrl
     )
 }
 
@@ -109,6 +111,7 @@ fun BillingModel.toBillingRemote() = RemoteResultBillingModel(
     branch = branch,
     comments = comments.map { RemoteBillingComments(it.comments, it.date) },
     clientName = clientName,
-    timeStamp = timeStamp
+    timeStamp = timeStamp,
+    documentUrl = documentUrl
 )
 

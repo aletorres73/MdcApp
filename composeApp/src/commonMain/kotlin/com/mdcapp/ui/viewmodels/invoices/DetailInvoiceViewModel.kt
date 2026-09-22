@@ -1,5 +1,6 @@
 package com.mdcapp.ui.viewmodels.invoices
 
+import androidx.compose.ui.platform.UriHandler
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingComments
@@ -10,6 +11,7 @@ import com.mdcapp.domain.entities.MovementStatus
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.entities.PaymentRegisterModel
 import com.mdcapp.domain.entities.recalculate
+import com.mdcapp.domain.repositories.IStorageRepository
 import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
@@ -31,7 +33,8 @@ class DetailInvoiceViewModel(
     private val addPaymentToRegisterUseCase: BuyOrderUseCase.AddPaymentToRegister,
     private val getLastIdPaymentUseCase: BuyOrderUseCase.GetLastIdPaymentFromRegister,
     private val deleteInvoiceUseCase: InvoiceUseCase.DeleteInvoice,
-    private val analytics: AnalyticsService
+    private val analytics: AnalyticsService,
+    private val storageRepository: IStorageRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(invoiceNumber = invoiceNumber))
@@ -47,7 +50,8 @@ class DetailInvoiceViewModel(
         val error: String? = null,
         val paymentConditionList: List<PaymentCondition> = emptyList(),
         val message: String? = null,
-        val payments: List<PaymentRegisterModel> = emptyList()
+        val payments: List<PaymentRegisterModel> = emptyList(),
+        val resolvedDocumentUrl: String = ""
     )
 
     init {
@@ -133,6 +137,9 @@ class DetailInvoiceViewModel(
                         isLoading = false
                     )
                 }
+                if (updatedBilling.documentUrl.isNotEmpty()) {
+                    resolveDocumentUrl(updatedBilling.documentUrl)
+                }
                 Napier.d("DetailInvoiceViewModel --- reactive billing update: $billing")
             }.launchIn(viewModelScope)
 
@@ -140,6 +147,60 @@ class DetailInvoiceViewModel(
             .onEach { payments ->
                 _state.update { it.copy(payments = payments) }
             }.launchIn(viewModelScope)
+    }
+
+    private fun resolveDocumentUrl(docPath: String) {
+        if (docPath.startsWith("http://") || docPath.startsWith("https://")) {
+            _state.update { it.copy(resolvedDocumentUrl = docPath) }
+        } else {
+            viewModelScope.launch {
+                try {
+                    val fullUrl = storageRepository.getDownloadUrl(docPath)
+                    if (fullUrl.isNotEmpty()) {
+                        _state.update { it.copy(resolvedDocumentUrl = fullUrl) }
+                    }
+                } catch (e: Exception) {
+                    Napier.e("Error resolving document URL for $docPath", e)
+                }
+            }
+        }
+    }
+
+    fun openDocument(uriHandler: UriHandler) {
+        val currentUrl = _state.value.resolvedDocumentUrl
+        val docPath = _state.value.billing.documentUrl
+
+        if (currentUrl.startsWith("http://") || currentUrl.startsWith("https://")) {
+            try {
+                uriHandler.openUri(currentUrl)
+            } catch (e: Exception) {
+                Napier.e("Error opening URI: $currentUrl", e)
+            }
+        } else if (docPath.isNotEmpty()) {
+            viewModelScope.launch {
+                try {
+                    val resolved =
+                        if (docPath.startsWith("http://") || docPath.startsWith("https://")) {
+                            docPath
+                        } else {
+                            storageRepository.getDownloadUrl(docPath)
+                        }
+
+                    if (resolved.startsWith("http://") || resolved.startsWith("https://")) {
+                        _state.update { it.copy(resolvedDocumentUrl = resolved) }
+                        try {
+                            uriHandler.openUri(resolved)
+                        } catch (e: Exception) {
+                            Napier.e("Error opening resolved URI: $resolved", e)
+                        }
+                    } else {
+                        Napier.w("Invalid resolved URL for document: $resolved")
+                    }
+                } catch (e: Exception) {
+                    Napier.e("Error fetching download URL on demand for $docPath", e)
+                }
+            }
+        }
     }
 
     fun updateSelectedPaymentCondition(condition: PaymentCondition) {
@@ -379,6 +440,37 @@ class DetailInvoiceViewModel(
         saveBilling()
     }
 
+    fun updateInvoiceDetails(
+        newBillingNumber: String,
+        newType: String,
+        newTotal: Double,
+        newBrand: String,
+        newBranch: String,
+        newLoadDate: Long,
+        newDeliveryDate: Long
+    ) {
+        val current = _state.value
+        val condition = current.paymentConditionList
+            .find { it.paymentName == current.billing.paymentCondition }
+
+        val updatedBilling = current.billing.copy(
+            billingNumber = newBillingNumber.ifBlank { current.billing.billingNumber },
+            type = newType.ifBlank { current.billing.type },
+            total = newTotal,
+            brand = newBrand,
+            branch = newBranch,
+            loadDate = if (newLoadDate > 0) newLoadDate else current.billing.loadDate,
+            deliveryDate = if (newDeliveryDate > 0) newDeliveryDate else current.billing.deliveryDate
+        ).recalculate(condition)
+
+        _state.update {
+            it.copy(billing = updatedBilling)
+        }
+
+        saveBilling()
+        Napier.d("DetailInvoiceViewModel --- on updateInvoiceDetails: $updatedBilling")
+    }
+
     fun deleteInvoice() {
         if (_state.value.payments.isNotEmpty()) {
             _state.update { it.copy(message = "No se puede eliminar una factura con movimientos en su historial") }
@@ -387,6 +479,15 @@ class DetailInvoiceViewModel(
 
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
+            val docUrl = _state.value.billing.documentUrl
+            if (docUrl.isNotEmpty()) {
+                try {
+                    storageRepository.deleteFile(docUrl)
+                } catch (e: Exception) {
+                    Napier.e("Error deleting document from storage: $docUrl", e)
+                }
+            }
+
             val result = deleteInvoiceUseCase(_state.value.invoiceNumber)
             if (result) {
                 _state.update { it.copy(isDeleted = true, isLoading = false) }

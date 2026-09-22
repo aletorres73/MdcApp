@@ -2,9 +2,11 @@ package com.mdcapp.di
 
 import com.mdcapp.data.repositories.DesktopAuthRepository
 import com.mdcapp.data.repositories.DesktopDatabaseRepository
+import com.mdcapp.data.repositories.DesktopInvoiceScannerService
 import com.mdcapp.data.repositories.DesktopStorageRepository
 import com.mdcapp.domain.repositories.IAuthRepository
 import com.mdcapp.domain.repositories.IDatabaseRepository
+import com.mdcapp.domain.repositories.IInvoiceScannerService
 import com.mdcapp.domain.repositories.IStorageRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -33,4 +35,5 @@ actual val platformModule = module {
     single<IAuthRepository> { get<DesktopAuthRepository>() }
     single<IDatabaseRepository> { DesktopDatabaseRepository(get(), get()) }
     single<IStorageRepository> { DesktopStorageRepository(get(), get()) }
+    single<IInvoiceScannerService> { DesktopInvoiceScannerService() }
 }

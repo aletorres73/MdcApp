@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -52,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -95,6 +97,16 @@ fun DetailInvoiceScreen(
     var commentText by remember { mutableStateOf("") }
     var showStateDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editNumber by remember { mutableStateOf("") }
+    var editType by remember { mutableStateOf("") }
+    var editTotal by remember { mutableStateOf("") }
+    var editBrand by remember { mutableStateOf("") }
+    var editBranch by remember { mutableStateOf("") }
+    var editLoadDate by remember { mutableStateOf(0L) }
+    var editDeliveryDate by remember { mutableStateOf(0L) }
+    var showEditLoadDatePicker by remember { mutableStateOf(false) }
+    var showEditDeliveryDatePicker by remember { mutableStateOf(false) }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val scope = rememberCoroutineScope()
@@ -150,6 +162,16 @@ fun DetailInvoiceScreen(
             InvoiceHeaderTopBar(
                 billing = state.billing,
                 onBack = onBack,
+                onEdit = {
+                    editNumber = state.billing.billingNumber
+                    editType = state.billing.type.ifEmpty { "Factura" }
+                    editTotal = if (state.billing.total > 0) state.billing.total.toString() else ""
+                    editBrand = state.billing.brand
+                    editBranch = state.billing.branch
+                    editLoadDate = state.billing.loadDate
+                    editDeliveryDate = state.billing.deliveryDate
+                    showEditDialog = true
+                },
                 onDelete = {
                     if (state.payments.isEmpty()) {
                         showDeleteDialog = true
@@ -185,6 +207,15 @@ fun DetailInvoiceScreen(
                     .padding(horizontal = 4.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
+                if (state.billing.documentUrl.isNotEmpty()) {
+                    val uriHandler = LocalUriHandler.current
+                    AssistChip(
+                        onClick = { vm.openDocument(uriHandler) },
+                        label = { Text("Ver Documento Adjunto") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
                 DatesCard(billing = state.billing) { showDatePicker = true }
 
                 TotalsCard(billing = state.billing)
@@ -376,6 +407,147 @@ fun DetailInvoiceScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (showEditLoadDatePicker) {
+        DatePicker(
+            onDismissRequest = { showEditLoadDatePicker = false },
+            onDateSelected = { millis ->
+                editLoadDate = millis
+                showEditLoadDatePicker = false
+            },
+            onDismissButton = { showEditLoadDatePicker = false },
+            enable = true
+        )
+    }
+
+    if (showEditDeliveryDatePicker) {
+        DatePicker(
+            onDismissRequest = { showEditDeliveryDatePicker = false },
+            onDateSelected = { millis ->
+                editDeliveryDate = millis
+                showEditDeliveryDatePicker = false
+            },
+            onDismissButton = { showEditDeliveryDatePicker = false },
+            enable = true
+        )
+    }
+
+    if (showEditDialog) {
+        val documentTypes =
+            listOf("Factura", "Remito", "Factura A", "Factura B", "Presupuesto", "Nota de Crédito")
+
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Editar Comprobante") },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text("Tipo de Comprobante", style = MaterialTheme.typography.labelMedium)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        documentTypes.forEach { type ->
+                            FilterChip(
+                                selected = editType == type,
+                                onClick = { editType = type },
+                                label = { Text(type, style = MaterialTheme.typography.labelSmall) }
+                            )
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = editNumber,
+                        onValueChange = { editNumber = it },
+                        label = { Text("Número de Comprobante") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    OutlinedTextField(
+                        value = editTotal,
+                        onValueChange = { editTotal = it },
+                        label = { Text("Monto Total") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        prefix = { Text("$ ") }
+                    )
+
+                    OutlinedTextField(
+                        value = editBrand,
+                        onValueChange = { editBrand = it },
+                        label = { Text("Fábrica / Marca") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    OutlinedTextField(
+                        value = editBranch,
+                        onValueChange = { editBranch = it },
+                        label = { Text("Sucursal") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Fecha Emisión", style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                if (editLoadDate > 0) editLoadDate.toFormattedDate() else "Sin fecha",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        TextButton(onClick = { showEditLoadDatePicker = true }) {
+                            Text("Cambiar")
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Fecha Vencimiento", style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                if (editDeliveryDate > 0) editDeliveryDate.toFormattedDate() else "Sin fecha",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        TextButton(onClick = { showEditDeliveryDatePicker = true }) {
+                            Text("Cambiar")
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val totalDouble = editTotal.toDoubleOrNull() ?: 0.0
+                    vm.updateInvoiceDetails(
+                        newBillingNumber = editNumber,
+                        newType = editType,
+                        newTotal = totalDouble,
+                        newBrand = editBrand,
+                        newBranch = editBranch,
+                        newLoadDate = editLoadDate,
+                        newDeliveryDate = editDeliveryDate
+                    )
+                    showEditDialog = false
+                }) {
+                    Text("Guardar Cambios")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) {
                     Text("Cancelar")
                 }
             }

@@ -50,6 +50,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mdcapp.domain.entities.AppRoute
+import com.mdcapp.domain.logic.SharedDocumentHandler
 import com.mdcapp.domain.service.RefreshController
 import com.mdcapp.ui.screens.invoicesClientDetail.DetailInvoiceScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.InvoicesScreen
@@ -81,6 +82,7 @@ fun MainScreen(
 
     val clientsState by clientsViewModel.state.collectAsState()
     val invoicesPagedState by invoicesPagedViewModel.uiState.collectAsState()
+    val pendingDocument by SharedDocumentHandler.pendingDocument.collectAsState()
 
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
 
@@ -541,6 +543,19 @@ fun MainScreen(
                 TextButton(onClick = { showLogoutDialog = false }) {
                     Text("Cancelar")
                 }
+            }
+        )
+    }
+
+    pendingDocument?.let { doc ->
+        SelectClientForDocumentDialog(
+            clientsViewModel = clientsViewModel,
+            documentName = doc.fileName,
+            onDismiss = {
+                SharedDocumentHandler.clearPendingDocument()
+            },
+            onClientSelected = { clientId ->
+                navController.navigate(AppRoute.AddInvoice.createRoute(clientId, null))
             }
         )
     }

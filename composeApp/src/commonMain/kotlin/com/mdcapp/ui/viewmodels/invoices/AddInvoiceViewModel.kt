@@ -8,6 +8,10 @@ import com.mdcapp.domain.entities.BuyOrderModel
 import com.mdcapp.domain.entities.FactoryModel
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.entities.recalculate
+import com.mdcapp.domain.logic.SharedDocument
+import com.mdcapp.domain.logic.SharedDocumentHandler
+import com.mdcapp.domain.repositories.IInvoiceScannerService
+import com.mdcapp.domain.repositories.IStorageRepository
 import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
@@ -25,7 +29,9 @@ class AddInvoiceViewModel(
     private val getClientNameUseCase: InvoiceUseCase.GetClientName,
     private val checkInvoiceUseCase: InvoiceUseCase.GetInvoiceByNumber,
     private val repository: com.mdcapp.domain.repositories.OrderRepository,
-    private val analytics: AnalyticsService
+    private val analytics: AnalyticsService,
+    private val scannerService: IInvoiceScannerService,
+    private val storageRepository: IStorageRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(orderId = orderId))
@@ -33,6 +39,30 @@ class AddInvoiceViewModel(
 
     init {
         analytics.logScreenView("AddInvoice")
+        collectPendingDocument()
+    }
+
+    private fun collectPendingDocument() {
+        viewModelScope.launch {
+            SharedDocumentHandler.pendingDocument.collect { doc ->
+                if (doc != null) {
+                    _state.update { it.copy(pendingDocument = doc, scanningDocument = true) }
+                    SharedDocumentHandler.clearPendingDocument()
+                    try {
+                        val result = scannerService.scanInvoice(doc.fileBytes, doc.mimeType)
+                        _state.update {
+                            it.copy(
+                                scanningDocument = false,
+                                scannedDocumentResult = result
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Napier.e("Error scanning document", e)
+                        _state.update { it.copy(scanningDocument = false, error = e.message) }
+                    }
+                }
+            }
+        }
     }
 
     data class UiState(
@@ -47,7 +77,10 @@ class AddInvoiceViewModel(
         val selectedBranch: String = "",
         val isSuccess: Boolean = false,
         val isExistingInvoice: Boolean = false,
-        val error: String? = null
+        val error: String? = null,
+        val scanningDocument: Boolean = false,
+        val scannedDocumentResult: Map<String, String>? = null,
+        val pendingDocument: SharedDocument? = null
     )
 
     fun onNumberChange(number: String) {
@@ -136,10 +169,15 @@ class AddInvoiceViewModel(
         _state.update { it.copy(selectedBranch = branch) }
     }
 
+    fun onScannedDocumentResultConsumed() {
+        _state.update { it.copy(scannedDocumentResult = null) }
+    }
+
     fun saveInvoice(
         number: String,
         amount: Double,
         condition: PaymentCondition?,
+        issueDate: Long,
         deliveryDate: Long,
         payDate: Long,
         type: String,
@@ -169,17 +207,35 @@ class AddInvoiceViewModel(
                     type = type,
                     comments = comments,
                     stateBilling = "Pendiente",
-                    loadDate = now,
+                    loadDate = if (issueDate != 0L) issueDate else now,
                     timeStamp = System.currentTimeMillis()
                 )
 
                 val finalInvoice =
                     if (condition != null) baseInvoice.recalculate(condition) else baseInvoice
 
+                var finalInvoiceToSave = finalInvoice
+                val pendingDoc = _state.value.pendingDocument
+                if (pendingDoc != null) {
+                    val extension = pendingDoc.fileName.substringAfterLast('.', "")
+                    val extPath = if (extension.isNotEmpty()) ".$extension" else ""
+                    val path = "invoices/${_state.value.buyOrder.client}/${number}_${now}$extPath"
+                    try {
+                        val url = storageRepository.uploadFile(path, pendingDoc.fileBytes)
+                        finalInvoiceToSave = finalInvoice.copy(documentUrl = url)
+                    } catch (e: Exception) {
+                        Napier.e(
+                            "Error uploading document to Firebase Storage (Check Storage Rules)",
+                            e
+                        )
+                    }
+                    SharedDocumentHandler.clearPendingDocument()
+                }
+
                 val success = createInvoiceUseCase(
                     _state.value.buyOrder.clientId,
                     _state.value.orderId,
-                    finalInvoice
+                    finalInvoiceToSave
                 )
                 if (success) {
                     analytics.logEvent(

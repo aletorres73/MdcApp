@@ -2,9 +2,11 @@ package com.mdcapp.di
 
 import com.mdcapp.data.repositories.AndroidAuthRepository
 import com.mdcapp.data.repositories.AndroidDatabaseRepository
+import com.mdcapp.data.repositories.AndroidInvoiceScannerService
 import com.mdcapp.data.repositories.AndroidStorageRepository
 import com.mdcapp.domain.repositories.IAuthRepository
 import com.mdcapp.domain.repositories.IDatabaseRepository
+import com.mdcapp.domain.repositories.IInvoiceScannerService
 import com.mdcapp.domain.repositories.IStorageRepository
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
@@ -19,4 +21,5 @@ actual val platformModule = module {
     single<IAuthRepository> { AndroidAuthRepository(get()) }
     single<IDatabaseRepository> { AndroidDatabaseRepository(get()) }
     single<IStorageRepository> { AndroidStorageRepository(get()) }
+    single<IInvoiceScannerService> { AndroidInvoiceScannerService() }
 }

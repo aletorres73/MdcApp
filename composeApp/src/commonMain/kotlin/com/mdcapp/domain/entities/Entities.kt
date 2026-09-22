@@ -170,7 +170,8 @@ data class BillingModel(
     val branch: String = "",
     val comments: List<BillingComments> = emptyList(),
     val clientName: String = "",
-    val timeStamp: Long = 0L
+    val timeStamp: Long = 0L,
+    val documentUrl: String = ""
 )
 
 data class BillingComments(

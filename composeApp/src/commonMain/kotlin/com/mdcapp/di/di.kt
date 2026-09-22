@@ -164,12 +164,15 @@ val viewModelModule = module {
             getClientNameUseCase = get(),
             checkInvoiceUseCase = get(),
             repository = get(),
-            analytics = get()
+            analytics = get(),
+            scannerService = get(),
+            storageRepository = get()
         )
     }
     viewModel { (invoiceNumber: String) ->
         DetailInvoiceViewModel(
             invoiceNumber,
+            get(),
             get(),
             get(),
             get(),
