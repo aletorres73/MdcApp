@@ -37,7 +37,8 @@ class DetailInvoiceViewModel(
     private val deleteInvoiceUseCase: InvoiceUseCase.DeleteInvoice,
     private val analytics: AnalyticsService,
     private val storageRepository: IStorageRepository,
-    private val orderRepository: OrderRepository
+    private val orderRepository: OrderRepository,
+    private val observeBuyOrdersByClientUseCase: BuyOrderUseCase.ObserveBuyOrdersByClient
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(invoiceNumber = invoiceNumber))
@@ -57,7 +58,8 @@ class DetailInvoiceViewModel(
         val resolvedDocumentUrl: String = "",
         val factories: List<FactoryModel> = emptyList(),
         val selectedFactory: FactoryModel? = null,
-        val selectedBranch: String = ""
+        val selectedBranch: String = "",
+        val clientOrders: List<BuyOrderModel> = emptyList()
     )
 
     init {
@@ -120,6 +122,18 @@ class DetailInvoiceViewModel(
                         )
                     }
                     return@onEach
+                }
+
+                if (billing.clientId.isNotEmpty() && _state.value.clientOrders.isEmpty()) {
+                    viewModelScope.launch {
+                        try {
+                            observeBuyOrdersByClientUseCase(billing.clientId).collect { orders ->
+                                _state.update { it.copy(clientOrders = orders) }
+                            }
+                        } catch (e: Exception) {
+                            Napier.e("Error observing client buy orders", e)
+                        }
+                    }
                 }
 
                 // Cargar BuyOrder solo si existe orderId y cambia o si aún no se tiene
@@ -504,11 +518,14 @@ class DetailInvoiceViewModel(
         newBrand: String,
         newBranch: String,
         newLoadDate: Long,
-        newDeliveryDate: Long
+        newDeliveryDate: Long,
+        newOrderId: String? = null
     ) {
         val current = _state.value
         val condition = current.paymentConditionList
             .find { it.paymentName == current.billing.paymentCondition }
+
+        val finalOrderId = newOrderId ?: current.billing.orderId
 
         val updatedBilling = current.billing.copy(
             billingNumber = newBillingNumber.ifBlank { current.billing.billingNumber },
@@ -517,14 +534,17 @@ class DetailInvoiceViewModel(
             brand = newBrand,
             branch = newBranch,
             loadDate = if (newLoadDate > 0) newLoadDate else current.billing.loadDate,
-            deliveryDate = if (newDeliveryDate > 0) newDeliveryDate else current.billing.deliveryDate
+            deliveryDate = if (newDeliveryDate > 0) newDeliveryDate else current.billing.deliveryDate,
+            orderId = finalOrderId
         ).recalculate(condition)
 
         val matchedFactory = current.factories.find { it.name.equals(newBrand, ignoreCase = true) }
+        val matchedOrder = current.clientOrders.find { it.id == finalOrderId } ?: current.buyOrder
 
         _state.update {
             it.copy(
                 billing = updatedBilling,
+                buyOrder = if (finalOrderId.isEmpty()) BuyOrderModel() else matchedOrder,
                 selectedFactory = matchedFactory ?: it.selectedFactory,
                 selectedBranch = newBranch
             )

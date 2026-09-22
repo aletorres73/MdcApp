@@ -31,7 +31,8 @@ class AddInvoiceViewModel(
     private val repository: com.mdcapp.domain.repositories.OrderRepository,
     private val analytics: AnalyticsService,
     private val scannerService: IInvoiceScannerService,
-    private val storageRepository: IStorageRepository
+    private val storageRepository: IStorageRepository,
+    private val observeBuyOrdersByClientUseCase: BuyOrderUseCase.ObserveBuyOrdersByClient
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(orderId = orderId))
@@ -80,7 +81,8 @@ class AddInvoiceViewModel(
         val error: String? = null,
         val scanningDocument: Boolean = false,
         val scannedDocumentResult: Map<String, String>? = null,
-        val pendingDocument: SharedDocument? = null
+        val pendingDocument: SharedDocument? = null,
+        val clientOrders: List<BuyOrderModel> = emptyList()
     )
 
     fun onNumberChange(number: String) {
@@ -103,6 +105,15 @@ class AddInvoiceViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
+                // Observar pedidos del cliente
+                if (clientId.isNotBlank()) {
+                    viewModelScope.launch {
+                        observeBuyOrdersByClientUseCase(clientId).collect { orders ->
+                            _state.update { it.copy(clientOrders = orders) }
+                        }
+                    }
+                }
+
                 val factories = repository.getFactories()
                 if (orderId.isNotBlank()) {
                     val buyOrder = getBuyOrderUseCase(clientId, orderId)
@@ -143,6 +154,44 @@ class AddInvoiceViewModel(
             } catch (e: Exception) {
                 Napier.e("Error loading data for AddInvoice", e)
                 _state.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun selectOrder(order: BuyOrderModel?) {
+        viewModelScope.launch {
+            if (order == null) {
+                _state.update {
+                    it.copy(
+                        orderId = "",
+                        buyOrder = BuyOrderModel(
+                            clientId = it.buyOrder.clientId,
+                            client = it.buyOrder.client
+                        )
+                    )
+                }
+            } else {
+                val conditions = getPaymentConditionUseCase(order.branch, order.factory)
+                val inheritedCondition = if (order.paymentCondition.isNotEmpty()) {
+                    PaymentCondition(
+                        paymentName = order.paymentCondition,
+                        discount = order.discount,
+                        expiration = order.expirationDays
+                    )
+                } else null
+
+                val matchedFactory = _state.value.factories.find { f -> f.name == order.factory }
+
+                _state.update {
+                    it.copy(
+                        orderId = order.id,
+                        buyOrder = order,
+                        paymentConditionList = conditions,
+                        selectedCondition = inheritedCondition,
+                        selectedFactory = matchedFactory,
+                        selectedBranch = order.branch
+                    )
+                }
             }
         }
     }

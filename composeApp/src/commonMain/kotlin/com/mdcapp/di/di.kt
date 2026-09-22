@@ -166,7 +166,8 @@ val viewModelModule = module {
             repository = get(),
             analytics = get(),
             scannerService = get(),
-            storageRepository = get()
+            storageRepository = get(),
+            observeBuyOrdersByClientUseCase = get()
         )
     }
     viewModel { (invoiceNumber: String) ->
@@ -182,7 +183,8 @@ val viewModelModule = module {
             get(),
             get(),
             get(),
-            get()
+            get(),
+            observeBuyOrdersByClientUseCase = get()
         )
     }
     viewModelOf(::InvoicesPagedViewModel)

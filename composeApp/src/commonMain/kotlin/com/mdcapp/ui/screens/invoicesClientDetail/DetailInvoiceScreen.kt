@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,6 +20,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
@@ -62,6 +65,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mdcapp.domain.entities.BillingComments
+import com.mdcapp.domain.entities.BuyOrderModel
 import com.mdcapp.domain.entities.FactoryModel
 import com.mdcapp.domain.entities.MovementMethod
 import com.mdcapp.domain.entities.MovementStatus
@@ -110,6 +114,7 @@ fun DetailInvoiceScreen(
     var editBranch by remember { mutableStateOf("") }
     var editLoadDate by remember { mutableStateOf(0L) }
     var editDeliveryDate by remember { mutableStateOf(0L) }
+    var editOrderId by remember { mutableStateOf("") }
     var showEditLoadDatePicker by remember { mutableStateOf(false) }
     var showEditDeliveryDatePicker by remember { mutableStateOf(false) }
 
@@ -175,6 +180,7 @@ fun DetailInvoiceScreen(
                     editBranch = state.selectedBranch.ifEmpty { state.billing.branch }
                     editLoadDate = state.billing.loadDate
                     editDeliveryDate = state.billing.deliveryDate
+                    editOrderId = state.billing.orderId
                     showEditDialog = true
                 },
                 onDelete = {
@@ -442,129 +448,59 @@ fun DetailInvoiceScreen(
         )
     }
 
+    val editSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     if (showEditDialog) {
-        val documentTypes =
-            listOf("Factura", "Remito", "Factura A", "Factura B", "Presupuesto", "Nota de Crédito")
-
-        AlertDialog(
+        ModalBottomSheet(
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Editar Comprobante") },
-            text = {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text("Tipo de Comprobante", style = MaterialTheme.typography.labelMedium)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        documentTypes.forEach { type ->
-                            FilterChip(
-                                selected = editType == type,
-                                onClick = { editType = type },
-                                label = { Text(type, style = MaterialTheme.typography.labelSmall) }
-                            )
-                        }
-                    }
-
-                    OutlinedTextField(
-                        value = editNumber,
-                        onValueChange = { editNumber = it },
-                        label = { Text("Número de Comprobante") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    OutlinedTextField(
-                        value = editTotal,
-                        onValueChange = { editTotal = it },
-                        label = { Text("Monto Total") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        prefix = { Text("$ ") }
-                    )
-
-                    val currentFactory =
-                        state.factories.find { it.name.equals(editBrand, ignoreCase = true) }
-                            ?: state.selectedFactory
-
-                    if (state.factories.isNotEmpty()) {
-                        FactorySelectorDropdown(
-                            factories = state.factories,
-                            selectedFactory = currentFactory,
-                            onFactorySelected = { factory ->
-                                editBrand = factory.name
-                                editBranch = factory.branchList.firstOrNull() ?: ""
-                                vm.onFactorySelected(factory)
-                            }
-                        )
-
-                        if (currentFactory != null && currentFactory.branchList.isNotEmpty()) {
-                            SegmentSelectorDropdown(
-                                segments = currentFactory.branchList,
-                                selectedSegment = editBranch,
-                                onSegmentSelected = { segment ->
-                                    editBranch = segment
-                                    vm.onBranchSelected(segment)
-                                }
-                            )
-                        }
+            sheetState = editSheetState,
+            modifier = Modifier.fillMaxHeight()
+        ) {
+            EditInvoiceSheetContent(
+                state = state,
+                editNumber = editNumber,
+                onNumberChange = { editNumber = it },
+                editType = editType,
+                onTypeChange = { editType = it },
+                editTotal = editTotal,
+                onTotalChange = { editTotal = it },
+                editBrand = editBrand,
+                onBrandChange = { editBrand = it },
+                editBranch = editBranch,
+                onBranchChange = { editBranch = it },
+                editOrderId = editOrderId,
+                onOrderSelected = { selectedOrder ->
+                    if (selectedOrder == null) {
+                        editOrderId = ""
                     } else {
-                        OutlinedTextField(
-                            value = editBrand,
-                            onValueChange = { editBrand = it },
-                            label = { Text("Fábrica / Marca") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
-                        )
-
-                        if (editBranch.isNotEmpty()) {
-                            OutlinedTextField(
-                                value = editBranch,
-                                onValueChange = { editBranch = it },
-                                label = { Text("Sucursal / Segmento") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
+                        editOrderId = selectedOrder.id
+                        editBrand = selectedOrder.factory
+                        editBranch = selectedOrder.branch
+                        val factory = state.factories.find {
+                            it.name.equals(
+                                selectedOrder.factory,
+                                ignoreCase = true
                             )
                         }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text("Fecha Emisión", style = MaterialTheme.typography.labelSmall)
-                            Text(
-                                if (editLoadDate > 0) editLoadDate.toFormattedDate() else "Sin fecha",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        TextButton(onClick = { showEditLoadDatePicker = true }) {
-                            Text("Cambiar")
+                        if (factory != null) {
+                            vm.onFactorySelected(factory)
                         }
                     }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text("Fecha Vencimiento", style = MaterialTheme.typography.labelSmall)
-                            Text(
-                                if (editDeliveryDate > 0) editDeliveryDate.toFormattedDate() else "Sin fecha",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        TextButton(onClick = { showEditDeliveryDatePicker = true }) {
-                            Text("Cambiar")
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
+                },
+                editLoadDate = editLoadDate,
+                onShowLoadDatePicker = { showEditLoadDatePicker = true },
+                editDeliveryDate = editDeliveryDate,
+                onShowDeliveryDatePicker = { showEditDeliveryDatePicker = true },
+                onFactorySelected = { factory ->
+                    editBrand = factory.name
+                    editBranch = factory.branchList.firstOrNull() ?: ""
+                    vm.onFactorySelected(factory)
+                },
+                onBranchSelected = { branch ->
+                    editBranch = branch
+                    vm.onBranchSelected(branch)
+                },
+                onSave = {
                     val totalDouble = editTotal.toDoubleOrNull() ?: 0.0
                     vm.updateInvoiceDetails(
                         newBillingNumber = editNumber,
@@ -573,19 +509,14 @@ fun DetailInvoiceScreen(
                         newBrand = editBrand,
                         newBranch = editBranch,
                         newLoadDate = editLoadDate,
-                        newDeliveryDate = editDeliveryDate
+                        newDeliveryDate = editDeliveryDate,
+                        newOrderId = editOrderId
                     )
                     showEditDialog = false
-                }) {
-                    Text("Guardar Cambios")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEditDialog = false }) {
-                    Text("Cancelar")
-                }
-            }
-        )
+                },
+                onCancel = { showEditDialog = false }
+            )
+        }
     }
 
     if (showPaymentDialog) {
@@ -895,7 +826,7 @@ fun SegmentSelectorDropdown(
         onExpandedChange = { expanded = it }
     ) {
         OutlinedTextField(
-            value = if (selectedSegment.isEmpty()) "Seleccionar Segmento" else selectedSegment,
+            value = selectedSegment.ifEmpty { "Seleccionar Segmento" },
             onValueChange = {},
             readOnly = true,
             label = { Text("Segmentación / Sucursal") },
@@ -914,6 +845,321 @@ fun SegmentSelectorDropdown(
                         expanded = false
                     }
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OrderSelectorDropdown(
+    orders: List<BuyOrderModel>,
+    selectedOrderId: String,
+    onOrderSelected: (BuyOrderModel?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedOrder = orders.find { it.id == selectedOrderId }
+
+    val displayText = when {
+        selectedOrder != null -> "Pedido Nº ${selectedOrder.id} - ${selectedOrder.factory}"
+        selectedOrderId.isNotEmpty() -> "Pedido Nº $selectedOrderId"
+        else -> "Sin Pedido (Facturación Directa)"
+    }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = displayText,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Pedido Asignado") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        "Sin Pedido (Facturación Directa)",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                onClick = {
+                    onOrderSelected(null)
+                    expanded = false
+                }
+            )
+            orders.forEach { order ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(
+                                "Pedido Nº ${order.id}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                "${order.factory} - ${order.branch}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    onClick = {
+                        onOrderSelected(order)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun EditInvoiceSheetContent(
+    state: DetailInvoiceViewModel.UiState,
+    editNumber: String,
+    onNumberChange: (String) -> Unit,
+    editType: String,
+    onTypeChange: (String) -> Unit,
+    editTotal: String,
+    onTotalChange: (String) -> Unit,
+    editBrand: String,
+    onBrandChange: (String) -> Unit,
+    editBranch: String,
+    onBranchChange: (String) -> Unit,
+    editOrderId: String,
+    onOrderSelected: (BuyOrderModel?) -> Unit,
+    editLoadDate: Long,
+    onShowLoadDatePicker: () -> Unit,
+    editDeliveryDate: Long,
+    onShowDeliveryDatePicker: () -> Unit,
+    onFactorySelected: (FactoryModel) -> Unit,
+    onBranchSelected: (String) -> Unit,
+    onSave: () -> Unit,
+    onCancel: () -> Unit
+) {
+    val documentTypes =
+        listOf("Factura", "Remito", "Factura A", "Factura B", "Presupuesto", "Nota de Crédito")
+
+    val currentFactory =
+        state.factories.find { it.name.equals(editBrand, ignoreCase = true) }
+            ?: state.selectedFactory
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .navigationBarsPadding()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Encabezado
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text("Editar Comprobante", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    "Modifique los datos del comprobante",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(onClick = onCancel) {
+                Icon(Icons.Default.Close, contentDescription = "Cerrar")
+            }
+        }
+
+        // Sección 1: Datos del Comprobante
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                    alpha = 0.4f
+                )
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("Tipo y Monto", style = MaterialTheme.typography.titleMedium)
+
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    documentTypes.forEach { type ->
+                        FilterChip(
+                            selected = editType == type,
+                            onClick = { onTypeChange(type) },
+                            label = { Text(type, style = MaterialTheme.typography.labelSmall) }
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = editNumber,
+                        onValueChange = onNumberChange,
+                        label = { Text("N° Comprobante") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+
+                    OutlinedTextField(
+                        value = editTotal,
+                        onValueChange = onTotalChange,
+                        label = { Text("Monto Total") },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        prefix = { Text("$ ") }
+                    )
+                }
+            }
+        }
+
+        // Sección 2: Pedido y Origen
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                    alpha = 0.4f
+                )
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("Pedido y Origen", style = MaterialTheme.typography.titleMedium)
+
+                OrderSelectorDropdown(
+                    orders = state.clientOrders,
+                    selectedOrderId = editOrderId,
+                    onOrderSelected = onOrderSelected,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (state.factories.isNotEmpty()) {
+                    FactorySelectorDropdown(
+                        factories = state.factories,
+                        selectedFactory = currentFactory,
+                        onFactorySelected = onFactorySelected
+                    )
+
+                    if (currentFactory != null && currentFactory.branchList.isNotEmpty()) {
+                        SegmentSelectorDropdown(
+                            segments = currentFactory.branchList,
+                            selectedSegment = editBranch,
+                            onSegmentSelected = onBranchSelected
+                        )
+                    }
+                } else {
+                    OutlinedTextField(
+                        value = editBrand,
+                        onValueChange = onBrandChange,
+                        label = { Text("Fábrica / Marca") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    if (editBranch.isNotEmpty()) {
+                        OutlinedTextField(
+                            value = editBranch,
+                            onValueChange = onBranchChange,
+                            label = { Text("Sucursal / Segmento") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                    }
+                }
+            }
+        }
+
+        // Sección 3: Fechas
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                    alpha = 0.4f
+                )
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("Fechas", style = MaterialTheme.typography.titleMedium)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Fecha Emisión", style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            if (editLoadDate > 0) editLoadDate.toFormattedDate() else "Sin fecha",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    TextButton(onClick = onShowLoadDatePicker) {
+                        Text("Cambiar")
+                    }
+                }
+
+                HorizontalDivider(thickness = 0.5.dp)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Fecha Vencimiento", style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            if (editDeliveryDate > 0) editDeliveryDate.toFormattedDate() else "Sin fecha",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    TextButton(onClick = onShowDeliveryDatePicker) {
+                        Text("Cambiar")
+                    }
+                }
+            }
+        }
+
+        // Acciones
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Button(
+                onClick = onCancel,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.outlinedButtonColors()
+            ) {
+                Text("Cancelar")
+            }
+
+            Button(
+                onClick = onSave,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Guardar Cambios")
             }
         }
     }

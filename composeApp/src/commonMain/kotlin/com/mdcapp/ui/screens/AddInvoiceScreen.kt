@@ -19,11 +19,15 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -41,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.mdcapp.domain.entities.BuyOrderModel
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.entities.toEpochMillis
 import com.mdcapp.domain.entities.toFormattedDate
@@ -171,16 +176,15 @@ fun AddInvoiceScreen(
                 }
             }
 
-            if (state.orderId.isNotEmpty()) {
-                Text("Pedido ID: ${state.orderId}", style = MaterialTheme.typography.bodyLarge)
-            } else {
-                Text(
-                    "Facturación sin pedido previo",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
             Text("Cliente: ${state.buyOrder.client}", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OrderSelectorDropdown(
+                orders = state.clientOrders,
+                selectedOrderId = state.orderId,
+                onOrderSelected = { viewModel.selectOrder(it) },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -341,4 +345,75 @@ fun AddInvoiceScreen(
     }
 
     LoadingOverlay(state.isLoading)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OrderSelectorDropdown(
+    orders: List<BuyOrderModel>,
+    selectedOrderId: String,
+    onOrderSelected: (BuyOrderModel?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedOrder = orders.find { it.id == selectedOrderId }
+
+    val displayText = when {
+        selectedOrder != null -> "Pedido Nº ${selectedOrder.id} - ${selectedOrder.factory}"
+        selectedOrderId.isNotEmpty() -> "Pedido Nº $selectedOrderId"
+        else -> "Sin Pedido (Facturación Directa)"
+    }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = displayText,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Pedido Asignado") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        "Sin Pedido (Facturación Directa)",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                onClick = {
+                    onOrderSelected(null)
+                    expanded = false
+                }
+            )
+            orders.forEach { order ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(
+                                "Pedido Nº ${order.id}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                "${order.factory} - ${order.branch}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    onClick = {
+                        onOrderSelected(order)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
 }
