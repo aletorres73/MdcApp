@@ -6,12 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingComments
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.BuyOrderModel
+import com.mdcapp.domain.entities.FactoryModel
 import com.mdcapp.domain.entities.MovementMethod
 import com.mdcapp.domain.entities.MovementStatus
 import com.mdcapp.domain.entities.PaymentCondition
 import com.mdcapp.domain.entities.PaymentRegisterModel
 import com.mdcapp.domain.entities.recalculate
 import com.mdcapp.domain.repositories.IStorageRepository
+import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
@@ -34,7 +36,8 @@ class DetailInvoiceViewModel(
     private val getLastIdPaymentUseCase: BuyOrderUseCase.GetLastIdPaymentFromRegister,
     private val deleteInvoiceUseCase: InvoiceUseCase.DeleteInvoice,
     private val analytics: AnalyticsService,
-    private val storageRepository: IStorageRepository
+    private val storageRepository: IStorageRepository,
+    private val orderRepository: OrderRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UiState(invoiceNumber = invoiceNumber))
@@ -51,12 +54,58 @@ class DetailInvoiceViewModel(
         val paymentConditionList: List<PaymentCondition> = emptyList(),
         val message: String? = null,
         val payments: List<PaymentRegisterModel> = emptyList(),
-        val resolvedDocumentUrl: String = ""
+        val resolvedDocumentUrl: String = "",
+        val factories: List<FactoryModel> = emptyList(),
+        val selectedFactory: FactoryModel? = null,
+        val selectedBranch: String = ""
     )
 
     init {
         analytics.logScreenView("DetailInvoice", invoiceNumber)
         loadData(invoiceNumber)
+        loadFactories()
+    }
+
+    private fun loadFactories() {
+        viewModelScope.launch {
+            try {
+                val list = orderRepository.getFactories()
+                val currentBrand = _state.value.billing.brand
+                val currentFactory = list.find { it.name.equals(currentBrand, ignoreCase = true) }
+                _state.update {
+                    it.copy(
+                        factories = list,
+                        selectedFactory = currentFactory ?: it.selectedFactory,
+                        selectedBranch = if (it.selectedBranch.isNotEmpty()) it.selectedBranch else _state.value.billing.branch
+                    )
+                }
+            } catch (e: Exception) {
+                Napier.e("Error loading factories in DetailInvoiceViewModel", e)
+            }
+        }
+    }
+
+    fun onFactorySelected(factory: FactoryModel) {
+        viewModelScope.launch {
+            val defaultBranch = factory.branchList.firstOrNull() ?: ""
+            _state.update {
+                it.copy(
+                    selectedFactory = factory,
+                    selectedBranch = defaultBranch
+                )
+            }
+            try {
+                val conditions =
+                    getPaymentConditionUseCase(factory.name, _state.value.buyOrder.factory)
+                _state.update { it.copy(paymentConditionList = conditions) }
+            } catch (e: Exception) {
+                Napier.e("Error loading conditions for selected factory", e)
+            }
+        }
+    }
+
+    fun onBranchSelected(branch: String) {
+        _state.update { it.copy(selectedBranch = branch) }
     }
 
     /** SECUENCIA: Billing → BuyOrder */
@@ -131,9 +180,17 @@ class DetailInvoiceViewModel(
                     }
                 }
 
+                val matchedFactory = _state.value.factories.find {
+                    it.name.equals(
+                        updatedBilling.brand,
+                        ignoreCase = true
+                    )
+                }
                 _state.update {
                     it.copy(
                         billing = updatedBilling,
+                        selectedFactory = matchedFactory ?: it.selectedFactory,
+                        selectedBranch = if (it.selectedBranch.isNotEmpty()) it.selectedBranch else updatedBilling.branch,
                         isLoading = false
                     )
                 }
@@ -463,8 +520,14 @@ class DetailInvoiceViewModel(
             deliveryDate = if (newDeliveryDate > 0) newDeliveryDate else current.billing.deliveryDate
         ).recalculate(condition)
 
+        val matchedFactory = current.factories.find { it.name.equals(newBrand, ignoreCase = true) }
+
         _state.update {
-            it.copy(billing = updatedBilling)
+            it.copy(
+                billing = updatedBilling,
+                selectedFactory = matchedFactory ?: it.selectedFactory,
+                selectedBranch = newBranch
+            )
         }
 
         saveBilling()

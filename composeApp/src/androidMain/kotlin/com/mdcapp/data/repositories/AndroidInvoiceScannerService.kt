@@ -71,7 +71,7 @@ class AndroidInvoiceScannerService : IInvoiceScannerService {
                     Analiza esta imagen y extrae la siguiente información de la factura o remito en formato JSON con estas claves exactas:
                     - "number": El número del documento (ej. 0001-00001234). String vacio si no se encuentra.
                     - "total": El monto final a pagar. Solo el numero sin signo de dolar. String vacio si no se encuentra.
-                    - "type": Debe ser "Factura" o "Remito". Si no dice, asume "Factura".
+                    - "type": Debe ser "Factura" o "Remito". Si no dice, asume "Remito".
                     - "date": La fecha de emision o entrega en formato "yyyy-MM-dd".
                 """.trimIndent()
 

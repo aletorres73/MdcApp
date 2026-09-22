@@ -26,12 +26,16 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -58,6 +62,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mdcapp.domain.entities.BillingComments
+import com.mdcapp.domain.entities.FactoryModel
 import com.mdcapp.domain.entities.MovementMethod
 import com.mdcapp.domain.entities.MovementStatus
 import com.mdcapp.domain.entities.PaymentRegisterModel
@@ -166,8 +171,8 @@ fun DetailInvoiceScreen(
                     editNumber = state.billing.billingNumber
                     editType = state.billing.type.ifEmpty { "Factura" }
                     editTotal = if (state.billing.total > 0) state.billing.total.toString() else ""
-                    editBrand = state.billing.brand
-                    editBranch = state.billing.branch
+                    editBrand = state.selectedFactory?.name ?: state.billing.brand
+                    editBranch = state.selectedBranch.ifEmpty { state.billing.branch }
                     editLoadDate = state.billing.loadDate
                     editDeliveryDate = state.billing.deliveryDate
                     showEditDialog = true
@@ -478,21 +483,50 @@ fun DetailInvoiceScreen(
                         prefix = { Text("$ ") }
                     )
 
-                    OutlinedTextField(
-                        value = editBrand,
-                        onValueChange = { editBrand = it },
-                        label = { Text("Fábrica / Marca") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    val currentFactory =
+                        state.factories.find { it.name.equals(editBrand, ignoreCase = true) }
+                            ?: state.selectedFactory
 
-                    OutlinedTextField(
-                        value = editBranch,
-                        onValueChange = { editBranch = it },
-                        label = { Text("Sucursal") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    if (state.factories.isNotEmpty()) {
+                        FactorySelectorDropdown(
+                            factories = state.factories,
+                            selectedFactory = currentFactory,
+                            onFactorySelected = { factory ->
+                                editBrand = factory.name
+                                editBranch = factory.branchList.firstOrNull() ?: ""
+                                vm.onFactorySelected(factory)
+                            }
+                        )
+
+                        if (currentFactory != null && currentFactory.branchList.isNotEmpty()) {
+                            SegmentSelectorDropdown(
+                                segments = currentFactory.branchList,
+                                selectedSegment = editBranch,
+                                onSegmentSelected = { segment ->
+                                    editBranch = segment
+                                    vm.onBranchSelected(segment)
+                                }
+                            )
+                        }
+                    } else {
+                        OutlinedTextField(
+                            value = editBrand,
+                            onValueChange = { editBrand = it },
+                            label = { Text("Fábrica / Marca") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        if (editBranch.isNotEmpty()) {
+                            OutlinedTextField(
+                                value = editBranch,
+                                onValueChange = { editBranch = it },
+                                label = { Text("Sucursal / Segmento") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                        }
+                    }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -804,6 +838,82 @@ fun CommentsSection(
                         thickness = 0.5.dp
                     )
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FactorySelectorDropdown(
+    factories: List<FactoryModel>,
+    selectedFactory: FactoryModel?,
+    onFactorySelected: (FactoryModel) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            value = selectedFactory?.name ?: "Seleccionar Fábrica",
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Fábrica / Marca") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            factories.forEach { factory ->
+                DropdownMenuItem(
+                    text = { Text(factory.name) },
+                    onClick = {
+                        onFactorySelected(factory)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SegmentSelectorDropdown(
+    segments: List<String>,
+    selectedSegment: String,
+    onSegmentSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            value = if (selectedSegment.isEmpty()) "Seleccionar Segmento" else selectedSegment,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Segmentación / Sucursal") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            segments.forEach { segment ->
+                DropdownMenuItem(
+                    text = { Text(segment) },
+                    onClick = {
+                        onSegmentSelected(segment)
+                        expanded = false
+                    }
+                )
             }
         }
     }
