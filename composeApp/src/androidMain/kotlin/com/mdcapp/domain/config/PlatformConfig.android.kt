@@ -58,19 +58,23 @@ actual fun downloadInstaller(context: Any, url: String, version: String): Boolea
 
     val contextAndroid = context as Context
 
-    analytics.logEvent("update_download_started", mapOf("url" to url))
-    crashlytics.log("PlatformConfig: Enqueuing download for $url")
+    val cleanVersion =
+        version.trim().removePrefix("v").removePrefix("V").ifEmpty { BuildConfig.VERSION_NAME }
+    val fileName = "MDCapp-v$cleanVersion.apk"
+
+    analytics.logEvent("update_download_started", mapOf("url" to url, "filename" to fileName))
+    crashlytics.log("PlatformConfig: Enqueuing download for $url as $fileName")
 
     val request = DownloadManager.Request(url.toUri()).apply {
         setTitle("Actualizando aplicación")
-        setDescription("Descargando nueva versión")
+        setDescription("Descargando $fileName")
         setNotificationVisibility(
             DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED,
         )
 
         setDestinationInExternalPublicDir(
             Environment.DIRECTORY_DOWNLOADS,
-            "MdcApp-v$version.apk"
+            fileName
         )
 
         setMimeType("application/vnd.android.package-archive")

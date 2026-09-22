@@ -134,6 +134,7 @@ fun InvoicesPageScreen(
                     UpdateDialog(
                         type = updateState,
                         releaseNotes = overlay.releasesNotes,
+                        isDownloading = overlay.isDownloading,
                         onUpdate = { viewModel.updateApk(installer) },
                         onDismiss = { viewModel.closeOverlay() }
                     )

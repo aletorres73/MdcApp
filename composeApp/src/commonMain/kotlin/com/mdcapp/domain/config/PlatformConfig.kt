@@ -11,8 +11,11 @@ expect fun downloadInstaller(context: Any, url: String, version: String): Boolea
 expect val appVersion: String
 
 fun compareVersions(v1: String, v2: String): Int {
-    val parts1 = v1.split(".").map { it.toIntOrNull() ?: 0 }
-    val parts2 = v2.split(".").map { it.toIntOrNull() ?: 0 }
+    val cleanV1 = v1.trim().removePrefix("v").removePrefix("V")
+    val cleanV2 = v2.trim().removePrefix("v").removePrefix("V")
+
+    val parts1 = cleanV1.split(".").map { part -> part.filter { it.isDigit() }.toIntOrNull() ?: 0 }
+    val parts2 = cleanV2.split(".").map { part -> part.filter { it.isDigit() }.toIntOrNull() ?: 0 }
 
     val maxLength = maxOf(parts1.size, parts2.size)
 

@@ -135,7 +135,11 @@ class InvoicesPagedViewModel(
 
     sealed interface Overlay {
         data object None : Overlay
-        data class UpdateApp(val state: UpdateState, val releasesNotes: String) : Overlay
+        data class UpdateApp(
+            val state: UpdateState,
+            val releasesNotes: String,
+            val isDownloading: Boolean = false
+        ) : Overlay
     }
 
     init {
@@ -190,10 +194,23 @@ class InvoicesPagedViewModel(
     }
 
     fun updateApk(installer: AppInstaller) {
+        val currentOverlay = _overlay.value
+        if (currentOverlay is Overlay.UpdateApp && currentOverlay.isDownloading) {
+            return
+        }
+
+        if (currentOverlay is Overlay.UpdateApp) {
+            _overlay.value = currentOverlay.copy(isDownloading = true)
+        }
+
         viewModelScope.launch {
             val result = initConfigUseCase.download(installer)
             if (!result) {
                 _message.value = "Error en el servidor"
+                val latestOverlay = _overlay.value
+                if (latestOverlay is Overlay.UpdateApp) {
+                    _overlay.value = latestOverlay.copy(isDownloading = false)
+                }
             } else {
                 if (_updateState.value != UpdateState.FORCE_UPDATE) {
                     _overlay.value = Overlay.None

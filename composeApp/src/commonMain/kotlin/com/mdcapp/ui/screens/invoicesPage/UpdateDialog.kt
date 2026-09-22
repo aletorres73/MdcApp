@@ -15,6 +15,7 @@ import com.mdcapp.domain.entities.UpdateState
 fun UpdateDialog(
     type: UpdateState,
     releaseNotes: String,
+    isDownloading: Boolean = false,
     onUpdate: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -23,7 +24,7 @@ fun UpdateDialog(
 
     AlertDialog(
         onDismissRequest = {
-            if (!force) onDismiss()
+            if (!force && !isDownloading) onDismiss()
         },
         title = {
             Text(
@@ -47,13 +48,19 @@ fun UpdateDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onUpdate) {
-                Text("Actualizar")
+            TextButton(
+                onClick = onUpdate,
+                enabled = !isDownloading
+            ) {
+                Text(if (isDownloading) "Descargando..." else "Actualizar")
             }
         },
         dismissButton = {
             if (!force) {
-                TextButton(onClick = onDismiss) {
+                TextButton(
+                    onClick = onDismiss,
+                    enabled = !isDownloading
+                ) {
                     Text("Más tarde")
                 }
             }
