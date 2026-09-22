@@ -78,7 +78,7 @@ class DetailInvoiceViewModel(
                     it.copy(
                         factories = list,
                         selectedFactory = currentFactory ?: it.selectedFactory,
-                        selectedBranch = if (it.selectedBranch.isNotEmpty()) it.selectedBranch else _state.value.billing.branch
+                        selectedBranch = it.selectedBranch.ifEmpty { _state.value.billing.branch }
                     )
                 }
             } catch (e: Exception) {
@@ -204,7 +204,7 @@ class DetailInvoiceViewModel(
                     it.copy(
                         billing = updatedBilling,
                         selectedFactory = matchedFactory ?: it.selectedFactory,
-                        selectedBranch = if (it.selectedBranch.isNotEmpty()) it.selectedBranch else updatedBilling.branch,
+                        selectedBranch = it.selectedBranch.ifEmpty { updatedBilling.branch },
                         isLoading = false
                     )
                 }

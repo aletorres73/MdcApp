@@ -2,11 +2,15 @@ package com.mdcapp.ui.utils
 
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.mdcapp.OrdersApp
 import com.mdcapp.domain.config.downloadInstaller
 import org.koin.java.KoinJavaComponent.get
 
@@ -21,11 +25,23 @@ actual fun getScreenWidthDp(): Dp {
 }
 
 actual fun showToast(message: String) {
-    // Implementación mínima para Android.
+    try {
+        val context = OrdersApp.getCurrentActivity() ?: get<Context>(Context::class.java)
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    } catch (e: Exception) {
+        // ignore
+    }
 }
 
 actual fun closeApp() {
-    // Implementación mínima.
+    val activity = OrdersApp.getCurrentActivity()
+    if (activity != null) {
+        activity.finishAffinity()
+    } else {
+        kotlin.system.exitProcess(0)
+    }
 }
 
 actual fun shareText(text: String, title: String) {

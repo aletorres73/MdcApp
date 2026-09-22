@@ -35,7 +35,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -58,7 +57,6 @@ import com.mdcapp.ui.screens.invoicesPage.InvoicesPageScreen
 import com.mdcapp.ui.utils.AppBackHandler
 import com.mdcapp.ui.utils.closeApp
 import com.mdcapp.ui.utils.isAndroid
-import com.mdcapp.ui.utils.showToast
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesPagedViewModel
@@ -83,8 +81,6 @@ fun MainScreen(
     val clientsState by clientsViewModel.state.collectAsState()
     val invoicesPagedState by invoicesPagedViewModel.uiState.collectAsState()
     val pendingDocument by SharedDocumentHandler.pendingDocument.collectAsState()
-
-    var lastBackPressTime by remember { mutableLongStateOf(0L) }
 
     val tabRoutes = listOf(
         AppRoute.InvoicesPaged.route,
@@ -120,13 +116,7 @@ fun MainScreen(
                 restoreState = true
             }
         } else {
-            val currentTime = System.currentTimeMillis()
-            if (currentTime - lastBackPressTime < 2000) {
-                closeApp()
-            } else {
-                lastBackPressTime = currentTime
-                showToast("Presiona de nuevo para salir")
-            }
+            closeApp()
         }
     }
 

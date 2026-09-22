@@ -53,6 +53,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -112,8 +113,8 @@ fun DetailInvoiceScreen(
     var editTotal by remember { mutableStateOf("") }
     var editBrand by remember { mutableStateOf("") }
     var editBranch by remember { mutableStateOf("") }
-    var editLoadDate by remember { mutableStateOf(0L) }
-    var editDeliveryDate by remember { mutableStateOf(0L) }
+    var editLoadDate by remember { mutableLongStateOf(0L) }
+    var editDeliveryDate by remember { mutableLongStateOf(0L) }
     var editOrderId by remember { mutableStateOf("") }
     var showEditLoadDatePicker by remember { mutableStateOf(false) }
     var showEditDeliveryDatePicker by remember { mutableStateOf(false) }
