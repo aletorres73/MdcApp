@@ -115,6 +115,12 @@ class OrderRepository(private val service: OrderService) {
         service.observeBuyOrdersByClient(clientId)
             .map { list -> list.map { it.toBuyOrderDomain() } }
 
+    fun observeAllBuyOrders(): Flow<List<BuyOrderModel>> =
+        service.observeAllBuyOrders().map { list -> list.map { it.toBuyOrderDomain() } }
+
+    suspend fun getAllBuyOrders(): List<BuyOrderModel> =
+        service.fetchAllBuyOrders().map { it.toBuyOrderDomain() }
+
     fun observeAllOrders(): Flow<List<OrderModel>> =
         service.observeAllOrders().map { list -> list.map { it.toOrderDomain() } }
 

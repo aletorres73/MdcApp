@@ -6,6 +6,11 @@ import androidx.compose.ui.graphics.Color
 val BrandBlue = Color(0xFF003D7C) // Azul Marino (MDCapp)
 val BrandGreen = Color(0xFF2E7D32) // Verde (Check mark)
 
+// Color de Acento y Contraste (Opción 1: Ámbar Cálido)
+val AccentAmber = Color(0xFFF57C00) // Ámbar cálido para acento y KPIs
+val AccentAmberContainer = Color(0xFFFDFCFB) // Fondo suave para KPI y pildora BottomBar
+val OnAccentAmberContainer = Color(0xFFE65100) // Texto/icono sobre contenedor ámbar
+
 // Colores del esquema de Material 3
 val PrimaryBlue = BrandBlue
 val OnPrimaryBlue = Color.White

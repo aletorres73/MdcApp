@@ -54,6 +54,7 @@ import com.mdcapp.domain.service.RefreshController
 import com.mdcapp.ui.screens.invoicesClientDetail.DetailInvoiceScreen
 import com.mdcapp.ui.screens.invoicesClientDetail.InvoicesScreen
 import com.mdcapp.ui.screens.invoicesPage.InvoicesPageScreen
+import com.mdcapp.ui.theme.AccentAmberContainer
 import com.mdcapp.ui.utils.AppBackHandler
 import com.mdcapp.ui.utils.closeApp
 import com.mdcapp.ui.utils.isAndroid
@@ -109,11 +110,10 @@ fun MainScreen(
             navController.navigate(AppRoute.InvoicesPaged.route) {
                 navController.graph.findStartDestination().route?.let { route ->
                     popUpTo(route) {
-                        saveState = true
+                        inclusive = false
                     }
                 }
                 launchSingleTop = true
-                restoreState = true
             }
         } else {
             closeApp()
@@ -137,7 +137,7 @@ fun MainScreen(
                             AppRoute.Clients.route -> "Mis Clientes"
                             AppRoute.Agenda.route -> "Agenda de Pagos"
                             AppRoute.Commissions.route -> "Mis Comisiones"
-                            else -> "Dashboard Facturas"
+                            else -> "Inicio"
                         }
                         Text(title)
                     },
@@ -169,9 +169,6 @@ fun MainScreen(
                         }
 
                         if (currentRoute == AppRoute.InvoicesPaged.route) {
-                            IconButton(onClick = { invoicesPagedViewModel.setSearchMode(true) }) {
-                                Icon(Icons.Default.Search, contentDescription = "Buscar")
-                            }
                             if (!isAndroid) {
                                 IconButton(onClick = { refreshController.triggerRefresh() }) {
                                     Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
@@ -233,21 +230,34 @@ fun MainScreen(
         },
         bottomBar = {
             if (isTabActive) {
-                NavigationBar {
+                NavigationBar(
+                    containerColor = AccentAmberContainer
+                ) {
                     items.forEach { item ->
                         NavigationBarItem(
                             icon = { Icon(item.icon, contentDescription = item.title) },
                             label = { Text(item.title) },
                             selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
                             onClick = {
-                                navController.navigate(item.route) {
-                                    navController.graph.findStartDestination().route?.let { route ->
-                                        popUpTo(route) {
-                                            saveState = true
+                                if (item.route == AppRoute.InvoicesPaged.route) {
+                                    navController.navigate(AppRoute.InvoicesPaged.route) {
+                                        navController.graph.findStartDestination().route?.let { startRoute ->
+                                            popUpTo(startRoute) {
+                                                inclusive = false
+                                            }
                                         }
+                                        launchSingleTop = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                } else {
+                                    navController.navigate(item.route) {
+                                        navController.graph.findStartDestination().route?.let { route ->
+                                            popUpTo(route) {
+                                                saveState = true
+                                            }
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
                             }
                         )
@@ -310,7 +320,6 @@ fun MainScreen(
             composable(AppRoute.InvoicesPaged.route) {
                 Box(modifier = Modifier.padding(innerPadding)) {
                     InvoicesPageScreen(
-                        viewModel = invoicesPagedViewModel,
                         onNavigationInvoice = { num ->
                             navController.navigate(
                                 AppRoute.DetailInvoice.createRoute(

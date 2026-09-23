@@ -27,6 +27,7 @@ import com.mdcapp.ui.viewmodels.AddClientViewModel
 import com.mdcapp.ui.viewmodels.AgendaViewModel
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import com.mdcapp.ui.viewmodels.CommissionsViewModel
+import com.mdcapp.ui.viewmodels.DashboardViewModel
 import com.mdcapp.ui.viewmodels.FactoryViewModel
 import com.mdcapp.ui.viewmodels.HomeViewModel
 import com.mdcapp.ui.viewmodels.LoginViewModel
@@ -61,6 +62,8 @@ val appModule = module {
     single<BuyOrderUseCase.GetBuyOrderById> { get<BuyOrderUseCase>().GetBuyOrderById() }
     single<BuyOrderUseCase.GetBuyOrdersByClient> { get<BuyOrderUseCase>().GetBuyOrdersByClient() }
     single<BuyOrderUseCase.ObserveBuyOrdersByClient> { get<BuyOrderUseCase>().ObserveBuyOrdersByClient() }
+    single<BuyOrderUseCase.ObserveAllBuyOrders> { get<BuyOrderUseCase>().ObserveAllBuyOrders() }
+    single<BuyOrderUseCase.GetAllBuyOrders> { get<BuyOrderUseCase>().GetAllBuyOrders() }
     single<BuyOrderUseCase.GetBillings> { get<BuyOrderUseCase>().GetBillings() }
     single<BuyOrderUseCase.AddPaymentToRegister> { get<BuyOrderUseCase>().AddPaymentToRegister() }
     single<BuyOrderUseCase.GetLastIdPaymentFromRegister> { get<BuyOrderUseCase>().GetLastIdPaymentFromRegister() }
@@ -142,6 +145,7 @@ val viewModelModule = module {
     viewModelOf(::AddClientViewModel)
     viewModelOf(::CommissionsViewModel)
     viewModelOf(::SubscriptionViewModel)
+    viewModelOf(::DashboardViewModel)
 //    viewModelOf(::InvoicesViewModel)
     viewModel { (clientId: String) ->
         InvoicesViewModel(

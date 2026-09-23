@@ -25,6 +25,18 @@ class BuyOrderUseCase(private val repository: OrderRepository) {
         }
     }
 
+    inner class ObserveAllBuyOrders {
+        operator fun invoke(): Flow<List<BuyOrderModel>> {
+            return repository.observeAllBuyOrders()
+        }
+    }
+
+    inner class GetAllBuyOrders {
+        suspend operator fun invoke(): List<BuyOrderModel> {
+            return repository.getAllBuyOrders()
+        }
+    }
+
     inner class GetBillings {
         suspend operator fun invoke(clientId: String, orderId: String): List<BillingModel> {
             return repository.getBillingsByOrder(clientId, orderId)

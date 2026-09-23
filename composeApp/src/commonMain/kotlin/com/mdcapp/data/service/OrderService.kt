@@ -32,6 +32,7 @@ class OrderService(
     private val factoriesPath get() = "$userPath/$FACTORIES"
     private val paymentsRegisterPath get() = "$userPath/$PAYMENTS_REGISTER"
     private val allBillingsPath get() = "$userPath/allBillings"
+    private val allBuyOrdersPath get() = "$userPath/allBuyOrders"
 
     private fun clientOrdersPath(clientId: String) =
         "$userPath/clients/$clientId/$BUY_ORDERS"
@@ -496,6 +497,28 @@ class OrderService(
         return db.observeCollection(clientOrdersPath(clientId), RemoteResultBuyOrder.serializer())
     }
 
+    fun observeAllBuyOrders(): Flow<List<RemoteResultBuyOrder>> {
+        Napier.i("OrderService --- observeAllBuyOrders")
+        return db.observeCollection(
+            allBuyOrdersPath,
+            RemoteResultBuyOrder.serializer(),
+            DatabaseQuery(orderBy = "timeStamp", descending = true, limit = 500)
+        )
+    }
+
+    suspend fun fetchAllBuyOrders(): List<RemoteResultBuyOrder> {
+        return try {
+            db.getCollection(
+                allBuyOrdersPath,
+                RemoteResultBuyOrder.serializer(),
+                DatabaseQuery(orderBy = "timeStamp", descending = true, limit = 500)
+            )
+        } catch (e: Exception) {
+            Napier.e("Error fetching all buy orders", e)
+            emptyList()
+        }
+    }
+
     fun observeAllOrders(): Flow<List<RemoteResultOrder>> {
         Napier.i("OrderService --- observeAllOrders")
         return db.observeCollection(
@@ -535,6 +558,11 @@ class OrderService(
                 finalOrder,
                 RemoteResultBuyOrder.serializer()
             )
+            db.setDocument(
+                "$allBuyOrdersPath/$orderId",
+                finalOrder,
+                RemoteResultBuyOrder.serializer()
+            )
             true
         } catch (e: Exception) {
             Napier.e("Error saving order", e)
@@ -551,6 +579,11 @@ class OrderService(
             val finalOrder = order.copy(id = orderId, order = orderId)
             db.setDocument(
                 "${clientOrdersPath(clientId)}/$orderId",
+                finalOrder,
+                RemoteResultBuyOrder.serializer()
+            )
+            db.setDocument(
+                "$allBuyOrdersPath/$orderId",
                 finalOrder,
                 RemoteResultBuyOrder.serializer()
             )
