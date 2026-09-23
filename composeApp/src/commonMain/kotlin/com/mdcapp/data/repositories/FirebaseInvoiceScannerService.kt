@@ -5,7 +5,8 @@ import com.mdcapp.domain.repositories.IInvoiceScannerService
 import com.mdcapp.domain.repositories.IStorageRepository
 import com.mdcapp.domain.repositories.ScanResult
 import io.github.aakira.napier.Napier
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration.Companion.milliseconds
@@ -17,7 +18,10 @@ data class ScanResultDto(
     val total: String = "",
     val type: String = "",
     val date: String = "",
-    val error: String? = null
+    val clientName: String = "",
+    val filePath: String = "",
+    val error: String? = null,
+    val createdAt: Long = 0L
 )
 
 class FirebaseInvoiceScannerService(
@@ -34,36 +38,32 @@ class FirebaseInvoiceScannerService(
         return try {
             val cleanClient = if (clientName.isBlank()) "general" else clientName.replace("/", "_")
             val timestamp = System.currentTimeMillis()
-            val cleanFileName =
-                if (fileName.isBlank()) "doc_$timestamp" else fileName.replace(" ", "_")
 
-            val extension = cleanFileName.substringAfterLast('.', "")
+            val rawFileName =
+                if (fileName.isBlank()) "doc_$timestamp" else fileName.replace(" ", "_")
+            val extension =
+                if (rawFileName.contains('.')) rawFileName.substringAfterLast('.') else ""
             val extPath = if (extension.isNotEmpty()) ".$extension" else ""
             val nameWithoutExt =
-                if (cleanFileName.contains('.')) cleanFileName.substringBeforeLast('.') else cleanFileName
+                if (rawFileName.contains('.')) rawFileName.substringBeforeLast('.') else rawFileName
+            val sanitizedBaseName = nameWithoutExt.replace(Regex("[^a-zA-Z0-9_-]"), "_")
 
-            val storageFileName = "${nameWithoutExt}_$timestamp$extPath"
+            val documentId = "${sanitizedBaseName}_$timestamp"
+            val storageFileName = "$documentId$extPath"
             val storagePath = "invoices/$cleanClient/$storageFileName"
-
-            val documentId =
-                storageFileName.substringBeforeLast('.').replace(Regex("[^a-zA-Z0-9_-]"), "_")
 
             Napier.i("Uploading file to Storage: $storagePath (documentId: $documentId)")
             val documentUrl = storageRepository.uploadFile(storagePath, fileBytes)
 
-            Napier.i("Waiting for Cloud Function processing at scan_results/$documentId")
+            Napier.i("Observing real-time Cloud Function processing at scan_results/$documentId")
             val scanPath = "scan_results/$documentId"
 
             val resultDto = withTimeoutOrNull(35_000L.milliseconds) {
-                var dto: ScanResultDto?
-                while (true) {
-                    dto = databaseRepository.getDocument(scanPath, ScanResultDto.serializer())
-                    if (dto?.status == "completed" || dto?.status == "error") {
-                        break
+                databaseRepository.observeDocument(scanPath, ScanResultDto.serializer())
+                    .filterNotNull()
+                    .firstOrNull {
+                        it.status == "completed" || it.status == "error"
                     }
-                    delay(1000L.milliseconds)
-                }
-                dto
             }
 
             if (resultDto == null) {
