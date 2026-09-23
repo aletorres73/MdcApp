@@ -5,7 +5,9 @@ import com.mdcapp.domain.repositories.IDatabaseRepository
 import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.Query
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.KSerializer
 
@@ -46,7 +48,12 @@ class AndroidDatabaseRepository(private val db: FirebaseFirestore) : IDatabaseRe
     }
 
     override fun <T : Any> observeDocument(path: String, serializer: KSerializer<T>): Flow<T?> {
-        return db.document(path).snapshots.map { if (it.exists) it.data(serializer) else null }
+        return db.document(path).snapshots
+            .map { if (it.exists) it.data(serializer) else null }
+            .catch { e ->
+                Napier.w("Error observando documento en $path", e)
+                emit(null)
+            }
     }
 
     private fun applyQuery(base: Query, query: DatabaseQuery?): Query {
@@ -115,9 +122,14 @@ class AndroidDatabaseRepository(private val db: FirebaseFirestore) : IDatabaseRe
         query: DatabaseQuery?
     ): Flow<List<T>> {
         val q = applyQuery(db.collection(path), query)
-        return q.snapshots.map { snapshot ->
-            snapshot.documents.map { it.data(serializer) }
-        }
+        return q.snapshots
+            .map { snapshot ->
+                snapshot.documents.map { it.data(serializer) }
+            }
+            .catch { e ->
+                Napier.w("Error observando colección en $path", e)
+                emit(emptyList())
+            }
     }
 
     override suspend fun <T : Any> getCollection(

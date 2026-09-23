@@ -40,6 +40,8 @@ fun SignUpScreen(
     viewModel: SignUpViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    var name by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -57,7 +59,27 @@ fun SignUpScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text("Registro de Vendedor", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Nombre") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = lastName,
+            onValueChange = { lastName = it },
+            label = { Text("Apellido") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = email,
@@ -67,7 +89,7 @@ fun SignUpScreen(
             singleLine = true
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = password,
@@ -84,7 +106,7 @@ fun SignUpScreen(
             singleLine = true
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = confirmPassword,
@@ -95,7 +117,7 @@ fun SignUpScreen(
             singleLine = true
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         if (state.error != null) {
             Text(state.error!!, color = MaterialTheme.colorScheme.error)
@@ -103,7 +125,7 @@ fun SignUpScreen(
         }
 
         Button(
-            onClick = { viewModel.register(email, password, confirmPassword) },
+            onClick = { viewModel.register(name, lastName, email, password, confirmPassword) },
             enabled = !state.isLoading,
             modifier = Modifier.fillMaxWidth()
         ) {

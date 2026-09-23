@@ -9,6 +9,7 @@ import com.mdcapp.ui.screens.LoginScreen
 import com.mdcapp.ui.screens.MainScreen
 import com.mdcapp.ui.screens.SignUpScreen
 import com.mdcapp.ui.screens.SubscriptionStatusScreen
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -30,13 +31,20 @@ fun AppNavigation(startRoute: String) {
                 navController.navigate(AppRoute.Home.route) {
                     popUpTo(AppRoute.Login.route) { inclusive = true }
                 }
+            } else if (user == null && currentRoute != AppRoute.Login.route && currentRoute != AppRoute.SignUp.route) {
+                println("🚪 [Navigation] Sin sesión, redirigiendo a Login...")
+                navController.navigate(AppRoute.Login.route) {
+                    popUpTo(AppRoute.Login.route) { inclusive = true }
+                }
             }
         }
     }
 
     // Lógica de redirección por suscripción en tiempo real
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        userService.observeUserProfile().collectLatest { profile ->
+        userService.observeUserProfile()
+            .catch { println("⚠️ [Navigation] Error observando perfil: ${it.message}") }
+            .collectLatest { profile ->
             val currentRoute = navController.currentDestination?.route
             if (authRepo.isLogged() &&
                 currentRoute != AppRoute.Login.route &&

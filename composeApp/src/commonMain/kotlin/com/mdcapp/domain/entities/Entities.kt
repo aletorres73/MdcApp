@@ -126,6 +126,7 @@ data class UserModel(
     val name: String = "",
     val lastName: String = "",
     val email: String = "",
+    val isNewUser: Boolean = true,
     val subscriptionExpiresAt: Long = 0L,
     val isManuallyEnabled: Boolean = false,
     val paymentHistory: List<PaymentEntry> = emptyList()

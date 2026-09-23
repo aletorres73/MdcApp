@@ -2,6 +2,7 @@ package com.mdcapp.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mdcapp.domain.entities.UserModel
 import com.mdcapp.domain.repositories.AuthRepository
 import com.mdcapp.domain.service.AnalyticsService
 import io.github.aakira.napier.Napier
@@ -28,8 +29,18 @@ class SignUpViewModel(
         val isSuccess: Boolean = false
     )
 
-    fun register(email: String, password: String, confirm: String) {
-        if (email.isBlank() || password.isBlank()) {
+    fun register(
+        name: String,
+        lastName: String,
+        email: String,
+        password: String,
+        confirm: String
+    ) {
+        val trimmedName = name.trim()
+        val trimmedLastName = lastName.trim()
+        val trimmedEmail = email.trim()
+
+        if (trimmedName.isBlank() || trimmedLastName.isBlank() || trimmedEmail.isBlank() || password.isBlank()) {
             _state.update { it.copy(error = "Complete todos los campos") }
             return
         }
@@ -45,14 +56,34 @@ class SignUpViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                val user = authRepository.register(email, password)
-                if (user != null) {
-                    analytics.logEvent("sign_up_success", mapOf("email" to email))
+                val appUser = authRepository.register(trimmedEmail, password)
+                if (appUser != null) {
+                    val trialDurationMs = 30L * 24 * 60 * 60 * 1000L
+                    val trialExpiration = System.currentTimeMillis() + trialDurationMs
+
+                    val newUserProfile = UserModel(
+                        uid = appUser.uid,
+                        name = trimmedName,
+                        lastName = trimmedLastName,
+                        email = trimmedEmail,
+                        isNewUser = true,
+                        subscriptionExpiresAt = trialExpiration,
+                        isManuallyEnabled = false,
+                        paymentHistory = emptyList()
+                    )
+
+                    try {
+                        authRepository.saveUserProfile(newUserProfile)
+                    } catch (e: Exception) {
+                        Napier.e("Error guardando perfil en Firestore", e)
+                    }
+
+                    analytics.logEvent("sign_up_success", mapOf("email" to trimmedEmail))
                     _state.update { it.copy(isLoading = false, isSuccess = true) }
                 } else {
                     analytics.logEvent(
                         "sign_up_failure",
-                        mapOf("email" to email, "reason" to "unknown")
+                        mapOf("email" to trimmedEmail, "reason" to "unknown")
                     )
                     _state.update {
                         it.copy(
@@ -63,7 +94,10 @@ class SignUpViewModel(
                 }
             } catch (e: Exception) {
                 Napier.e("SignUp error", e)
-                analytics.logEvent("sign_up_error", mapOf("email" to email, "error" to e.message))
+                analytics.logEvent(
+                    "sign_up_error",
+                    mapOf("email" to trimmedEmail, "error" to e.message)
+                )
                 _state.update {
                     it.copy(
                         isLoading = false,

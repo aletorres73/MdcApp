@@ -58,8 +58,8 @@ class UserService(
     }
 
     suspend fun saveUserProfile(user: UserModel) {
-        val id = userId ?: return
-        val path = userPath ?: return
+        val id = user.uid.ifEmpty { userId } ?: return
+        val path = "users/$id"
         db.setDocument(path, user.copy(uid = id).toRemote(), RemoteResultUserModel.serializer())
     }
 
