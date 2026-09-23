@@ -71,7 +71,6 @@ fun BottomSheetPaymentCondition(
                     }
                 }
             }
-//            AddNewPaymentCondition()
         }
     }
 }

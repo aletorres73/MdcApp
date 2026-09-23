@@ -21,7 +21,6 @@ import com.mdcapp.domain.usescases.homeusescases.HomeUseCase
 import com.mdcapp.domain.usescases.homeusescases.PaymentConditionsUseCase
 import com.mdcapp.domain.usescases.invoiceusecase.InvoiceUseCase
 import com.mdcapp.domain.usescases.ordersusescases.BuyOrderUseCase
-import com.mdcapp.domain.usescases.ordersusescases.GetFactoriesListUseCase
 import com.mdcapp.domain.usescases.ordersusescases.OrdersUseCase
 import com.mdcapp.ui.viewmodels.AddClientViewModel
 import com.mdcapp.ui.viewmodels.AgendaViewModel
@@ -29,7 +28,6 @@ import com.mdcapp.ui.viewmodels.ClientsViewModel
 import com.mdcapp.ui.viewmodels.CommissionsViewModel
 import com.mdcapp.ui.viewmodels.DashboardViewModel
 import com.mdcapp.ui.viewmodels.FactoryViewModel
-import com.mdcapp.ui.viewmodels.HomeViewModel
 import com.mdcapp.ui.viewmodels.LoginViewModel
 import com.mdcapp.ui.viewmodels.ProfileViewModel
 import com.mdcapp.ui.viewmodels.SignUpViewModel
@@ -41,7 +39,6 @@ import com.mdcapp.ui.viewmodels.invoices.InvoicesPagedViewModel
 import com.mdcapp.ui.viewmodels.invoices.InvoicesViewModel
 import com.mdcapp.ui.viewmodels.orders.ClientOrdersViewModel
 import com.mdcapp.ui.viewmodels.orders.CreateOrderViewModel
-import com.mdcapp.ui.viewmodels.orders.OrdersViewModel
 import org.koin.compose.viewmodel.dsl.viewModel
 import org.koin.compose.viewmodel.dsl.viewModelOf
 import org.koin.core.context.startKoin
@@ -71,7 +68,6 @@ val appModule = module {
     single<BuyOrderUseCase.GetPaymentsRegister> { get<BuyOrderUseCase>().GetPaymentsRegister() }
     single<BuyOrderUseCase.SaveOrder> { get<BuyOrderUseCase>().SaveOrder() }
     single<BuyOrderUseCase.UpdateOrder> { get<BuyOrderUseCase>().UpdateOrder() }
-    single<GetFactoriesListUseCase> { get<GetFactoriesListUseCase>() }
 
     single<PaymentConditionsUseCase.GetPaymentsConditions> { get<PaymentConditionsUseCase>().GetPaymentsConditions() }
     single<PaymentConditionsUseCase.SetPaymentsConditionsFactory> { get<PaymentConditionsUseCase>().SetPaymentsConditionsFactory() }
@@ -123,7 +119,6 @@ val dataModule = module {
     factoryOf(::BuyOrderUseCase)
     factoryOf(::HomeUseCase)
     factoryOf(::PaymentConditionsUseCase)
-    factoryOf(::GetFactoriesListUseCase)
     factoryOf(::GetClientsUseCase)
     factoryOf(::InvoiceUseCase)
     factoryOf(::AgendaUseCase)
@@ -131,11 +126,9 @@ val dataModule = module {
 }
 
 val viewModelModule = module {
-    viewModelOf(::OrdersViewModel)
     viewModelOf(::CreateOrderViewModel)
     viewModel { (clientId: String) -> ClientOrdersViewModel(clientId, get(), get()) }
     viewModelOf(::BuyOrdersViewModel)
-    viewModelOf(::HomeViewModel)
     viewModelOf(::ClientsViewModel)
     viewModelOf(::FactoryViewModel)
     viewModelOf(::AgendaViewModel)
@@ -146,7 +139,6 @@ val viewModelModule = module {
     viewModelOf(::CommissionsViewModel)
     viewModelOf(::SubscriptionViewModel)
     viewModelOf(::DashboardViewModel)
-//    viewModelOf(::InvoicesViewModel)
     viewModel { (clientId: String) ->
         InvoicesViewModel(
             clientId,
@@ -202,4 +194,3 @@ fun initKoin(config: KoinAppDeclaration? = null) {
         modules(appModule, dataModule, platformModule, viewModelModule)
     }
 }
-

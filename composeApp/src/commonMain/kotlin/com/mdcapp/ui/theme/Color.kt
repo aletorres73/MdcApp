@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 // Colores de Marca extraídos del Logo
 val BrandBlue = Color(0xFF003D7C) // Azul Marino (MDCapp)
 val BrandGreen = Color(0xFF2E7D32) // Verde (Check mark)
+val WhatsAppGreen = Color(0xFF25D366) // Verde WhatsApp
 
 // Color de Acento y Contraste (Opción 1: Ámbar Cálido)
 val AccentAmber = Color(0xFFF57C00) // Ámbar cálido para acento y KPIs

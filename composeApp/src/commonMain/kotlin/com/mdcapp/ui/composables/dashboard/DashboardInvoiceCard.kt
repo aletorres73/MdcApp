@@ -34,6 +34,7 @@ import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.toFormattedDate
 import com.mdcapp.domain.entities.toPrint
 import com.mdcapp.ui.theme.AccentAmberContainer
+import com.mdcapp.ui.theme.WhatsAppGreen
 import com.mdcapp.ui.theme.getBillingStatusColor
 
 @Composable
