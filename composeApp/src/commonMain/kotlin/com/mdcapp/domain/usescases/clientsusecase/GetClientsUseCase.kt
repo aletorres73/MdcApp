@@ -57,5 +57,9 @@ class GetClientsUseCase(
     suspend fun getNextId(): String {
         return service.peekNextClientNumber()
     }
+
+    suspend fun getClientById(clientId: String): ClientModel? {
+        return service.fetchClientById(clientId)?.toClientDomain()
+    }
 }
 

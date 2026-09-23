@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -27,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mdcapp.ui.composables.common.LoadingOverlay
 import com.mdcapp.ui.viewmodels.AddClientViewModel
@@ -44,16 +48,37 @@ fun AddClientScreen(
     val state by viewModel.state.collectAsState()
     var name by remember { mutableStateOf(initialName ?: "") }
     var clientId by remember { mutableStateOf(initialId ?: "") }
+    var cuit by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
+    var taxAddress by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
 
     LaunchedEffect(initialId) {
         if (initialId == null) {
             viewModel.loadNextId()
+        } else {
+            viewModel.loadClientDetails(initialId)
         }
     }
 
     LaunchedEffect(state.suggestedId) {
         if (initialId == null && state.suggestedId.isNotEmpty()) {
             clientId = state.suggestedId
+        }
+    }
+
+    LaunchedEffect(state.loadedClient) {
+        state.loadedClient?.let { client ->
+            name = client.clientName
+            clientId = client.clientId
+            cuit = client.cuit
+            address = client.address
+            taxAddress = client.taxAddress
+            email = client.email
+            phone = client.phone
+            city = client.city
         }
     }
 
@@ -79,18 +104,9 @@ fun AddClientScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Razón Social / Nombre") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             OutlinedTextField(
                 value = clientId,
                 onValueChange = {},
@@ -109,6 +125,79 @@ fun AddClientScreen(
                 }
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Razón Social / Nombre *") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = cuit,
+                onValueChange = { cuit = it },
+                label = { Text("CUIT (Opcional)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = address,
+                onValueChange = { address = it },
+                label = { Text("Dirección Comercial (Opcional)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = taxAddress,
+                onValueChange = { taxAddress = it },
+                label = { Text("Dirección Fiscal (Opcional)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = city,
+                onValueChange = { city = it },
+                label = { Text("Localidad (Opcional)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email (Opcional)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = phone,
+                onValueChange = { phone = it },
+                label = { Text("Teléfono (Opcional)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+            )
+
             Spacer(modifier = Modifier.height(24.dp))
 
             if (state.error != null) {
@@ -118,9 +207,16 @@ fun AddClientScreen(
 
             Button(
                 onClick = {
-                    // Para clientes nuevos, enviamos el ID vacío al ViewModel/Service
-                    // para que se genere y consuma el contador solo al guardar con éxito.
-                    viewModel.saveClient(name, if (initialId == null) "" else clientId)
+                    viewModel.saveClient(
+                        id = if (initialId == null) "" else clientId,
+                        name = name,
+                        cuit = cuit,
+                        address = address,
+                        taxAddress = taxAddress,
+                        email = email,
+                        phone = phone,
+                        city = city
+                    )
                 },
                 enabled = !state.isLoading && name.isNotBlank() && (initialId != null || clientId.isNotBlank()),
                 modifier = Modifier.fillMaxWidth()
@@ -140,4 +236,3 @@ fun AddClientScreen(
 
     LoadingOverlay(state.isLoading)
 }
-

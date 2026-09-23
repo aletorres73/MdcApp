@@ -26,6 +26,7 @@ class AddClientViewModel(
     data class UiState(
         val isLoading: Boolean = false,
         val suggestedId: String = "",
+        val loadedClient: ClientModel? = null,
         val error: String? = null,
         val isSuccess: Boolean = false
     )
@@ -34,10 +35,6 @@ class AddClientViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
-                // Necesitamos acceder al service para obtener el ID sugerido.
-                // Sin embargo, GetClientsUseCase es el que expone los metodos.
-                // Voy a verificar si GetClientsUseCase tiene el metodo o si debo agregarlo.
-                // Como soy el desarrollador, prefiero agregarlo al UseCase si no existe.
                 val nextId = clientUseCase.getNextId()
                 _state.update { it.copy(isLoading = false, suggestedId = nextId) }
             } catch (e: Exception) {
@@ -46,18 +43,50 @@ class AddClientViewModel(
         }
     }
 
-    fun saveClient(name: String, id: String) {
+    fun loadClientDetails(clientId: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            try {
+                val client = clientUseCase.getClientById(clientId)
+                _state.update { it.copy(isLoading = false, loadedClient = client) }
+            } catch (e: Exception) {
+                Napier.e("Error loading client details", e)
+                _state.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    fun saveClient(
+        id: String,
+        name: String,
+        cuit: String = "",
+        address: String = "",
+        taxAddress: String = "",
+        email: String = "",
+        phone: String = "",
+        city: String = "",
+        isActive: Boolean = true
+    ) {
         if (name.isBlank()) {
-            _state.update { it.copy(error = "El nombre no puede estar vacío") }
+            _state.update { it.copy(error = "El nombre / Razón Social no puede estar vacío") }
             return
         }
 
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                // Si el id está vacío, el service generará uno automáticamente.
-                // Sin embargo, si lo cargamos desde la UI, usamos ese.
-                val success = clientUseCase.save(ClientModel(clientId = id, clientName = name))
+                val client = ClientModel(
+                    clientId = id,
+                    clientName = name.trim(),
+                    cuit = cuit.trim(),
+                    address = address.trim(),
+                    taxAddress = taxAddress.trim(),
+                    email = email.trim(),
+                    phone = phone.trim(),
+                    city = city.trim(),
+                    isActive = isActive
+                )
+                val success = clientUseCase.save(client)
                 if (success) {
                     analytics.logEvent("add_client_success", mapOf("client_name" to name))
                     _state.update { it.copy(isLoading = false, isSuccess = true) }
@@ -87,4 +116,3 @@ class AddClientViewModel(
         _state.update { UiState() }
     }
 }
-

@@ -115,9 +115,15 @@ enum class MovementStatus(val displayName: String, val colorHex: String) {
 }
 
 data class ClientModel(
-    val clientId: String,
-    val clientName: String,
-    val isActive: Boolean = true
+    val clientId: String = "",
+    val clientName: String = "",
+    val isActive: Boolean = true,
+    val cuit: String = "",
+    val address: String = "",
+    val taxAddress: String = "",
+    val email: String = "",
+    val phone: String = "",
+    val city: String = ""
 )
 
 @Serializable

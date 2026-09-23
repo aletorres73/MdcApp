@@ -50,11 +50,19 @@ class AddInvoiceViewModel(
                     _state.update { it.copy(pendingDocument = doc, scanningDocument = true) }
                     SharedDocumentHandler.clearPendingDocument()
                     try {
-                        val result = scannerService.scanInvoice(doc.fileBytes, doc.mimeType)
+                        val client = _state.value.buyOrder.client.ifBlank { "general" }
+                        val scanResult = scannerService.scanInvoice(
+                            fileBytes = doc.fileBytes,
+                            mimeType = doc.mimeType,
+                            fileName = doc.fileName,
+                            clientName = client
+                        )
                         _state.update {
                             it.copy(
                                 scanningDocument = false,
-                                scannedDocumentResult = result
+                                scannedDocumentResult = scanResult?.metadata,
+                                uploadedDocumentUrl = scanResult?.documentUrl
+                                    ?: it.uploadedDocumentUrl
                             )
                         }
                     } catch (e: Exception) {
@@ -81,6 +89,7 @@ class AddInvoiceViewModel(
         val error: String? = null,
         val scanningDocument: Boolean = false,
         val scannedDocumentResult: Map<String, String>? = null,
+        val uploadedDocumentUrl: String = "",
         val pendingDocument: SharedDocument? = null,
         val clientOrders: List<BuyOrderModel> = emptyList()
     )
@@ -264,21 +273,27 @@ class AddInvoiceViewModel(
                     if (condition != null) baseInvoice.recalculate(condition) else baseInvoice
 
                 var finalInvoiceToSave = finalInvoice
-                val pendingDoc = _state.value.pendingDocument
-                if (pendingDoc != null) {
-                    val extension = pendingDoc.fileName.substringAfterLast('.', "")
-                    val extPath = if (extension.isNotEmpty()) ".$extension" else ""
-                    val path = "invoices/${_state.value.buyOrder.client}/${number}_${now}$extPath"
-                    try {
-                        val url = storageRepository.uploadFile(path, pendingDoc.fileBytes)
-                        finalInvoiceToSave = finalInvoice.copy(documentUrl = url)
-                    } catch (e: Exception) {
-                        Napier.e(
-                            "Error uploading document to Firebase Storage (Check Storage Rules)",
-                            e
-                        )
+                val existingUploadedUrl = _state.value.uploadedDocumentUrl
+                if (existingUploadedUrl.isNotBlank()) {
+                    finalInvoiceToSave = finalInvoice.copy(documentUrl = existingUploadedUrl)
+                } else {
+                    val pendingDoc = _state.value.pendingDocument
+                    if (pendingDoc != null) {
+                        val extension = pendingDoc.fileName.substringAfterLast('.', "")
+                        val extPath = if (extension.isNotEmpty()) ".$extension" else ""
+                        val clientFolder = _state.value.buyOrder.client.ifBlank { "general" }
+                        val path = "invoices/$clientFolder/${number}_${now}$extPath"
+                        try {
+                            val url = storageRepository.uploadFile(path, pendingDoc.fileBytes)
+                            finalInvoiceToSave = finalInvoice.copy(documentUrl = url)
+                        } catch (e: Exception) {
+                            Napier.e(
+                                "Error uploading document to Firebase Storage (Check Storage Rules)",
+                                e
+                            )
+                        }
+                        SharedDocumentHandler.clearPendingDocument()
                     }
-                    SharedDocumentHandler.clearPendingDocument()
                 }
 
                 val success = createInvoiceUseCase(

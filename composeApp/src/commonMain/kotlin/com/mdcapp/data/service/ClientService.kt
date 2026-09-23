@@ -86,15 +86,17 @@ class ClientService(
         }
     }
 
-    suspend fun fetchClientName(clientId: String): RemoteResultClientModel {
+    suspend fun fetchClientById(clientId: String): RemoteResultClientModel? {
         return try {
-            val client =
-                db.getDocument("$clientsPath/$clientId", RemoteResultClientModel.serializer())
-            client ?: RemoteResultClientModel("", "")
+            db.getDocument("$clientsPath/$clientId", RemoteResultClientModel.serializer())
         } catch (e: Exception) {
-            Napier.e("Error fetching client name", e)
-            RemoteResultClientModel("", "")
+            Napier.e("Error fetching client by id", e)
+            null
         }
+    }
+
+    suspend fun fetchClientName(clientId: String): RemoteResultClientModel {
+        return fetchClientById(clientId) ?: RemoteResultClientModel("", "")
     }
 
     suspend fun fetchAllClientsName(): List<RemoteResultClientModel> {
