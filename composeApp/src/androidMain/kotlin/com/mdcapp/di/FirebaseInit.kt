@@ -15,14 +15,21 @@ actual fun initFirebaseApp(context: Any?) {
     try {
         val appContext = context as? Context ?: return
 
-        val firebaseOptions = FirebaseOptions(
-            projectId = BuildKonfig.FIREBASE_PROJECT_ID,
-            apiKey = BuildKonfig.FIREBASE_API_KEY,
-            applicationId = BuildKonfig.FIREBASE_APP_ID_ANDROID,
-        )
-
-        // Using GitLive initialization with explicit options to ensure it works without google-services plugin
-        Firebase.initialize(appContext, options = firebaseOptions)
+        // Check if Firebase is already initialized by the google-services plugin
+        val apps = com.google.firebase.FirebaseApp.getApps(appContext)
+        if (apps.isNotEmpty()) {
+            Napier.i("Firebase already initialized by google-services plugin")
+            // Initialize GitLive wrapper without explicit options to use the default app
+            Firebase.initialize(appContext)
+        } else {
+            Napier.i("Firebase not initialized. Initializing manually with options")
+            val firebaseOptions = FirebaseOptions(
+                projectId = BuildKonfig.FIREBASE_PROJECT_ID,
+                apiKey = BuildKonfig.FIREBASE_API_KEY,
+                applicationId = BuildKonfig.FIREBASE_APP_ID_ANDROID,
+            )
+            Firebase.initialize(appContext, options = firebaseOptions)
+        }
 
         // Initialize Firebase App Check for Vertex AI and other Firebase services
         try {

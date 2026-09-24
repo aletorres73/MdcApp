@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneId
 
 class AgendaViewModel(
@@ -43,8 +42,8 @@ class AgendaViewModel(
         flow {
             emit(emptyList<BillingModel>()) // Loading state placeholder
             val dateFrom = weekStart.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            val dateTo = weekStart.plusDays(6).atTime(LocalTime.MAX).atZone(ZoneId.systemDefault())
-                .toInstant().toEpochMilli()
+            val dateTo = weekStart.plusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant()
+                .toEpochMilli() - 1L
             emit(fetchAgenda(dateFrom, dateTo))
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

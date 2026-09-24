@@ -218,6 +218,17 @@ class OrderService(
         }
     }
 
+    suspend fun deletePaymentFromRegister(id: Int): Boolean {
+        return try {
+            db.deleteDocument("$paymentsRegisterPath/$id")
+            Napier.i("Firestore --- On deletePaymentFromRegister $id successful")
+            true
+        } catch (e: Exception) {
+            Napier.e("Firestore--- onDeletePaymentFromRegister $e")
+            false
+        }
+    }
+
     suspend fun fetchLastIdFromPayments(): Int {
         return try {
             val documents =

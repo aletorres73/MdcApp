@@ -63,6 +63,7 @@ val appModule = module {
     single<BuyOrderUseCase.GetAllBuyOrders> { get<BuyOrderUseCase>().GetAllBuyOrders() }
     single<BuyOrderUseCase.GetBillings> { get<BuyOrderUseCase>().GetBillings() }
     single<BuyOrderUseCase.AddPaymentToRegister> { get<BuyOrderUseCase>().AddPaymentToRegister() }
+    single<BuyOrderUseCase.DeletePaymentFromRegister> { get<BuyOrderUseCase>().DeletePaymentFromRegister() }
     single<BuyOrderUseCase.GetLastIdPaymentFromRegister> { get<BuyOrderUseCase>().GetLastIdPaymentFromRegister() }
     single<BuyOrderUseCase.UpdateBilling> { get<BuyOrderUseCase>().UpdateBilling() }
     single<BuyOrderUseCase.GetPaymentsRegister> { get<BuyOrderUseCase>().GetPaymentsRegister() }
@@ -169,6 +170,7 @@ val viewModelModule = module {
     viewModel { (invoiceNumber: String) ->
         DetailInvoiceViewModel(
             invoiceNumber,
+            get(),
             get(),
             get(),
             get(),

@@ -33,6 +33,7 @@ class DetailInvoiceViewModel(
     private val updateInvoiceUseCase: InvoiceUseCase.UpdateInvoice,
     private val observePaymentsRegisterUseCase: InvoiceUseCase.ObservePaymentsByInvoice,
     private val addPaymentToRegisterUseCase: BuyOrderUseCase.AddPaymentToRegister,
+    private val deletePaymentFromRegisterUseCase: BuyOrderUseCase.DeletePaymentFromRegister,
     private val getLastIdPaymentUseCase: BuyOrderUseCase.GetLastIdPaymentFromRegister,
     private val deleteInvoiceUseCase: InvoiceUseCase.DeleteInvoice,
     private val analytics: AnalyticsService,
@@ -432,7 +433,8 @@ class DetailInvoiceViewModel(
         originalPayment: PaymentRegisterModel,
         newAmount: Double,
         newNotes: String,
-        newMethod: MovementMethod
+        newMethod: MovementMethod,
+        newDate: Long
     ) {
         if (_state.value.isProcessingPayment) return
 
@@ -445,7 +447,8 @@ class DetailInvoiceViewModel(
                     total = newAmount,
                     notes = newNotes,
                     method = newMethod.name,
-                    isVirtual = newMethod.isVirtual
+                    isVirtual = newMethod.isVirtual,
+                    date = newDate
                 )
 
                 // 1. Update Payment in Firestore
@@ -481,6 +484,62 @@ class DetailInvoiceViewModel(
                 }
             } catch (e: Exception) {
                 Napier.e("Error editing movement", e)
+                _state.update {
+                    it.copy(
+                        message = "Error: ${e.message}",
+                        isProcessingPayment = false
+                    )
+                }
+            }
+        }
+    }
+
+    fun deletePayment(payment: PaymentRegisterModel) {
+        if (_state.value.isProcessingPayment) return
+
+        viewModelScope.launch {
+            _state.update { it.copy(isProcessingPayment = true) }
+            val current = _state.value
+
+            try {
+                // 1. Delete Payment in Firestore
+                val deleteResult = deletePaymentFromRegisterUseCase(payment.id)
+
+                if (deleteResult) {
+                    analytics.logEvent(
+                        "delete_movement_success", mapOf(
+                            "amount" to payment.total,
+                            "method" to payment.method
+                        )
+                    )
+
+                    // 2. Recalculate total payed from ALL payments excluding the deleted one
+                    val allPayments = current.payments.filter { it.id != payment.id }
+                    val totalPayed = allPayments.sumOf { it.total }
+
+                    // 3. Update Billing
+                    val updatedBilling = current.billing.copy(
+                        payed = totalPayed
+                    ).recalculate()
+
+                    _state.update {
+                        it.copy(
+                            billing = updatedBilling,
+                            message = "Movimiento eliminado",
+                            isProcessingPayment = false
+                        )
+                    }
+                    saveBilling()
+                } else {
+                    _state.update {
+                        it.copy(
+                            message = "Error al eliminar el movimiento",
+                            isProcessingPayment = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Napier.e("Error deleting movement", e)
                 _state.update {
                     it.copy(
                         message = "Error: ${e.message}",

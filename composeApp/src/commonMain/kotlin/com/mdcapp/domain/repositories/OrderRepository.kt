@@ -60,6 +60,9 @@ class OrderRepository(private val service: OrderService) {
     suspend fun addPaymentToRegister(data: PaymentRegisterModel) =
         service.addPaymentToRegister(data.toPaymentRemote())
 
+    suspend fun deletePaymentFromRegister(id: Int) =
+        service.deletePaymentFromRegister(id)
+
     suspend fun getLastId() = service.fetchLastIdFromPayments()
 
     suspend fun updateBillingOnService(

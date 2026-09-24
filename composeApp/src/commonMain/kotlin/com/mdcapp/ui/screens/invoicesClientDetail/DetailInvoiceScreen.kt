@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
@@ -104,6 +105,8 @@ fun DetailInvoiceScreen(
     var paymentAmount by remember { mutableStateOf("") }
     var paymentNotes by remember { mutableStateOf("") }
     var paymentMethod by remember { mutableStateOf(MovementMethod.EFECTIVO) }
+    var paymentDate by remember { mutableLongStateOf(0L) }
+    var showPaymentDatePicker by remember { mutableStateOf(false) }
     var commentText by remember { mutableStateOf("") }
     var showStateDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -306,6 +309,9 @@ fun DetailInvoiceScreen(
                 }
 
                 // Nueva sección de Pagos
+                var paymentToDelete by remember { mutableStateOf<PaymentRegisterModel?>(null) }
+                var showDeletePaymentConfirmDialog by remember { mutableStateOf(false) }
+
                 PaymentsSection(
                     payments = state.payments,
                     onAddPayment = {
@@ -313,6 +319,7 @@ fun DetailInvoiceScreen(
                         paymentAmount = ""
                         paymentNotes = ""
                         paymentMethod = MovementMethod.EFECTIVO
+                        paymentDate = System.currentTimeMillis()
                         showPaymentDialog = true
                     },
                     onEditPayment = { payment ->
@@ -320,10 +327,46 @@ fun DetailInvoiceScreen(
                         paymentAmount = payment.total.toString()
                         paymentNotes = payment.notes
                         paymentMethod = MovementMethod.fromName(payment.method)
+                        paymentDate = payment.date
                         showPaymentDialog = true
+                    },
+                    onDeletePayment = { payment ->
+                        paymentToDelete = payment
+                        showDeletePaymentConfirmDialog = true
                     },
                     onReconcile = { vm.reconcileMovement(it) }
                 )
+
+                if (showDeletePaymentConfirmDialog && paymentToDelete != null) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            showDeletePaymentConfirmDialog = false
+                            paymentToDelete = null
+                        },
+                        title = { Text("Eliminar Movimiento") },
+                        text = { Text("¿Está seguro que desea eliminar este movimiento de $${paymentToDelete?.total}? Esta acción no se puede deshacer.") },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    paymentToDelete?.let { vm.deletePayment(it) }
+                                    showDeletePaymentConfirmDialog = false
+                                    paymentToDelete = null
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Text("Eliminar")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = {
+                                showDeletePaymentConfirmDialog = false
+                                paymentToDelete = null
+                            }) {
+                                Text("Cancelar")
+                            }
+                        }
+                    )
+                }
 
                 // Nueva sección de Comentarios
                 CommentsSection(
@@ -523,6 +566,18 @@ fun DetailInvoiceScreen(
     if (showPaymentDialog) {
         val methods = MovementMethod.entries.toTypedArray()
 
+        if (showPaymentDatePicker) {
+            DatePicker(
+                onDismissRequest = { showPaymentDatePicker = false },
+                onDateSelected = { millis ->
+                    paymentDate = millis
+                    showPaymentDatePicker = false
+                },
+                onDismissButton = { showPaymentDatePicker = false },
+                enable = true
+            )
+        }
+
         AlertDialog(
             onDismissRequest = {
                 if (!state.isProcessingPayment) {
@@ -540,6 +595,25 @@ fun DetailInvoiceScreen(
                         "Saldo pendiente: $ $displayBalance",
                         style = MaterialTheme.typography.bodyMedium
                     )
+
+                    if (editingPayment != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("Fecha", style = MaterialTheme.typography.labelSmall)
+                                Text(
+                                    if (paymentDate > 0) paymentDate.toFormattedDate() else "Sin fecha",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            TextButton(onClick = { showPaymentDatePicker = true }) {
+                                Text("Cambiar")
+                            }
+                        }
+                    }
 
                     Text("Tipo de Movimiento", style = MaterialTheme.typography.labelSmall)
                     FlowRow(
@@ -592,7 +666,8 @@ fun DetailInvoiceScreen(
                                     editingPayment!!,
                                     amount,
                                     paymentNotes,
-                                    paymentMethod
+                                    paymentMethod,
+                                    paymentDate
                                 )
                             }
 
@@ -639,6 +714,7 @@ fun PaymentsSection(
     payments: List<PaymentRegisterModel>,
     onAddPayment: () -> Unit,
     onEditPayment: (PaymentRegisterModel) -> Unit,
+    onDeletePayment: (PaymentRegisterModel) -> Unit,
     onReconcile: (PaymentRegisterModel) -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -702,6 +778,14 @@ fun PaymentsSection(
                                         contentDescription = "Editar",
                                         modifier = Modifier.size(18.dp),
                                         tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                IconButton(onClick = { onDeletePayment(payment) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Eliminar",
+                                        modifier = Modifier.size(18.dp),
+                                        tint = MaterialTheme.colorScheme.error
                                     )
                                 }
                             }

@@ -49,6 +49,12 @@ class BuyOrderUseCase(private val repository: OrderRepository) {
         }
     }
 
+    inner class DeletePaymentFromRegister {
+        suspend operator fun invoke(id: Int): Boolean {
+            return repository.deletePaymentFromRegister(id)
+        }
+    }
+
     inner class GetLastIdPaymentFromRegister {
         suspend operator fun invoke(): Int {
             return repository.getLastId()
