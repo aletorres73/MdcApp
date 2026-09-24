@@ -28,6 +28,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -57,22 +58,22 @@ fun InvoicesPageScreen(
     val state by viewModel.uiState.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            if (state.isLoading && (state.allOrders.isNotEmpty() || state.allInvoices.isNotEmpty())) {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                )
-            }
+        RefreshContainer(
+            isRefreshing = state.isLoading,
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                if (state.isLoading && (state.allOrders.isNotEmpty() || state.allInvoices.isNotEmpty())) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(2.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    )
+                }
 
-            RefreshContainer(
-                isRefreshing = state.isLoading,
-                onRefresh = { viewModel.refresh() },
-                modifier = Modifier.weight(1f)
-            ) {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -87,12 +88,48 @@ fun InvoicesPageScreen(
 
                     // 2. Grilla 2x2 de Tarjetas Métricas
                     item {
-                        StatCardGrid(
-                            monthlyOrdersCount = state.monthlyOrdersCount,
-                            monthlyBillingTotal = state.monthlyBillingTotal,
-                            activeClientsCount = state.activeClientsCount,
-                            monthlyCollectedTotal = state.monthlyCollectedTotal
-                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Resumen del mes",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 17.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+
+                                Surface(
+                                    shape = RoundedCornerShape(50),
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                ) {
+                                    Text(
+                                        text = if (state.currentMonthName.isNotBlank()) "Mes en curso: ${state.currentMonthName}" else "Mes en curso",
+                                        modifier = Modifier.padding(
+                                            horizontal = 10.dp,
+                                            vertical = 4.dp
+                                        ),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+
+                            StatCardGrid(
+                                monthlyOrdersCount = state.monthlyOrdersCount,
+                                monthlyBillingTotal = state.monthlyBillingTotal,
+                                activeClientsCount = state.activeClientsCount,
+                                monthlyCollectedTotal = state.monthlyCollectedTotal,
+                                monthlyPendingCollectedTotal = state.monthlyPendingCollectedTotal,
+                                currentMonthName = state.currentMonthName
+                            )
+                        }
                     }
 
                     // 3. Sección "Últimas Facturaciones" (Facturas)

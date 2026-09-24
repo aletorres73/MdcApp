@@ -27,7 +27,8 @@ class DashboardViewModel(
     private val getClientsUseCase: GetClientsUseCase,
     private val observeAllBillings: InvoiceUseCase.ObserveAllBillings,
     private val observeAllBuyOrders: BuyOrderUseCase.ObserveAllBuyOrders,
-    private val analytics: AnalyticsService
+    private val analytics: AnalyticsService,
+    private val refreshDatabaseUseCase: InvoiceUseCase.RefreshDatabase
 ) : ViewModel() {
 
     data class UiState(
@@ -36,6 +37,8 @@ class DashboardViewModel(
         val monthlyBillingTotal: Double = 0.0,
         val activeClientsCount: Int = 0,
         val monthlyCollectedTotal: Double = 0.0,
+        val monthlyPendingCollectedTotal: Double = 0.0,
+        val currentMonthName: String = "",
         val allOrders: List<BuyOrderModel> = emptyList(),
         val filteredOrders: List<BuyOrderModel> = emptyList(),
         val allInvoices: List<BillingModel> = emptyList(),
@@ -108,6 +111,7 @@ class DashboardViewModel(
 
             val billingTotal = monthlyInvoices.sumOf { it.total }
             val collectedTotal = monthlyInvoices.sumOf { it.payed }
+            val pendingCollectedTotal = monthlyInvoices.sumOf { maxOf(0.0, it.rest) }
 
             val sortedOrders =
                 orders.sortedByDescending { if (it.timeStamp > 0) it.timeStamp else it.loadedDate }
@@ -119,6 +123,8 @@ class DashboardViewModel(
                     monthlyOrdersCount = monthlyOrders.size,
                     monthlyBillingTotal = billingTotal,
                     monthlyCollectedTotal = collectedTotal,
+                    monthlyPendingCollectedTotal = pendingCollectedTotal,
+                    currentMonthName = formatMonthName(now),
                     allOrders = sortedOrders,
                     filteredOrders = filterOrders(sortedOrders, current.ordersSearchQuery),
                     allInvoices = sortedInvoices,
@@ -153,8 +159,15 @@ class DashboardViewModel(
     fun refresh() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            getClientsUseCase.resetPagination()
-            _uiState.update { it.copy(isLoading = false) }
+            try {
+                getClientsUseCase.resetPagination()
+                refreshDatabaseUseCase()
+                kotlinx.coroutines.delay(800)
+            } catch (e: Exception) {
+                Napier.e("Error refreshing dashboard", e)
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
+            }
         }
     }
 
@@ -180,5 +193,14 @@ class DashboardViewModel(
                     it.brand.lowercase().contains(q) ||
                     it.stateBilling.lowercase().contains(q)
         }
+    }
+
+    private fun formatMonthName(now: LocalDate): String {
+        val months = listOf(
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        )
+        val monthName = months.getOrElse(now.monthValue - 1) { "" }
+        return "$monthName ${now.year}".trim()
     }
 }

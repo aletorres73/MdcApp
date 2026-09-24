@@ -4,8 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -43,7 +46,9 @@ fun StatCardGrid(
     monthlyBillingTotal: Double,
     activeClientsCount: Int,
     monthlyCollectedTotal: Double,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    monthlyPendingCollectedTotal: Double = 0.0,
+    currentMonthName: String = ""
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -51,31 +56,39 @@ fun StatCardGrid(
     ) {
         // Fila 1: Pedidos + Facturación
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Max),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             StatCard(
                 title = "Pedidos",
                 value = monthlyOrdersCount.toString(),
-                subtitle = "Este mes",
+                subtitle = "Total",
                 icon = Icons.Default.ShoppingCart,
                 accentColor = BrandBlue,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
             )
 
             StatCard(
                 title = "Facturación",
                 value = formatCurrencyCompact(monthlyBillingTotal),
-                subtitle = "Este mes",
+                subtitle = "Total",
                 icon = Icons.Default.DateRange,
                 accentColor = BrandGreen,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
             )
         }
 
         // Fila 2: Clientes + Cobranza
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Max),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             StatCard(
@@ -84,16 +97,17 @@ fun StatCardGrid(
                 subtitle = "Activos",
                 icon = Icons.Default.AccountBox,
                 accentColor = Color(0xFF00897B),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
             )
 
-            StatCard(
-                title = "Cobranza",
-                value = formatCurrencyCompact(monthlyCollectedTotal),
-                subtitle = "Cobrados",
-                icon = Icons.Default.Home,
-                accentColor = AccentAmber,
-                modifier = Modifier.weight(1f)
+            CobranzaStatCard(
+                collectedTotal = monthlyCollectedTotal,
+                pendingTotal = monthlyPendingCollectedTotal,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
             )
         }
     }
@@ -109,7 +123,7 @@ fun StatCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.height(118.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = AccentAmberContainer
@@ -118,8 +132,9 @@ fun StatCard(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp)
+                .fillMaxSize()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -152,25 +167,122 @@ fun StatCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Column {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
 
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1
-            )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                )
+            }
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(2.dp))
+@Composable
+fun CobranzaStatCard(
+    collectedTotal: Double,
+    pendingTotal: Double,
+    modifier: Modifier = Modifier
+) {
+    val accentColor = AccentAmber
+    Card(
+        modifier = modifier.height(118.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = AccentAmberContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(accentColor.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Cobranza",
+                        tint = accentColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
 
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-            )
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Text(
+                    text = "Cobranza",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+            }
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Cobrado:",
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = formatCurrencyCompact(collectedTotal),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        ),
+                        color = BrandGreen
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Pendiente:",
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = formatCurrencyCompact(pendingTotal),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        ),
+                        color = Color(0xFFD84315)
+                    )
+                }
+            }
         }
     }
 }
