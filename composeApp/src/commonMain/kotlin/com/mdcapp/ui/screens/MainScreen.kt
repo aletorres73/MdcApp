@@ -4,8 +4,12 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -20,12 +24,14 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -40,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -49,6 +56,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mdcapp.domain.entities.AppRoute
+import com.mdcapp.domain.entities.UpdateState
 import com.mdcapp.domain.logic.SharedDocumentHandler
 import com.mdcapp.domain.service.RefreshController
 import com.mdcapp.ui.screens.invoicesClientDetail.DetailInvoiceScreen
@@ -57,6 +65,7 @@ import com.mdcapp.ui.screens.invoicesPage.InvoicesPageScreen
 import com.mdcapp.ui.theme.AccentAmberContainer
 import com.mdcapp.ui.utils.AppBackHandler
 import com.mdcapp.ui.utils.closeApp
+import com.mdcapp.ui.utils.getAppInstaller
 import com.mdcapp.ui.utils.isAndroid
 import com.mdcapp.ui.viewmodels.ClientsViewModel
 import com.mdcapp.ui.viewmodels.invoices.DetailInvoiceViewModel
@@ -541,6 +550,66 @@ fun MainScreen(
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
                     Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    val overlay = invoicesPagedState.overlay
+    if (overlay is InvoicesPagedViewModel.Overlay.UpdateApp) {
+        val isForce = overlay.state == UpdateState.FORCE_UPDATE
+        AlertDialog(
+            onDismissRequest = {
+                if (!isForce && !overlay.isDownloading) {
+                    invoicesPagedViewModel.closeOverlay()
+                }
+            },
+            title = {
+                Text(if (isForce) "Actualización obligatoria" else "Nueva versión disponible")
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        if (isForce)
+                            "Tu versión actual ya no es compatible. Por favor, actualiza la aplicación para continuar."
+                        else
+                            "Hay una nueva versión disponible para descargar."
+                    )
+                    if (overlay.releasesNotes.isNotBlank()) {
+                        Text(
+                            text = "Novedades:\n${overlay.releasesNotes}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    if (overlay.isDownloading) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                            Text("Descargando actualización...")
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !overlay.isDownloading,
+                    onClick = {
+                        invoicesPagedViewModel.updateApk(getAppInstaller())
+                    }
+                ) {
+                    Text(if (overlay.isDownloading) "Descargando..." else "Actualizar ahora")
+                }
+            },
+            dismissButton = {
+                if (!isForce) {
+                    TextButton(
+                        enabled = !overlay.isDownloading,
+                        onClick = { invoicesPagedViewModel.closeOverlay() }
+                    ) {
+                        Text("Ahora no")
+                    }
                 }
             }
         )

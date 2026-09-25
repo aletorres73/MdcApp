@@ -45,31 +45,33 @@ fun AppNavigation(startRoute: String) {
         userService.observeUserProfile()
             .catch { println("⚠️ [Navigation] Error observando perfil: ${it.message}") }
             .collectLatest { profile ->
-            val currentRoute = navController.currentDestination?.route
-            if (authRepo.isLogged() &&
-                currentRoute != AppRoute.Login.route &&
-                currentRoute != AppRoute.SignUp.route &&
-                currentRoute != AppRoute.SubscriptionStatus.route
-            ) {
-                val isExpired = (profile?.subscriptionExpiresAt ?: 0) < System.currentTimeMillis()
-                val isManuallyEnabled = profile?.isManuallyEnabled == true
+                val currentRoute = navController.currentDestination?.route
+                if (authRepo.isLogged() &&
+                    currentRoute != AppRoute.Login.route &&
+                    currentRoute != AppRoute.SignUp.route &&
+                    currentRoute != AppRoute.SubscriptionStatus.route
+                ) {
+                    if (profile == null) return@collectLatest
+                    val isExpired = profile.subscriptionExpiresAt < System.currentTimeMillis()
+                    val isManuallyEnabled = profile.isManuallyEnabled
 
-                if (isExpired && !isManuallyEnabled) {
-                    navController.navigate(AppRoute.SubscriptionStatus.route) {
-                        popUpTo(AppRoute.Login.route) { inclusive = true }
+                    if (isExpired && !isManuallyEnabled) {
+                        navController.navigate(AppRoute.SubscriptionStatus.route) {
+                            popUpTo(AppRoute.Login.route) { inclusive = true }
+                        }
                     }
-                }
-            } else if (authRepo.isLogged() && currentRoute == AppRoute.SubscriptionStatus.route) {
-                // Si estamos en la pantalla de bloqueo y la suscripción se activa, salir de ahí
-                val isExpired = (profile?.subscriptionExpiresAt ?: 0) < System.currentTimeMillis()
-                val isManuallyEnabled = profile?.isManuallyEnabled == true
-                if (!isExpired || isManuallyEnabled) {
-                    navController.navigate(AppRoute.Home.route) {
-                        popUpTo(AppRoute.SubscriptionStatus.route) { inclusive = true }
+                } else if (authRepo.isLogged() && currentRoute == AppRoute.SubscriptionStatus.route) {
+                    if (profile == null) return@collectLatest
+                    // Si estamos en la pantalla de bloqueo y la suscripción se activa, salir de ahí
+                    val isExpired = profile.subscriptionExpiresAt < System.currentTimeMillis()
+                    val isManuallyEnabled = profile.isManuallyEnabled
+                    if (!isExpired || isManuallyEnabled) {
+                        navController.navigate(AppRoute.Home.route) {
+                            popUpTo(AppRoute.SubscriptionStatus.route) { inclusive = true }
+                        }
                     }
                 }
             }
-        }
     }
 
     NavHost(
