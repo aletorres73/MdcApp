@@ -315,7 +315,8 @@ class DetailInvoiceViewModel(
     fun registerMovement(
         amount: Double,
         notes: String,
-        method: MovementMethod
+        method: MovementMethod,
+        date: Long = System.currentTimeMillis()
     ) {
         if (_state.value.isProcessingPayment) return
 
@@ -330,12 +331,13 @@ class DetailInvoiceViewModel(
 
                 // 2. Create Payment Register
                 val now = System.currentTimeMillis()
+                val movementDate = if (date > 0) date else now
 
                 val paymentRegister = PaymentRegisterModel(
                     id = nextId,
                     clientId = current.billing.clientId,
                     branch = current.billing.brand,
-                    date = now,
+                    date = movementDate,
                     clientName = current.billing.clientName,
                     documentNumber = current.billing.billingNumber,
                     type = current.billing.type.ifEmpty { "Factura" },

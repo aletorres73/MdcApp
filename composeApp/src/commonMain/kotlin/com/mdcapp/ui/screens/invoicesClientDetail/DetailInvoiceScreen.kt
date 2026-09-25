@@ -596,22 +596,20 @@ fun DetailInvoiceScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
 
-                    if (editingPayment != null) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text("Fecha", style = MaterialTheme.typography.labelSmall)
-                                Text(
-                                    if (paymentDate > 0) paymentDate.toFormattedDate() else "Sin fecha",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                            TextButton(onClick = { showPaymentDatePicker = true }) {
-                                Text("Cambiar")
-                            }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Fecha", style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                if (paymentDate > 0) paymentDate.toFormattedDate() else "Sin fecha",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        TextButton(onClick = { showPaymentDatePicker = true }) {
+                            Text("Cambiar")
                         }
                     }
 
@@ -660,7 +658,12 @@ fun DetailInvoiceScreen(
                         val amount = paymentAmount.toDoubleOrNull() ?: 0.0
                         if (amount > 0) {
                             if (editingPayment == null) {
-                                vm.registerMovement(amount, paymentNotes, paymentMethod)
+                                vm.registerMovement(
+                                    amount,
+                                    paymentNotes,
+                                    paymentMethod,
+                                    paymentDate
+                                )
                             } else {
                                 vm.editPayment(
                                     editingPayment!!,

@@ -127,7 +127,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "5.1.0"
+        versionName = "5.2.0"
     }
     buildFeatures {
         compose = true

@@ -234,6 +234,19 @@ fun Long.toFormattedDate(): String {
     return this.toLocalDate().formatter()
 }
 
+fun Long.toStartOfDayMillis(): Long {
+    if (this <= 0L) return this
+    val date = Instant.ofEpochMilli(this).atZone(ZoneId.of("UTC")).toLocalDate()
+    return date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+}
+
+fun Long.toEndOfDayMillis(): Long {
+    if (this <= 0L) return this
+    val date = Instant.ofEpochMilli(this).atZone(ZoneId.of("UTC")).toLocalDate()
+    return date.atTime(23, 59, 59, 999_000_000).atZone(ZoneId.systemDefault()).toInstant()
+        .toEpochMilli()
+}
+
 fun BillingModel.recalculate(
     condition: PaymentCondition? = null
 ): BillingModel {

@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.mdcapp.domain.entities.BillingModel
 import com.mdcapp.domain.entities.CommissionConfig
 import com.mdcapp.domain.entities.PaymentRegisterModel
+import com.mdcapp.domain.entities.toEndOfDayMillis
+import com.mdcapp.domain.entities.toStartOfDayMillis
 import com.mdcapp.domain.repositories.OrderRepository
 import com.mdcapp.domain.service.AnalyticsService
 import com.mdcapp.domain.usescases.commissionusecase.CommissionUseCase
@@ -108,7 +110,9 @@ class CommissionsViewModel(
     )
 
     fun setDateRange(start: Long?, end: Long?) {
-        _filterState.update { it.copy(startDate = start, endDate = end) }
+        val adjustedStart = start?.toStartOfDayMillis()
+        val adjustedEnd = end?.toEndOfDayMillis()
+        _filterState.update { it.copy(startDate = adjustedStart, endDate = adjustedEnd) }
     }
 
     fun setFactory(factoryName: String?) {
