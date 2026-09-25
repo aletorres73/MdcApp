@@ -5,8 +5,6 @@ import com.mdcapp.domain.entities.CommissionConfig
 import com.mdcapp.domain.entities.FactoryModel
 import com.mdcapp.domain.entities.MovementMethod
 import com.mdcapp.domain.entities.PaymentRegisterModel
-import com.mdcapp.domain.entities.toEndOfDayMillis
-import com.mdcapp.domain.entities.toStartOfDayMillis
 import com.mdcapp.domain.logic.CommissionCalculator
 import com.mdcapp.domain.repositories.OrderRepository
 
@@ -24,11 +22,8 @@ class CommissionUseCase(private val repository: OrderRepository) {
             endDate: Long,
             config: CommissionConfig = CommissionConfig()
         ): List<CommissionResult> {
-            val adjustedStartDate = startDate.toStartOfDayMillis()
-            val adjustedEndDate = endDate.toEndOfDayMillis()
-
-            // 1. Obtener pagos en rango
-            val payments = repository.fetchPaymentsByDateRange(adjustedStartDate, adjustedEndDate)
+            // 1. Obtener pagos en rango (startDate y endDate ya están ajustados a inicio y fin de día local)
+            val payments = repository.fetchPaymentsByDateRange(startDate, endDate)
                 .filter { !MovementMethod.fromName(it.method).isVirtual }
 
             if (payments.isEmpty()) return emptyList()
