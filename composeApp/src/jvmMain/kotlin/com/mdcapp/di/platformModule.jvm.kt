@@ -4,10 +4,12 @@ import com.mdcapp.data.repositories.DesktopAuthRepository
 import com.mdcapp.data.repositories.DesktopDatabaseRepository
 import com.mdcapp.data.repositories.DesktopStorageRepository
 import com.mdcapp.data.repositories.FirebaseInvoiceScannerService
+import com.mdcapp.data.service.DesktopSessionManager
 import com.mdcapp.domain.repositories.IAuthRepository
 import com.mdcapp.domain.repositories.IDatabaseRepository
 import com.mdcapp.domain.repositories.IInvoiceScannerService
 import com.mdcapp.domain.repositories.IStorageRepository
+import com.mdcapp.domain.service.ISessionManager
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -31,6 +33,7 @@ actual val platformModule = module {
             }
         }
     }
+    single<ISessionManager> { DesktopSessionManager() }
     single { DesktopAuthRepository(get()) }
     single<IAuthRepository> { get<DesktopAuthRepository>() }
     single<IDatabaseRepository> { DesktopDatabaseRepository(get(), get()) }

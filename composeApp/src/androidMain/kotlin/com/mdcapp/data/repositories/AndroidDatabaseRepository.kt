@@ -6,9 +6,11 @@ import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.Query
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
 import kotlinx.serialization.KSerializer
 
 class AndroidDatabaseRepository(private val db: FirebaseFirestore) : IDatabaseRepository {
@@ -48,9 +50,26 @@ class AndroidDatabaseRepository(private val db: FirebaseFirestore) : IDatabaseRe
     }
 
     override fun <T : Any> observeDocument(path: String, serializer: KSerializer<T>): Flow<T?> {
+        println("🔑 [MDC_SESSION] AndroidDatabaseRepository.observeDocument() -> path: $path")
         return db.document(path).snapshots
-            .map { if (it.exists) it.data(serializer) else null }
+            .map { snap ->
+                println("🔑 [MDC_SESSION] AndroidDatabaseRepository.observeDocument snapshot -> path: $path, exists: ${snap.exists}")
+                if (snap.exists) snap.data(serializer) else null
+            }
+            .retryWhen { cause, attempt ->
+                val isPermissionError =
+                    cause.message?.contains("PERMISSION_DENIED", ignoreCase = true) == true
+                if (isPermissionError && attempt < 5) {
+                    println("⚠️ [MDC_SESSION] PERMISSION_DENIED on observeDocument($path). Retrying attempt #${attempt + 1} after 800ms while auth syncs...")
+                    delay(800)
+                    true
+                } else {
+                    false
+                }
+            }
             .catch { e ->
+                println("❌ [MDC_SESSION] Error observando documento en $path: ${e.message}")
+                e.printStackTrace()
                 Napier.w("Error observando documento en $path", e)
                 emit(null)
             }
@@ -92,6 +111,7 @@ class AndroidDatabaseRepository(private val db: FirebaseFirestore) : IDatabaseRe
                             q.where { field.inArray(values) }
                         } else q
                     }
+
                     else -> q
                 }
             }
@@ -126,7 +146,19 @@ class AndroidDatabaseRepository(private val db: FirebaseFirestore) : IDatabaseRe
             .map { snapshot ->
                 snapshot.documents.map { it.data(serializer) }
             }
+            .retryWhen { cause, attempt ->
+                val isPermissionError =
+                    cause.message?.contains("PERMISSION_DENIED", ignoreCase = true) == true
+                if (isPermissionError && attempt < 5) {
+                    println("⚠️ [MDC_SESSION] PERMISSION_DENIED on observeCollection($path). Retrying attempt #${attempt + 1} after 800ms while auth syncs...")
+                    delay(800)
+                    true
+                } else {
+                    false
+                }
+            }
             .catch { e ->
+                println("❌ [MDC_SESSION] Error observando colección en $path: ${e.message}")
                 Napier.w("Error observando colección en $path", e)
                 emit(emptyList())
             }

@@ -29,14 +29,17 @@ class LoginViewModel(
     )
 
     fun login(email: String, password: String) {
+        println("🔑 [MDC_SESSION] LoginViewModel.login() started for: $email")
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 val user = authRepository.login(email, password)
                 if (user != null) {
+                    println("🔑 [MDC_SESSION] LoginViewModel.login() success for uid: ${user.uid}")
                     analytics.logEvent("login_success", mapOf("email" to email))
                     _state.update { it.copy(isLoading = false, isSuccess = true) }
                 } else {
+                    println("❌ [MDC_SESSION] LoginViewModel.login() failed: user returned null")
                     analytics.logEvent(
                         "login_failure",
                         mapOf("email" to email, "reason" to "invalid_credentials")
@@ -44,6 +47,8 @@ class LoginViewModel(
                     _state.update { it.copy(isLoading = false, error = "Credenciales inválidas") }
                 }
             } catch (e: Exception) {
+                println("❌ [MDC_SESSION] LoginViewModel.login() exception: ${e.message}")
+                e.printStackTrace()
                 Napier.e("Login error", e)
                 analytics.logEvent("login_error", mapOf("email" to email, "error" to e.message))
                 _state.update {

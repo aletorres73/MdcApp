@@ -9,7 +9,10 @@ import com.mdcapp.domain.entities.PaymentInfo
 import com.mdcapp.domain.entities.UserModel
 import com.mdcapp.domain.repositories.IDatabaseRepository
 import com.mdcapp.domain.repositories.IStorageRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 class UserService(
@@ -38,21 +41,42 @@ class UserService(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun observeUserProfile(): Flow<UserModel?> {
-        val path = userPath ?: return kotlinx.coroutines.flow.flowOf(null)
-        return db.observeDocument(path, RemoteResultUserModel.serializer()).map { it?.toDomain() }
+        return authService.observeAuthState().flatMapLatest { user ->
+            val uid = user?.uid ?: userId
+            val path = uid?.let { "users/$it" }
+            println("🔑 [MDC_SESSION] UserService.observeUserProfile() -> userId: $uid, path: $path")
+            if (path == null) {
+                println("⚠️ [MDC_SESSION] UserService.observeUserProfile() path is null, emitting null")
+                return@flatMapLatest flowOf(null)
+            }
+            db.observeDocument(path, RemoteResultUserModel.serializer())
+                .map { doc ->
+                    val remoteUser: RemoteResultUserModel? = doc
+                    val profile: UserModel? = remoteUser?.toDomain()
+                    println("🔑 [MDC_SESSION] UserService.observeUserProfile emission -> profile: ${profile?.email}, expiresAt: ${profile?.subscriptionExpiresAt}, isManuallyEnabled: ${profile?.isManuallyEnabled}")
+                    profile
+                }
+        }
     }
 
     suspend fun getUserProfile(): UserModel? {
-        val path = userPath ?: return null
+        val uid = userId
+        val path = userPath
+        println("🔑 [MDC_SESSION] UserService.getUserProfile() called -> userId: $uid, path: $path")
+        if (path == null) return null
         return try {
             val data = db.getDocument(path, RemoteResultUserModel.serializer())
-            data?.toDomain() ?: UserModel(
+            val profile = data?.toDomain() ?: UserModel(
                 uid = userId ?: "",
                 email = authService.currentUser?.email ?: ""
             )
+            println("🔑 [MDC_SESSION] UserService.getUserProfile() success -> profile: ${profile.email}")
+            profile
         } catch (e: Exception) {
-            println("Error fetching user profile: ${e.message}")
+            println("❌ [MDC_SESSION] Error fetching user profile: ${e.message}")
+            e.printStackTrace()
             null
         }
     }

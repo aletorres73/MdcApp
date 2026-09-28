@@ -10,9 +10,16 @@ class AuthRepository(
 ) {
     suspend fun login(email: String, password: String) = authService.signIn(email, password)
     suspend fun register(email: String, password: String) = authService.signUp(email, password)
-    suspend fun logout() = authService.signOut()
+    suspend fun logout() {
+        println("🚨 [MDC_SESSION] AuthRepository.logout() requested")
+        authService.signOut()
+    }
     fun observeAuthState() = authService.observeAuthState()
-    fun isLogged() = authService.isUserLoggedIn()
+    fun isLogged(): Boolean {
+        val logged = authService.isUserLoggedIn()
+        println("🔑 [MDC_SESSION] AuthRepository.isLogged() -> $logged")
+        return logged
+    }
     fun getCurrentUser() = authService.currentUser
     fun getUserId() = authService.currentUser?.uid
 

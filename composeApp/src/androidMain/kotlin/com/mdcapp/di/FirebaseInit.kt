@@ -14,15 +14,20 @@ import io.github.aakira.napier.Napier
 actual fun initFirebaseApp(context: Any?) {
     try {
         val appContext = context as? Context ?: return
+        println("🔑 [MDC_SESSION] initFirebaseApp starting on Android...")
 
         // Check if Firebase is already initialized by the google-services plugin
         val apps = com.google.firebase.FirebaseApp.getApps(appContext)
+        println("🔑 [MDC_SESSION] FirebaseApp.getApps count: ${apps.size}")
         if (apps.isNotEmpty()) {
+            apps.forEach { app ->
+                println("🔑 [MDC_SESSION] Existing FirebaseApp: name=${app.name}")
+            }
+            println("🔑 [MDC_SESSION] Firebase already initialized by google-services. Skipping re-initialization to preserve session!")
             Napier.i("Firebase already initialized by google-services plugin")
-            // Initialize GitLive wrapper without explicit options to use the default app
-            Firebase.initialize(appContext)
         } else {
             Napier.i("Firebase not initialized. Initializing manually with options")
+            println("🔑 [MDC_SESSION] Firebase not initialized. Initializing manually with options...")
             val firebaseOptions = FirebaseOptions(
                 projectId = BuildKonfig.FIREBASE_PROJECT_ID,
                 apiKey = BuildKonfig.FIREBASE_API_KEY,
@@ -30,6 +35,9 @@ actual fun initFirebaseApp(context: Any?) {
             )
             Firebase.initialize(appContext, options = firebaseOptions)
         }
+
+        val nativeUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        println("🔑 [MDC_SESSION] Post-init Native FirebaseAuth.currentUser -> uid: ${nativeUser?.uid}, email: ${nativeUser?.email}")
 
         // Initialize Firebase App Check for Vertex AI and other Firebase services
         try {
@@ -58,11 +66,15 @@ actual fun initFirebaseApp(context: Any?) {
                 Napier.i("Firebase App Check initialized with PlayIntegrityAppCheckProviderFactory")
             }
         } catch (e: Exception) {
+            println("❌ [MDC_SESSION] Failed to initialize Firebase App Check: ${e.message}")
             Napier.e("Failed to initialize Firebase App Check", e)
         }
 
+        println("🔑 [MDC_SESSION] Firebase initialized successfully on Android")
         Napier.i("Firebase initialized successfully on Android")
     } catch (e: Exception) {
+        println("❌ [MDC_SESSION] Failed to initialize Firebase on Android: ${e.message}")
+        e.printStackTrace()
         Napier.e("Failed to initialize Firebase on Android", e)
     }
 }
